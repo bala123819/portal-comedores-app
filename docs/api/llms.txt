@@ -1,0 +1,73 @@
+# Mermab API — Banco de Alimentos
+
+> API REST multi-tenant para la gestión integral de bancos de alimentos argentinos:
+> mermas (excedentes publicados por donantes), postulaciones y asignaciones,
+> donaciones, compras, inventario por lotes con vencimientos, organizaciones
+> beneficiarias, familias, programas con cupos, distribuciones con máquina de
+> estados, voluntarios, facturación y reportes de impacto. 493 operaciones
+> documentadas. Backend Laravel 10 + PostgreSQL. Idioma del dominio: español
+> (estados, mensajes de error y enums, ej. `activa`, `pendiente`, `en_camino`).
+
+Convenciones que todo cliente (humano o agente) debe respetar:
+
+- **Base URL**: `https://cloud.mermab.com/api`
+- **Autenticación** (dos caminos):
+  - `X-API-Key: mrmb_...` — recomendado para integraciones máquina-a-máquina.
+    Cada key pertenece a UN tenant (un banco de alimentos) y tiene scopes por
+    módulo; todo lo que se lee/escribe queda aislado a ese tenant.
+  - `Authorization: Bearer <token>` (Laravel Sanctum) — para actuar en nombre
+    de un usuario logueado (`POST /api/auth/login`).
+- **Idempotencia**: los POST con efecto real exigen el header `Idempotency-Key`
+  (UUID v4, generado una vez y persistido entre reintentos) — sin él:
+  `400 IDEMPOTENCY_KEY_REQUIRED`. En PUT el header es opcional pero recomendado
+  (si se envía, el reintento devuelve la respuesta cacheada).
+- **Formato de respuesta**: siempre `{"success": true|false, "data": ...}` con
+  `"meta": {current_page, last_page, per_page, total}` en listados paginados y
+  `"message"`/`"errors"` en fallos (422 de validación con detalle por campo).
+- **Máquinas de estado**: las transiciones (mermas, asignaciones,
+  distribuciones, postulaciones) se hacen SOLO con los endpoints de acción
+  (`/approve`, `/cancel`, `/complete`, ...) — nunca editando `status` directo.
+- **Rate limiting**: 60 req/min general (120 admins), 10 req/min en auth,
+  límite configurable por API key. Ante 429, respetar `Retry-After`.
+- **Header requerido**: enviar siempre `Accept: application/json`.
+
+## Documentación
+
+- [Documentación navegable de la API](https://cloud.mermab.com/docs/): referencia
+  completa de las 493 operaciones agrupadas por módulo, con ejemplos de request
+  y response en bash/JavaScript/PHP.
+- [Especificación OpenAPI 3.0.3](https://cloud.mermab.com/docs/openapi.yaml):
+  contrato máquina-legible de toda la API — la fuente para validar requests,
+  generar clientes o corroborar drift de integración.
+- [Colección Postman](https://cloud.mermab.com/docs/collection.json): las mismas
+  operaciones listas para importar y probar.
+
+## Verificación de conexión (para agentes e integraciones)
+
+Checklist de 3 pasos para corroborar que una integración está bien conectada:
+
+1. **Alcance de red** — `GET https://cloud.mermab.com/api/health` (sin auth).
+   Esperado: `{"status":"ok","timestamp":...,"version":...}`.
+2. **Credenciales y tenant** — `GET https://cloud.mermab.com/api/capabilities`
+   con la API key. Esperado: 200 con los módulos y acciones habilitados para
+   esa key (si da 401, la key es inválida; si faltan módulos, faltan scopes).
+3. **Lectura real** — `GET https://cloud.mermab.com/api/mermas?per_page=1` con
+   la API key. Esperado: 200 con `data` (posiblemente vacío) y `meta` — confirma
+   scope de lectura y aislamiento de tenant.
+
+## Capa de agente (MCP)
+
+- El repositorio incluye un **MCP server** en TypeScript (`mcp-server/`) que
+  expone 194 tools en 25 dominios + 4 resources sobre esta misma API, con
+  `Idempotency-Key` automático y retry ante rate limit. Catálogo completo en
+  `mcp-server/TOOLS.md`; setup en `mcp-server/README.md`. Es el camino
+  recomendado para plataformas de agentes (ej. GoDubi).
+
+## Optional
+
+- [Brief de integración GoDubi ↔ Mermab](https://gitlab.com/zorrero/bat-backend/-/blob/production-v1/GODUBI-INTEGRATION-BRIEF.md):
+  proceso de negocio de punta a punta, personas, reglas duras, acciones
+  sensibles que requieren confirmación humana y triggers/webhooks disponibles.
+- Webhooks salientes: 24 eventos con firma HMAC (`merma.created`,
+  `inventory.expiring`, `distribution.completed`, ...) — suscripción vía
+  `POST /api/webhook-subscriptions`.

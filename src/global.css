@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 40 20% 99%;
+  --foreground: 220 20% 14%;
+  --primary: 152 45% 42%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 152 30% 94%;
+  --accent-foreground: 152 45% 30%;
+  --success: 152 55% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 95% 55%;
+  --warning-foreground: 220 20% 14%;
+  --info: 210 85% 55%;
+  --info-foreground: 0 0% 100%;
+  --destructive: 0 65% 55%;
+  --destructive-foreground: 0 0% 100%;
+  /* Derivados (misma familia cromática) */
+  --muted: 40 12% 95%;
+  --muted-foreground: 220 10% 40%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 20% 14%;
+  --border: 40 10% 88%;
+  --input: 40 10% 82%;
+  --ring: 152 45% 42%;
+  --radius: 0.625rem;
+}

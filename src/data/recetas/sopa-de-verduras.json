@@ -1,0 +1,56 @@
+{
+  "id": "sopa-de-verduras",
+  "nombre": "Sopa de verduras",
+  "categoria": "Sopas",
+  "raciones_base": 10,
+  "ingredientes": [
+    {
+      "nombre": "Papas",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Zanahorias",
+      "cantidad": 4,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Zapallo",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Cebolla",
+      "cantidad": 2,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Fideos para sopa",
+      "cantidad": 500,
+      "unidad": "g",
+      "grupo_nutricional": "cereales"
+    },
+    {
+      "nombre": "Sal",
+      "cantidad": null,
+      "unidad": null
+    }
+  ],
+  "pasos": [
+    "Pelar y cortar todas las verduras en cubos chicos.",
+    "Hervir en 5 litros de agua con sal durante 30 minutos.",
+    "Agregar los fideos y cocinar lo que indique el paquete.",
+    "Servir caliente."
+  ],
+  "tiempo": 50,
+  "etiquetas": [
+    "entrada",
+    "invierno",
+    "vegetariano"
+  ],
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco"
+}

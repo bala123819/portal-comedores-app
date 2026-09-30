@@ -1,0 +1,69 @@
+{
+  "id": "fideos-con-salsa-de-verduras",
+  "nombre": "Fideos con salsa de verduras",
+  "categoria": "Pastas",
+  "raciones_base": 10,
+  "ingredientes": [
+    {
+      "nombre": "Fideos secos",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "cereales"
+    },
+    {
+      "nombre": "Puré de tomate",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Zapallitos",
+      "cantidad": 4,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Zanahorias",
+      "cantidad": 3,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Cebolla",
+      "cantidad": 2,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Aceite",
+      "cantidad": 3,
+      "unidad": "cucharadas",
+      "grupo_nutricional": "aceites"
+    },
+    {
+      "nombre": "Queso rallado",
+      "cantidad": 200,
+      "unidad": "g",
+      "grupo_nutricional": "lacteos"
+    },
+    {
+      "nombre": "Sal y orégano",
+      "cantidad": null,
+      "unidad": null
+    }
+  ],
+  "pasos": [
+    "Picar la cebolla y rehogar en el aceite.",
+    "Agregar la zanahoria rallada y los zapallitos en cubos. Cocinar 10 minutos.",
+    "Sumar el puré de tomate, condimentar y cocinar 15 minutos a fuego bajo.",
+    "Hervir los fideos en abundante agua con sal. Escurrir.",
+    "Servir los fideos con la salsa y el queso rallado."
+  ],
+  "tiempo": 40,
+  "etiquetas": [
+    "plato principal",
+    "vegetariano",
+    "rápido"
+  ],
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco"
+}

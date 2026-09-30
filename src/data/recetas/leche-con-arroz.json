@@ -1,0 +1,42 @@
+{
+  "id": "leche-con-arroz",
+  "nombre": "Leche con arroz",
+  "categoria": "Postres",
+  "raciones_base": 10,
+  "ingredientes": [
+    {
+      "nombre": "Arroz",
+      "cantidad": 400,
+      "unidad": "g",
+      "grupo_nutricional": "cereales"
+    },
+    {
+      "nombre": "Leche",
+      "cantidad": 3,
+      "unidad": "litros",
+      "grupo_nutricional": "lacteos"
+    },
+    {
+      "nombre": "Azúcar",
+      "cantidad": 300,
+      "unidad": "g"
+    },
+    {
+      "nombre": "Canela y cáscara de naranja",
+      "cantidad": null,
+      "unidad": null
+    }
+  ],
+  "pasos": [
+    "Hervir el arroz en agua 5 minutos y escurrir.",
+    "Calentar la leche con la canela y la cáscara de naranja.",
+    "Agregar el arroz y cocinar a fuego bajo 30 minutos, revolviendo.",
+    "Sumar el azúcar al final y cocinar 5 minutos más."
+  ],
+  "tiempo": 45,
+  "etiquetas": [
+    "postre",
+    "merienda"
+  ],
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco"
+}

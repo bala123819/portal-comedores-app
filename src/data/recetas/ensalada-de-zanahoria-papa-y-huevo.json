@@ -1,0 +1,49 @@
+{
+  "id": "ensalada-de-zanahoria-papa-y-huevo",
+  "nombre": "Ensalada de zanahoria, papa y huevo",
+  "categoria": "Ensaladas",
+  "raciones_base": 10,
+  "ingredientes": [
+    {
+      "nombre": "Papas",
+      "cantidad": 1.5,
+      "unidad": "kg",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Zanahorias",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Huevos",
+      "cantidad": 6,
+      "unidad": "unidades",
+      "grupo_nutricional": "proteinas"
+    },
+    {
+      "nombre": "Aceite",
+      "cantidad": 4,
+      "unidad": "cucharadas",
+      "grupo_nutricional": "aceites"
+    },
+    {
+      "nombre": "Sal y vinagre",
+      "cantidad": null,
+      "unidad": null
+    }
+  ],
+  "pasos": [
+    "Lavar bien las papas y las zanahorias. Pelar y cortar en cubos.",
+    "Hervir las verduras hasta que estén tiernas. Escurrir y dejar enfriar.",
+    "Hervir los huevos 10 minutos, enfriar, pelar y picar.",
+    "Mezclar todo y condimentar con aceite, sal y vinagre."
+  ],
+  "tiempo": 35,
+  "etiquetas": [
+    "acompañamiento",
+    "verano"
+  ],
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco"
+}

@@ -41,3 +41,9 @@ example
 # generated native folders
 /ios
 /android
+
+# env con secretos
+.env
+
+# muestras reales de la API (aunque estén enmascaradas, no se versionan)
+docs/api/samples/

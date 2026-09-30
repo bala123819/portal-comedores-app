@@ -1,0 +1,180 @@
+{
+  "_nota": "RECETARIO DE EJEMPLO para desarrollo. Reemplazar por los recetarios del Banco de Alimentos y correr `npm run recetas:convertir`. Sin información nutricional: no se inventa.",
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco",
+  "recetas": [
+    {
+      "nombre": "Guiso de lentejas",
+      "categoria": "Guisos",
+      "raciones": 10,
+      "tiempo_minutos": 90,
+      "etiquetas": ["plato principal", "invierno", "legumbres"],
+      "ingredientes": [
+        { "nombre": "Lentejas", "cantidad": 1, "unidad": "kg", "grupo": "proteinas" },
+        { "nombre": "Arroz", "cantidad": 300, "unidad": "g", "grupo": "cereales" },
+        { "nombre": "Papas", "cantidad": 1, "unidad": "kg", "grupo": "frutas_verduras" },
+        { "nombre": "Zanahorias", "cantidad": 3, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Cebolla", "cantidad": 2, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Morrón", "cantidad": 1, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Puré de tomate", "cantidad": 520, "unidad": "g", "grupo": "frutas_verduras" },
+        { "nombre": "Aceite", "cantidad": 3, "unidad": "cucharadas", "grupo": "aceites" },
+        { "nombre": "Sal, pimentón y laurel", "cantidad": null, "unidad": null }
+      ],
+      "pasos": [
+        "Remojar las lentejas la noche anterior. Escurrir.",
+        "Picar la cebolla y el morrón y rehogar en el aceite hasta que estén blandos.",
+        "Agregar las zanahorias en rodajas y las papas en cubos. Revolver.",
+        "Sumar las lentejas, el puré de tomate, el laurel y agua hasta cubrir.",
+        "Cocinar a fuego bajo 40 minutos, revolviendo cada tanto.",
+        "Agregar el arroz y cocinar 15 minutos más. Condimentar y servir."
+      ]
+    },
+    {
+      "nombre": "Arroz con pollo",
+      "categoria": "Platos principales",
+      "raciones": 10,
+      "tiempo_minutos": 60,
+      "etiquetas": ["plato principal", "pollo"],
+      "ingredientes": [
+        { "nombre": "Pollo (pata muslo)", "cantidad": 2.5, "unidad": "kg", "grupo": "proteinas" },
+        { "nombre": "Arroz", "cantidad": 1, "unidad": "kg", "grupo": "cereales" },
+        { "nombre": "Cebolla", "cantidad": 2, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Morrón", "cantidad": 2, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Zanahorias", "cantidad": 2, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Arvejas", "cantidad": 350, "unidad": "g", "grupo": "frutas_verduras" },
+        { "nombre": "Aceite", "cantidad": 4, "unidad": "cucharadas", "grupo": "aceites" },
+        { "nombre": "Sal, cúrcuma o azafrán", "cantidad": null, "unidad": null }
+      ],
+      "pasos": [
+        "Dorar el pollo en una olla grande con el aceite. Retirar.",
+        "En la misma olla rehogar la cebolla, el morrón y la zanahoria picados.",
+        "Volver a poner el pollo, agregar el arroz y revolver 2 minutos.",
+        "Cubrir con el doble de agua que de arroz, condimentar y tapar.",
+        "Cocinar a fuego bajo 20 minutos. Sumar las arvejas al final."
+      ]
+    },
+    {
+      "nombre": "Fideos con salsa de verduras",
+      "categoria": "Pastas",
+      "raciones": 10,
+      "tiempo_minutos": 40,
+      "etiquetas": ["plato principal", "vegetariano", "rápido"],
+      "ingredientes": [
+        { "nombre": "Fideos secos", "cantidad": 1, "unidad": "kg", "grupo": "cereales" },
+        { "nombre": "Puré de tomate", "cantidad": 1, "unidad": "kg", "grupo": "frutas_verduras" },
+        { "nombre": "Zapallitos", "cantidad": 4, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Zanahorias", "cantidad": 3, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Cebolla", "cantidad": 2, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Aceite", "cantidad": 3, "unidad": "cucharadas", "grupo": "aceites" },
+        { "nombre": "Queso rallado", "cantidad": 200, "unidad": "g", "grupo": "lacteos" },
+        { "nombre": "Sal y orégano", "cantidad": null, "unidad": null }
+      ],
+      "pasos": [
+        "Picar la cebolla y rehogar en el aceite.",
+        "Agregar la zanahoria rallada y los zapallitos en cubos. Cocinar 10 minutos.",
+        "Sumar el puré de tomate, condimentar y cocinar 15 minutos a fuego bajo.",
+        "Hervir los fideos en abundante agua con sal. Escurrir.",
+        "Servir los fideos con la salsa y el queso rallado."
+      ]
+    },
+    {
+      "nombre": "Polenta con salsa",
+      "categoria": "Platos principales",
+      "raciones": 10,
+      "tiempo_minutos": 30,
+      "etiquetas": ["plato principal", "rápido", "económico"],
+      "ingredientes": [
+        { "nombre": "Harina de maíz (polenta)", "cantidad": 1, "unidad": "kg", "grupo": "cereales" },
+        { "nombre": "Leche", "cantidad": 1, "unidad": "litros", "grupo": "lacteos" },
+        { "nombre": "Puré de tomate", "cantidad": 1, "unidad": "kg", "grupo": "frutas_verduras" },
+        { "nombre": "Cebolla", "cantidad": 2, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Queso rallado", "cantidad": 200, "unidad": "g", "grupo": "lacteos" },
+        { "nombre": "Aceite", "cantidad": 2, "unidad": "cucharadas", "grupo": "aceites" }
+      ],
+      "pasos": [
+        "Preparar la salsa: rehogar la cebolla en el aceite y sumar el puré de tomate.",
+        "Hervir 3 litros de agua con la leche y sal.",
+        "Agregar la polenta en lluvia, revolviendo sin parar para que no se formen grumos.",
+        "Cocinar lo que indique el paquete, revolviendo.",
+        "Servir con la salsa y el queso rallado."
+      ]
+    },
+    {
+      "nombre": "Ensalada de zanahoria, papa y huevo",
+      "categoria": "Ensaladas",
+      "raciones": 10,
+      "tiempo_minutos": 35,
+      "etiquetas": ["acompañamiento", "verano"],
+      "ingredientes": [
+        { "nombre": "Papas", "cantidad": 1.5, "unidad": "kg", "grupo": "frutas_verduras" },
+        { "nombre": "Zanahorias", "cantidad": 1, "unidad": "kg", "grupo": "frutas_verduras" },
+        { "nombre": "Huevos", "cantidad": 6, "unidad": "unidades", "grupo": "proteinas" },
+        { "nombre": "Aceite", "cantidad": 4, "unidad": "cucharadas", "grupo": "aceites" },
+        { "nombre": "Sal y vinagre", "cantidad": null, "unidad": null }
+      ],
+      "pasos": [
+        "Lavar bien las papas y las zanahorias. Pelar y cortar en cubos.",
+        "Hervir las verduras hasta que estén tiernas. Escurrir y dejar enfriar.",
+        "Hervir los huevos 10 minutos, enfriar, pelar y picar.",
+        "Mezclar todo y condimentar con aceite, sal y vinagre."
+      ]
+    },
+    {
+      "nombre": "Compota de manzana",
+      "categoria": "Postres",
+      "raciones": 10,
+      "tiempo_minutos": 30,
+      "etiquetas": ["postre", "frutas"],
+      "ingredientes": [
+        { "nombre": "Manzanas", "cantidad": 2, "unidad": "kg", "grupo": "frutas_verduras" },
+        { "nombre": "Azúcar", "cantidad": 150, "unidad": "g" },
+        { "nombre": "Canela", "cantidad": null, "unidad": null }
+      ],
+      "pasos": [
+        "Lavar, pelar y cortar las manzanas en cubos.",
+        "Poner en una olla con un vaso de agua, el azúcar y la canela.",
+        "Cocinar a fuego bajo 20 minutos hasta que estén tiernas.",
+        "Servir tibia o fría."
+      ]
+    },
+    {
+      "nombre": "Leche con arroz",
+      "categoria": "Postres",
+      "raciones": 10,
+      "tiempo_minutos": 45,
+      "etiquetas": ["postre", "merienda"],
+      "ingredientes": [
+        { "nombre": "Arroz", "cantidad": 400, "unidad": "g", "grupo": "cereales" },
+        { "nombre": "Leche", "cantidad": 3, "unidad": "litros", "grupo": "lacteos" },
+        { "nombre": "Azúcar", "cantidad": 300, "unidad": "g" },
+        { "nombre": "Canela y cáscara de naranja", "cantidad": null, "unidad": null }
+      ],
+      "pasos": [
+        "Hervir el arroz en agua 5 minutos y escurrir.",
+        "Calentar la leche con la canela y la cáscara de naranja.",
+        "Agregar el arroz y cocinar a fuego bajo 30 minutos, revolviendo.",
+        "Sumar el azúcar al final y cocinar 5 minutos más."
+      ]
+    },
+    {
+      "nombre": "Sopa de verduras",
+      "categoria": "Sopas",
+      "raciones": 10,
+      "tiempo_minutos": 50,
+      "etiquetas": ["entrada", "invierno", "vegetariano"],
+      "ingredientes": [
+        { "nombre": "Papas", "cantidad": 1, "unidad": "kg", "grupo": "frutas_verduras" },
+        { "nombre": "Zanahorias", "cantidad": 4, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Zapallo", "cantidad": 1, "unidad": "kg", "grupo": "frutas_verduras" },
+        { "nombre": "Cebolla", "cantidad": 2, "unidad": "unidades", "grupo": "frutas_verduras" },
+        { "nombre": "Fideos para sopa", "cantidad": 500, "unidad": "g", "grupo": "cereales" },
+        { "nombre": "Sal", "cantidad": null, "unidad": null }
+      ],
+      "pasos": [
+        "Pelar y cortar todas las verduras en cubos chicos.",
+        "Hervir en 5 litros de agua con sal durante 30 minutos.",
+        "Agregar los fideos y cocinar lo que indique el paquete.",
+        "Servir caliente."
+      ]
+    }
+  ]
+}

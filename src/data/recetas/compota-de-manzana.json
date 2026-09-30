@@ -1,0 +1,36 @@
+{
+  "id": "compota-de-manzana",
+  "nombre": "Compota de manzana",
+  "categoria": "Postres",
+  "raciones_base": 10,
+  "ingredientes": [
+    {
+      "nombre": "Manzanas",
+      "cantidad": 2,
+      "unidad": "kg",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Azúcar",
+      "cantidad": 150,
+      "unidad": "g"
+    },
+    {
+      "nombre": "Canela",
+      "cantidad": null,
+      "unidad": null
+    }
+  ],
+  "pasos": [
+    "Lavar, pelar y cortar las manzanas en cubos.",
+    "Poner en una olla con un vaso de agua, el azúcar y la canela.",
+    "Cocinar a fuego bajo 20 minutos hasta que estén tiernas.",
+    "Servir tibia o fría."
+  ],
+  "tiempo": 30,
+  "etiquetas": [
+    "postre",
+    "frutas"
+  ],
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco"
+}

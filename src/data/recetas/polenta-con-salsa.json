@@ -1,0 +1,58 @@
+{
+  "id": "polenta-con-salsa",
+  "nombre": "Polenta con salsa",
+  "categoria": "Platos principales",
+  "raciones_base": 10,
+  "ingredientes": [
+    {
+      "nombre": "Harina de maíz (polenta)",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "cereales"
+    },
+    {
+      "nombre": "Leche",
+      "cantidad": 1,
+      "unidad": "litros",
+      "grupo_nutricional": "lacteos"
+    },
+    {
+      "nombre": "Puré de tomate",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Cebolla",
+      "cantidad": 2,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Queso rallado",
+      "cantidad": 200,
+      "unidad": "g",
+      "grupo_nutricional": "lacteos"
+    },
+    {
+      "nombre": "Aceite",
+      "cantidad": 2,
+      "unidad": "cucharadas",
+      "grupo_nutricional": "aceites"
+    }
+  ],
+  "pasos": [
+    "Preparar la salsa: rehogar la cebolla en el aceite y sumar el puré de tomate.",
+    "Hervir 3 litros de agua con la leche y sal.",
+    "Agregar la polenta en lluvia, revolviendo sin parar para que no se formen grumos.",
+    "Cocinar lo que indique el paquete, revolviendo.",
+    "Servir con la salsa y el queso rallado."
+  ],
+  "tiempo": 30,
+  "etiquetas": [
+    "plato principal",
+    "rápido",
+    "económico"
+  ],
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco"
+}

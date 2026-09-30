@@ -1,0 +1,76 @@
+{
+  "id": "guiso-de-lentejas",
+  "nombre": "Guiso de lentejas",
+  "categoria": "Guisos",
+  "raciones_base": 10,
+  "ingredientes": [
+    {
+      "nombre": "Lentejas",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "proteinas"
+    },
+    {
+      "nombre": "Arroz",
+      "cantidad": 300,
+      "unidad": "g",
+      "grupo_nutricional": "cereales"
+    },
+    {
+      "nombre": "Papas",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Zanahorias",
+      "cantidad": 3,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Cebolla",
+      "cantidad": 2,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Morrón",
+      "cantidad": 1,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Puré de tomate",
+      "cantidad": 520,
+      "unidad": "g",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Aceite",
+      "cantidad": 3,
+      "unidad": "cucharadas",
+      "grupo_nutricional": "aceites"
+    },
+    {
+      "nombre": "Sal, pimentón y laurel",
+      "cantidad": null,
+      "unidad": null
+    }
+  ],
+  "pasos": [
+    "Remojar las lentejas la noche anterior. Escurrir.",
+    "Picar la cebolla y el morrón y rehogar en el aceite hasta que estén blandos.",
+    "Agregar las zanahorias en rodajas y las papas en cubos. Revolver.",
+    "Sumar las lentejas, el puré de tomate, el laurel y agua hasta cubrir.",
+    "Cocinar a fuego bajo 40 minutos, revolviendo cada tanto.",
+    "Agregar el arroz y cocinar 15 minutos más. Condimentar y servir."
+  ],
+  "tiempo": 90,
+  "etiquetas": [
+    "plato principal",
+    "invierno",
+    "legumbres"
+  ],
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco"
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+    <title>Portal Comedores</title>
+    <meta name="description" content="Portal para comedores y organizaciones sociales del Banco de Alimentos." />
+    <meta name="theme-color" content="#3B9B6E" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Comedores" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- Reset recomendado por react-native-web: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+        background-color: #fdfdfc;
+      }
+      body {
+        overflow: hidden;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>Para usar el Portal Comedores tenés que habilitar JavaScript.</noscript>
+    <div id="root"></div>
+    <script>
+      // Service worker de la PWA: app shell offline + avisos Web Push.
+      // No se registra en desarrollo para no cachear bundles de Metro.
+      if ('serviceWorker' in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+      }
+    </script>
+  </body>
+</html>

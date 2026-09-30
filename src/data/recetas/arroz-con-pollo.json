@@ -1,0 +1,68 @@
+{
+  "id": "arroz-con-pollo",
+  "nombre": "Arroz con pollo",
+  "categoria": "Platos principales",
+  "raciones_base": 10,
+  "ingredientes": [
+    {
+      "nombre": "Pollo (pata muslo)",
+      "cantidad": 2.5,
+      "unidad": "kg",
+      "grupo_nutricional": "proteinas"
+    },
+    {
+      "nombre": "Arroz",
+      "cantidad": 1,
+      "unidad": "kg",
+      "grupo_nutricional": "cereales"
+    },
+    {
+      "nombre": "Cebolla",
+      "cantidad": 2,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Morrón",
+      "cantidad": 2,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Zanahorias",
+      "cantidad": 2,
+      "unidad": "unidades",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Arvejas",
+      "cantidad": 350,
+      "unidad": "g",
+      "grupo_nutricional": "frutas_verduras"
+    },
+    {
+      "nombre": "Aceite",
+      "cantidad": 4,
+      "unidad": "cucharadas",
+      "grupo_nutricional": "aceites"
+    },
+    {
+      "nombre": "Sal, cúrcuma o azafrán",
+      "cantidad": null,
+      "unidad": null
+    }
+  ],
+  "pasos": [
+    "Dorar el pollo en una olla grande con el aceite. Retirar.",
+    "En la misma olla rehogar la cebolla, el morrón y la zanahoria picados.",
+    "Volver a poner el pollo, agregar el arroz y revolver 2 minutos.",
+    "Cubrir con el doble de agua que de arroz, condimentar y tapar.",
+    "Cocinar a fuego bajo 20 minutos. Sumar las arvejas al final."
+  ],
+  "tiempo": 60,
+  "etiquetas": [
+    "plato principal",
+    "pollo"
+  ],
+  "fuente": "Ejemplo de desarrollo — reemplazar por el recetario del Banco"
+}

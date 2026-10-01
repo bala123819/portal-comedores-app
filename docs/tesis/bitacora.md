@@ -132,7 +132,7 @@ El equipo del Banco envió 6 posts con la guía de la API para la app de organiz
 
 ---
 
-## (este commit) · docs: documentación de tesis
+## 01d4acf · docs: documentación de tesis (bitácora, arquitectura, problemas y estado)
 - **Fecha:** 2026-10-01 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
 - **Etapa:** Documentación
 

@@ -35,3 +35,6 @@ El Banco mandó la guía de la API de organizaciones (`docs/bda/`). Pasa a ser l
 
 ### D-09 · Smoke test en TypeScript
 `scripts/smoke-test.sh` (del Banco) necesita `jq` y `uuidgen`, que no vienen en Windows. `npm run smoke` hace lo mismo sin dependencias. Reemplaza al `check:api` anterior.
+
+### D-10 · Autenticación de los agentes en dos fases (2026-10-01)
+Fase 1 (recetas y nutrición general): la app no manda el token del usuario, sólo ids de contexto; esos agentes no devuelven datos privados. Fase 2 (datos de la organización): el agente no puede confiar en el `organizationId` del body; se recomienda reenviar el token Bearer del usuario para que el agente consulte la API como ese usuario. Se decide con el equipo de agentes antes de habilitar la fase 2. Contrato en `docs/agentes-contrato.md`.

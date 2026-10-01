@@ -144,3 +144,25 @@ El equipo del Banco envió 6 posts con la guía de la API para la app de organiz
 - Regla en `AGENTS.md` para que toda sesión de desarrollo documente sus commits.
 
 **Verificación.** No aplica (documentación y un script auxiliar).
+
+---
+
+## (este commit) · docs: contrato de agentes y pedido al Banco
+- **Fecha:** 2026-10-01 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Planificación de agentes y coordinación con el Banco
+
+**Objetivo.** Destrabar las dos dependencias externas más grandes de la tesis: los agentes de IA (componente central, sin construir) y los módulos del backend que el Banco todavía no habilitó (mermas y retiros).
+
+**Qué se hizo.**
+- `docs/agentes-contrato.md` (versión 1): endpoints `POST /recipes/suggest`, `/chat` y `/nutrition/ask` con pedidos y respuestas de ejemplo, contexto común, autenticación por fases, regla de acciones propuestas (sólo navegan, el usuario confirma), errores, tiempos, cómo probar.
+- `src/services/agents/http.ts`: timeout de 30 s, header `X-Agents-Contract: 1` y validación con zod de las respuestas (una respuesta fuera de contrato muestra un error legible en vez de romper la pantalla).
+- `docs/comunicaciones/2026-10-01-pedido-al-banco.md`: mensaje al Banco con el estado y los pedidos priorizados (mermas y retiros, recetarios, brief GoDubi y contrato de agentes, número de WhatsApp, push nativo y VAPID, CORS para la PWA, módulos a futuro). Versión final ajustada por el equipo antes de enviar.
+- Hito: el usuario corrió `npm run smoke:samples`; las respuestas reales (login, me, capabilities, organización, estadísticas, familias, demografía, avisos) coinciden con los tipos de la app (sólo sobran `created_at`/`updated_at`, que no se usan).
+
+**Decisiones.** D-10 (autenticación de agentes en dos fases).
+
+**Verificación.** `tsc` y `lint` sin errores. El cliente HTTP de agentes no se probó contra un servicio real (no existe todavía); el agente simulado sigue funcionando igual.
+
+**Pendientes.** Enviar el mensaje al Banco (completar el resultado del smoke test). Definir quién construye los agentes. Prueba de la app con la API real y en celular.
+
+**Archivos principales.** `docs/agentes-contrato.md`, `docs/comunicaciones/2026-10-01-pedido-al-banco.md`, `src/services/agents/http.ts`, `docs/decisiones.md`.

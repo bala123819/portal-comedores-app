@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-**Última actualización:** 2026-10-01 (después del commit 0d00782).
+**Última actualización:** 2026-10-01. Conexión con la API real verificada con `npm run smoke:samples` (formas de respuesta coinciden con la app).
 
 ## Funciona con la API real del Banco
 | Pantalla | Endpoints | Probado contra la API real |
@@ -39,5 +39,5 @@ documentación y ficha social; jornadas y talleres; datos nutricionales de produ
 
 ### Agentes de IA y WhatsApp
 - Construir los agentes (recetas, nutrición, operación) en GoDubi/n8n.
-- Endpoint HTTP para la app y contrato de mensajes.
+- Endpoint HTTP para la app (contrato propuesto en `docs/agentes-contrato.md`, v1).
 - Número de WhatsApp del chatbot. Brief de GoDubi.

@@ -39,3 +39,13 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## Documentación de tesis (obligatorio en cada commit)
+
+Este proyecto es parte de una tesis: **todo lo que se hace queda documentado** en `docs/tesis/`.
+
+- Cada commit tiene su entrada en `docs/tesis/bitacora.md` (plantilla en `docs/tesis/README.md`): objetivo, qué se hizo, decisiones (`D-xx` en `docs/decisiones.md`), problemas (`P-xx` en `docs/tesis/problemas-y-soluciones.md`), verificación y pendientes.
+- Antes de terminar una tarea con commits, correr `npm run bitacora`: debe decir que todos los commits tienen entrada. Si el hash no se conoce antes de commitear, la entrada se completa en un commit `docs(bitacora): …` inmediato (esos commits no requieren entrada propia).
+- Si cambia la arquitectura, actualizar `docs/tesis/arquitectura.md`; al cerrar una etapa, `docs/tesis/estado-actual.md`.
+- La fuente de verdad del backend es `docs/bda/` (guía del Banco de Alimentos). Faltantes y bugs del backend: `docs/api-gaps.md`.
+- Nunca escribir credenciales en la documentación.

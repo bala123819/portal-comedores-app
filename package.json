@@ -72,7 +72,8 @@
     "recetas:convertir": "tsx scripts/convertir-recetas.ts",
     "build:web": "expo export -p web",
     "smoke": "tsx scripts/smoke-test.ts",
-    "smoke:samples": "tsx scripts/smoke-test.ts --samples"
+    "smoke:samples": "tsx scripts/smoke-test.ts --samples",
+    "bitacora": "node scripts/bitacora.mjs"
   },
   "private": true
 }

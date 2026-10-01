@@ -147,7 +147,7 @@ El equipo del Banco envió 6 posts con la guía de la API para la app de organiz
 
 ---
 
-## (este commit) · docs: contrato de agentes y pedido al Banco
+## ca451e7 · docs: contrato de agentes y pedido al Banco
 - **Fecha:** 2026-10-01 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
 - **Etapa:** Planificación de agentes y coordinación con el Banco
 

@@ -28,7 +28,7 @@ export default function SugerirRecetasScreen() {
   const org = useSession((s) => s.organization);
   const [foods, setFoods] = useState<string[]>(params.alimentos ? params.alimentos.split('|').filter(Boolean) : []);
   const [draft, setDraft] = useState('');
-  const [servings, setServings] = useState(org?.service_count ?? 20);
+  const [servings, setServings] = useState(org?.total_beneficiaries || 20);
 
   const suggest = useMutation({
     mutationFn: async () => {

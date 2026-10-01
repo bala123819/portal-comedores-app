@@ -1,4 +1,4 @@
-import { Search, Sparkles } from 'lucide-react-native';
+import { Scale, Search, Sparkles, Users } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { NutritionBars } from '@/components/nutricion/NutritionBars';
@@ -16,7 +16,10 @@ import {
   StatCard,
   Text,
 } from '@/components/ui';
+import { DemographicsSummary } from '@/components/familias/DemographicsSummary';
 import { useSession } from '@/features/auth/store';
+import { useDemographics } from '@/features/familias/hooks';
+import { features } from '@/lib/features';
 import { useNutritionalGroups, useNutritionSummary, useProductSearch } from '@/features/nutricion/hooks';
 import { nutrientRows } from '@/features/nutricion/summary';
 import { formatNumber, toISODate } from '@/lib/format';
@@ -34,8 +37,8 @@ function forbidden(e: unknown) {
   return isApiError(e) && e.kind === 'forbidden';
 }
 
-export default function NutricionScreen() {
-  const org = useSession((s) => s.organization);
+/** Endpoints /nutrition, /nutritional-groups y /unified-products: sólo con el módulo `nutricionApi` */
+function NutritionApiSections() {
   const [range, setRange] = useState<(typeof RANGES)[number]['key']>('1m');
   const [q, setQ] = useState('');
   const months = RANGES.find((r) => r.key === range)!.months;
@@ -46,15 +49,10 @@ export default function NutricionScreen() {
   const groups = useNutritionalGroups();
   const summary = useNutritionSummary(toISODate(from), toISODate(to));
   const products = useProductSearch(q);
-  const quota = org?.nutritional_quota ?? org?.manual_quota ?? null;
   const maxGrams = Math.max(...(groups.data ?? []).map((g) => g.daily_recommended_grams ?? 0), 1);
 
   return (
-    <Screen header={<Header title="Nutrición" subtitle="Qué aporta lo que reciben" back backFallback="/mas" />}>
-      {quota != null ? (
-        <StatCard label="Cuota nutricional asignada" value={formatNumber(quota)} />
-      ) : null}
-
+    <>
       {!forbidden(summary.error) ? (
         <>
           <SectionHeader title="Lo que recibieron" />
@@ -144,6 +142,56 @@ export default function NutricionScreen() {
           <Text tone="muted">No encontramos productos con ese nombre.</Text>
         )
       ) : null}
+
+    </>
+  );
+}
+
+/**
+ * Nutrición con lo que el backend ofrece hoy: la cuota mensual (`monthly_quota_kg` de /org/profile,
+ * que el Banco recalcula con las familias) y las necesidades de las familias (/org/families/demographics).
+ */
+export default function NutricionScreen() {
+  const org = useSession((s) => s.organization);
+  const demographics = useDemographics();
+  const quota = org?.monthly_quota_kg ?? null;
+  const weighted = demographics.data?.weighted_beneficiaries ?? null;
+  // Cálculo propio, aproximado: cuota mensual / 30 días / personas (equivalente en adultos)
+  const perPersonDay = quota && weighted ? (quota * 1000) / 30 / weighted : null;
+
+  return (
+    <Screen header={<Header title="Nutrición" subtitle="Cuota y necesidades de las familias" back backFallback="/mas" />}>
+      <SectionHeader title="Cuota mensual" />
+      <View className="flex-row flex-wrap gap-3">
+        {quota != null ? <StatCard label="Kilos por mes asignados" value={`${formatNumber(quota)} kg`} icon={Scale} /> : null}
+        {org?.total_beneficiaries != null ? (
+          <StatCard label="Personas asistidas" value={formatNumber(org.total_beneficiaries)} icon={Users} />
+        ) : null}
+        {weighted != null ? <StatCard label="Equivalente en adultos" value={formatNumber(weighted)} icon={Users} /> : null}
+      </View>
+      {perPersonDay ? (
+        <Card tone="accent">
+          <Text>
+            Son unos <Text className="font-bold">{formatNumber(perPersonDay, 0)} g por persona por día</Text> (cálculo aproximado:
+            cuota mensual repartida en 30 días entre el equivalente en adultos).
+          </Text>
+        </Card>
+      ) : null}
+      <Text variant="caption">
+        La cuota la calcula el Banco de Alimentos a partir de las familias cargadas: cada persona pesa según su necesidad
+        (un bebé cuenta menos, una embarazada más).
+      </Text>
+
+      {demographics.data ? (
+        <>
+          <SectionHeader title="Necesidades de las familias" />
+          <DemographicsSummary data={demographics.data} />
+        </>
+      ) : demographics.isPending ? (
+        <SkeletonList count={2} />
+      ) : null}
+
+      {features.nutricionApi ? <NutritionApiSections /> : null}
 
       <Button
         title="Preguntarle al asistente nutricional"

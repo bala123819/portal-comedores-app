@@ -10,9 +10,9 @@ export function useOrgProfile() {
   return useQuery({
     queryKey: qk.orgProfile,
     queryFn: async () => {
-      const org = await orgApi.profile();
-      setOrganization(org);
-      return org;
+      const { organization } = await orgApi.profile();
+      setOrganization(organization);
+      return organization;
     },
     meta: { persist: true },
   });
@@ -34,7 +34,10 @@ export function useCapabilities() {
 export function useUpdateAddress() {
   return useAction((body: AddressBody, key) => orgApi.updateAddress(body, key), {
     invalidate: [qk.orgProfile],
-    successMessage: 'Guardamos la dirección',
+    successMessage: (data) =>
+      data?.zone_assigned === false
+        ? 'Guardamos la dirección. El Banco todavía no tiene una zona que cubra ese lugar.'
+        : 'Guardamos la dirección',
     errorToast: false,
   });
 }

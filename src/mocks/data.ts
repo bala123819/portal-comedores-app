@@ -3,7 +3,7 @@
  * Nombres y datos ficticios.
  */
 import type { Assignment, OrganizationContact, Picker } from '@/features/asignaciones/types';
-import type { Family } from '@/features/familias/types';
+import type { Family, FamilyMember } from '@/features/familias/types';
 import type { Merma } from '@/features/mermas/types';
 import type { AppNotification } from '@/features/notificaciones/types';
 import type { NutritionalGroup } from '@/features/nutricion/types';
@@ -21,33 +21,57 @@ const at = (offset: number, hour: string) => `${day(offset)} ${hour}`;
 export const ORG_ID = 'org-0001';
 
 export function createMockDb() {
+  // Formas tomadas de las respuestas reales (docs/bda/02-sesion-perfil-organizacion.md)
   const organization: Organization = {
     id: ORG_ID,
     name: 'Comedor Los Girasoles',
+    legal_name: 'Asociación Civil Los Girasoles',
+    tax_id: '30-00000000-0',
     organization_type: 'comedor',
+    email: 'contacto@girasoles.test',
+    phone: '+54 299 555 0101',
+    total_beneficiaries: 6,
+    services_per_day: 1,
+    monthly_quota_kg: 198,
     status: 'aprobada',
-    address: 'Calle 12 Nº 345, Barrio San Martín',
-    city: 'La Plata',
-    state: 'Buenos Aires',
-    phone: '221 555-0101',
-    contact_person: 'Marta Gómez',
-    service_count: 120,
-    total_beneficiaries: 180,
-    declared_families: 64,
+    pickup_preference: 'pickup',
+    preferred_pickup_days: ['martes', 'jueves'],
+    preferred_pickup_time_start: '09:00:00',
+    preferred_pickup_time_end: '12:00:00',
     has_refrigeration: true,
     has_own_vehicle: false,
+    vehicle_capacity_kg: null,
+    compliance_score: 0,
+    geographic_zone: null,
+    address: {
+      street: 'Calle 12',
+      street_number: '345',
+      neighborhood: 'Barrio San Martín',
+      city: 'Neuquén',
+      state: 'Neuquén',
+      postal_code: '8300',
+      full_address: 'Calle 12 345, Barrio San Martín, Neuquén, Neuquén (8300)',
+      latitude: null,
+      longitude: null,
+    },
   };
 
   const me = {
-    id: 'user-0001',
-    email: 'referente@ejemplo.org',
+    id: 'e2e1ba9d-0000-4000-8000-000000000001',
+    email: 'referente@ejemplo.test',
     first_name: 'Marta',
     last_name: 'Gómez',
-    phone: '221 555-0101',
-    roles: ['organizacion'],
-    permissions: ['org.portal'],
-    organization_id: ORG_ID,
-    tenant: { id: 'tenant-1', name: 'Banco de Alimentos La Plata' },
+    full_name: 'Marta Gómez',
+    phone: '+54 299 555 0101',
+    avatar_url: null,
+    tenant_id: 'b393b130-0000-4000-8000-000000000001',
+    tenant: { id: 'b393b130-0000-4000-8000-000000000001', name: 'Banco de Alimentos (simulado)', timezone: 'America/Argentina/Buenos_Aires' },
+    roles: ['organization_coordinator'],
+    permissions: ['mermas.edit_own'],
+    is_verified: false,
+    is_active: true,
+    last_login_at: new Date().toISOString(),
+    preferences: [] as unknown,
   };
 
   const mermas: Merma[] = [
@@ -223,9 +247,9 @@ export function createMockDb() {
   const pickers: Record<string, Picker[]> = { 'asg-001': [] };
 
   const notifications: AppNotification[] = [
-    { id: 'n-1', type: 'merma_nueva', title: 'Nuevos alimentos disponibles', message: 'Lácteos próximos a vencer — retiro hoy de 14 a 18 h.', read_at: null, created_at: at(0, '08:05'), data: { merma_id: 'merma-002' } },
-    { id: 'n-2', type: 'postulacion_aprobada', title: 'Tu pedido fue aprobado', message: 'Pollo congelado: retiro el ' + day(2) + ' de 8 a 10 h.', read_at: null, created_at: at(-1, '15:00'), data: { assignment_id: 'asg-001' } },
-    { id: 'n-3', type: 'retiro_completado', title: 'Retiro registrado', message: 'Gracias por retirar Tomates y cebollas.', read_at: at(-6, '11:00'), created_at: at(-6, '10:20'), data: { assignment_id: 'asg-000' } },
+    { id: 'a2dd8761-0000-4000-8000-000000000001', type: 'merma_nueva', title: 'Nuevos alimentos disponibles', body: 'Lácteos próximos a vencer — retiro hoy de 14 a 18 h.', data: { merma_id: 'merma-002' }, action_url: '/notifications', is_read: false, read_at: null, created_at: at(0, '08:05') },
+    { id: 'a2dd8761-0000-4000-8000-000000000002', type: 'sistema', title: 'Actualizamos las familias', body: 'La cuota mensual se recalculó con las familias cargadas.', data: {}, action_url: '/notifications', is_read: false, read_at: null, created_at: at(-1, '15:00') },
+    { id: 'a2dd8761-0000-4000-8000-000000000003', type: 'sistema', title: 'Notificación de Prueba', body: '¡Las notificaciones están funcionando correctamente!', data: { test: true }, action_url: '/notifications', is_read: true, read_at: at(-6, '11:00'), created_at: at(-6, '10:20') },
   ];
 
   const nutritionalGroups: NutritionalGroup[] = [
@@ -236,29 +260,74 @@ export function createMockDb() {
     { id: 'ng-5', name: 'Aceites y grasas', code: 'aceites', daily_recommended_grams: 30, color: '#2A6F4F', display_order: 5 },
   ];
 
+  // Formas de /org/families (docs/bda/03-familias-avisos.md). Ids UUID como en la API real.
+  const member = (m: Partial<FamilyMember> & Pick<FamilyMember, 'id' | 'first_name' | 'last_name'>): FamilyMember => ({
+    full_name: `${m.first_name} ${m.last_name}`,
+    document_type: 'dni',
+    is_head_of_household: false,
+    is_pregnant: false,
+    is_nursing_mother: false,
+    is_diabetic: false,
+    is_celiac: false,
+    is_lactose_intolerant: false,
+    has_disability: false,
+    has_special_conditions: false,
+    nutritional_weight: 1,
+    status: 'activo',
+    ...m,
+  });
   const families: Family[] = [
     {
-      id: 'fam-1',
+      id: '85126eb7-1356-4c69-b689-bcc689147c3e',
+      organization_id: ORG_ID,
+      source: 'manual',
+      code: 'FAM-2026-0029',
       name: 'Familia Rodríguez',
+      registration_date: day(-120),
+      phone: '+54 299 555 0301',
+      total_members: 3,
       status: 'activa',
       housing_situation: 'alquilado',
-      registration_date: day(-120),
-      phone: '221 555-0301',
+      family_type: { id: 'ft-1', code: 'familia_funcional', name: 'Composición Familiar', color: '#4CAF50' },
       members: [
-        { id: 'fm-1', first_name: 'Ana', last_name: 'Rodríguez', relationship: 'jefe_hogar', is_head_of_household: true, gender: 'femenino', birth_date: '1988-03-12', employment_level: 'empleado_informal' },
-        { id: 'fm-2', first_name: 'Tomás', last_name: 'Rodríguez', relationship: 'hijo', gender: 'masculino', birth_date: '2016-07-02', is_celiac: true },
-        { id: 'fm-3', first_name: 'Sofía', last_name: 'Rodríguez', relationship: 'hijo', gender: 'femenino', birth_date: '2020-11-20' },
+        member({ id: '68b5e0e8-0000-4000-8000-000000000001', first_name: 'Ana', last_name: 'Rodríguez', document_number: '30111222', birth_date: '1988-03-12', age: 38, age_group: 'adults_18_64', gender: 'femenino', relationship: 'jefe_hogar', is_head_of_household: true }),
+        member({ id: '68b5e0e8-0000-4000-8000-000000000002', first_name: 'Tomás', last_name: 'Rodríguez', birth_date: '2016-07-02', age: 10, age_group: 'children_3_12', gender: 'masculino', relationship: 'hijo', is_celiac: true, has_special_conditions: true, nutritional_weight: 0.8 }),
+        member({ id: '68b5e0e8-0000-4000-8000-000000000003', first_name: 'Sofía', last_name: 'Rodríguez', birth_date: '2025-01-20', age: 1, age_group: 'infants_0_2', gender: 'femenino', relationship: 'hijo', nutritional_weight: 0.5 }),
       ],
+      head_of_household: { id: '68b5e0e8-0000-4000-8000-000000000001', full_name: 'Ana Rodríguez', document_number: '30111222' },
     },
     {
-      id: 'fam-2',
+      id: '87809bec-3a09-4245-aaed-1e840f530848',
+      organization_id: ORG_ID,
+      source: 'manual',
+      code: 'FAM-2026-0030',
       name: 'Familia Benítez',
+      registration_date: day(-60),
+      total_members: 2,
       status: 'activa',
       housing_situation: 'propietario',
-      registration_date: day(-60),
+      family_type: { id: 'ft-2', code: 'madre_sola_con_hijos', name: 'Madre sola con hijos', color: '#E91E63' },
       members: [
-        { id: 'fm-4', first_name: 'Jorge', last_name: 'Benítez', relationship: 'jefe_hogar', is_head_of_household: true, gender: 'masculino', birth_date: '1955-01-30', employment_level: 'jubilado_pensionado', is_diabetic: true },
+        member({ id: '2555c237-0000-4000-8000-000000000001', first_name: 'Carla', last_name: 'Benítez', birth_date: '1990-11-22', age: 35, age_group: 'adults_18_64', gender: 'femenino', relationship: 'jefe_hogar', is_head_of_household: true, is_pregnant: true, has_special_conditions: true, nutritional_weight: 1.3 }),
+        member({ id: '2555c237-0000-4000-8000-000000000002', first_name: 'Lucas', last_name: 'Benítez', birth_date: '2010-05-10', age: 16, age_group: 'teens_13_17', gender: 'masculino', relationship: 'hijo' }),
       ],
+      head_of_household: { id: '2555c237-0000-4000-8000-000000000001', full_name: 'Carla Benítez', document_number: null },
+    },
+    {
+      id: 'c3a1b2d4-0000-4000-8000-000000000003',
+      organization_id: ORG_ID,
+      source: 'manual',
+      code: 'FAM-2026-0031',
+      name: 'Jorge Paz',
+      registration_date: day(-30),
+      total_members: 1,
+      status: 'activa',
+      housing_situation: 'prestado',
+      family_type: { id: 'ft-3', code: 'adultos_mayores', name: 'Adultos mayores (65+)', color: '#795548' },
+      members: [
+        member({ id: 'd4e5f6a7-0000-4000-8000-000000000001', first_name: 'Jorge', last_name: 'Paz', birth_date: '1955-01-30', age: 71, age_group: 'seniors_65_plus', gender: 'masculino', relationship: 'jefe_hogar', is_head_of_household: true, is_diabetic: true, has_special_conditions: true }),
+      ],
+      head_of_household: { id: 'd4e5f6a7-0000-4000-8000-000000000001', full_name: 'Jorge Paz', document_number: null },
     },
   ];
 

@@ -1,4 +1,7 @@
-/** Campos de `POST/PUT /organizations` + estado del listado */
+/**
+ * Tipos de la organización según las respuestas REALES de `GET /org/profile`
+ * (docs/bda/02-sesion-perfil-organizacion.md).
+ */
 export type OrganizationStatus = 'pendiente' | 'verificada' | 'aprobada' | 'suspendida' | 'inactiva';
 
 export interface OrganizationAddress {
@@ -10,8 +13,9 @@ export interface OrganizationAddress {
   postal_code?: string | null;
   country?: string | null;
   full_address?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
+  /** En `/org/profile` vienen como número o null; en la respuesta de `PUT /org/address`, como string */
+  latitude?: number | string | null;
+  longitude?: number | string | null;
 }
 
 export interface Organization {
@@ -20,35 +24,46 @@ export interface Organization {
   legal_name?: string | null;
   tax_id?: string | null;
   organization_type?: string | null;
-  status?: OrganizationStatus | string | null;
-  address?: string | OrganizationAddress | null;
-  city?: string | null;
-  state?: string | null;
-  phone?: string | null;
   email?: string | null;
-  contact_person?: string | null;
-  contact_phone?: string | null;
-  service_count?: number | null;
-  description?: string | null;
+  phone?: string | null;
+  /** Se recalcula solo a partir de las familias cargadas */
   total_beneficiaries?: number | null;
-  declared_families?: number | null;
-  has_refrigeration?: boolean | null;
-  has_own_vehicle?: boolean | null;
-  vehicle_capacity_kg?: number | null;
+  services_per_day?: number | null;
+  /** Cuota mensual en kg; se recalcula sola a partir de las familias */
+  monthly_quota_kg?: number | null;
+  status?: OrganizationStatus | string | null;
   pickup_preference?: string | null;
   preferred_pickup_days?: string[] | null;
   preferred_pickup_time_start?: string | null;
   preferred_pickup_time_end?: string | null;
-  /** Cuota nutricional (`PUT /organizations/{id}/quota`) — si el perfil la expone */
-  manual_quota?: number | null;
-  nutritional_quota?: number | null;
+  has_refrigeration?: boolean | null;
+  has_own_vehicle?: boolean | null;
+  vehicle_capacity_kg?: number | null;
+  compliance_score?: number | null;
+  geographic_zone?: { id?: string; name?: string } | string | null;
+  address?: OrganizationAddress | null;
 }
 
-/**
- * `GET /org/stats`: forma sin documentar. Se muestran los campos numéricos que vengan,
- * con etiquetas para los conocidos (ver `lib/labels.ts` → statLabels).
- */
-export type OrgStats = Record<string, unknown>;
+/** `GET /org/profile` → `{ organization, user }` */
+export interface OrgProfileResponse {
+  organization: Organization;
+  user?: { id: string; full_name?: string; email?: string };
+}
+
+/** `GET /org/stats`. Hoy sólo `impacto` es útil; el resto cuenta mermas (viene en cero). */
+export interface OrgStats {
+  postulaciones?: { total: number; pendientes: number; aprobadas: number; rechazadas: number };
+  asignaciones?: { total: number; pendientes: number; completadas: number; canceladas: number; este_mes: number };
+  impacto?: { total_kg_recibidos: number; total_distribuciones: number };
+  disponibilidad?: { mermas_disponibles: number };
+}
+
+/** Respuesta de `PUT /org/address` */
+export interface UpdateAddressResponse {
+  address: OrganizationAddress;
+  geographic_zone: unknown;
+  zone_assigned: boolean;
+}
 
 export interface SocialData {
   organization_fields?: {

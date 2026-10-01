@@ -254,3 +254,41 @@ export const statLabels: Record<string, string> = {
   no_show: 'Ausencias',
   year: 'Año',
 };
+
+export const ageGroupLabels: Record<string, string> = {
+  infants_0_2: 'Bebés (0 a 2 años)',
+  children_3_12: 'Niñas y niños (3 a 12)',
+  teens_13_17: 'Adolescentes (13 a 17)',
+  adults_18_64: 'Adultos (18 a 64)',
+  seniors_65_plus: 'Personas mayores (65 o más)',
+};
+
+export const specialConditionLabels: Record<string, string> = {
+  pregnant_women: 'Embarazadas',
+  nursing_mothers: 'Madres que amamantan',
+  diabetics: 'Personas con diabetes',
+  celiacs: 'Personas celíacas',
+  lactose_intolerant: 'Intolerantes a la lactosa',
+  disabled: 'Personas con discapacidad',
+};
+
+export const roleLabels: Record<string, string> = {
+  organization_coordinator: 'Coordinación de la organización',
+};
+
+export const pickupDayLabels: Record<string, string> = {
+  lunes: 'Lunes',
+  martes: 'Martes',
+  miercoles: 'Miércoles',
+  miércoles: 'Miércoles',
+  jueves: 'Jueves',
+  viernes: 'Viernes',
+  sabado: 'Sábado',
+  sábado: 'Sábado',
+  domingo: 'Domingo',
+};
+
+export const pickupPreferenceLabels: Record<string, string> = {
+  pickup: 'Retiran ustedes',
+  delivery: 'Se lo llevan',
+};

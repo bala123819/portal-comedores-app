@@ -55,7 +55,8 @@ export async function enablePush(): Promise<PushStatus> {
     {
       endpoint: sub.endpoint,
       keys: { p256dh: toBase64Url(sub.getKey('p256dh')), auth: toBase64Url(sub.getKey('auth')) },
-      device_type: 'web',
+      // El backend acepta desktop | mobile | tablet (docs/bda 5/6)
+      device_type: /Mobi|Android|iPhone/.test(navigator.userAgent) ? 'mobile' : /iPad|Tablet/.test(navigator.userAgent) ? 'tablet' : 'desktop',
       browser: navigator.userAgent.includes('Chrome') ? 'chrome' : navigator.userAgent.includes('Firefox') ? 'firefox' : 'otro',
       os: navigator.userAgent.includes('Android') ? 'Android' : navigator.userAgent.includes('iPhone') ? 'iOS' : 'otro',
     },

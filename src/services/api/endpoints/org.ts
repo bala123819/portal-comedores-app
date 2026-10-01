@@ -1,9 +1,10 @@
 import type { Assignment } from '@/features/asignaciones/types';
-import type { Demographics, Family } from '@/features/familias/types';
+import type { Demographics, FamiliesFilter, Family } from '@/features/familias/types';
 import type { AvailableMermasFilters, Merma } from '@/features/mermas/types';
-import type { Organization, OrgStats } from '@/features/org/types';
+import type { OrgProfileResponse, OrgStats, UpdateAddressResponse } from '@/features/org/types';
 import type { Application } from '@/features/postulaciones/types';
-import { api } from '../client';
+import { api, isUuid } from '../client';
+import { ApiError } from '../errors';
 import type { BodyOf } from '../types';
 
 export type CreateApplicationBody = BodyOf<'/api/org/applications', 'post'>;
@@ -15,9 +16,11 @@ const id = (v: string) => encodeURIComponent(v);
 
 /** Portal Organización: el tenant y la organización los resuelve el backend por el usuario. */
 export const orgApi = {
-  profile: () => api.get<Organization>('/org/profile'),
+  /** Devuelve `{ organization, user }` */
+  profile: () => api.get<OrgProfileResponse>('/org/profile'),
   stats: () => api.get<OrgStats>('/org/stats'),
-  updateAddress: (body: AddressBody, key: string) => api.put<unknown>('/org/address', body, key),
+  updateAddress: (body: AddressBody, key: string) =>
+    api.put<UpdateAddressResponse>('/org/address', body, key),
 
   availableMermas: (page: number, perPage: number, f: AvailableMermasFilters = {}) =>
     api.getPage<Merma>('/org/mermas/available', {
@@ -52,8 +55,20 @@ export const orgApi = {
   cancelAssignment: (assignmentId: string, body: CancelAssignmentBody, key: string) =>
     api.post<Assignment>(`/org/assignments/${id(assignmentId)}/cancel`, body, key),
 
-  families: (page: number, perPage: number) =>
-    api.getPage<Family>('/org/families', { page, per_page: perPage }),
+  families: (page: number, perPage: number, f: FamiliesFilter = {}) =>
+    api.getPage<Family>('/org/families', {
+      page,
+      per_page: perPage,
+      search: f.search?.trim() || undefined,
+      status: f.status,
+      source: f.source,
+    }),
   demographics: () => api.get<Demographics>('/org/families/demographics'),
-  family: (familyId: string) => api.get<Family>(`/org/families/${id(familyId)}`),
+  family: (familyId: string) => {
+    // Un id no UUID da 500 en el servidor: se corta antes como "no encontrado".
+    if (!isUuid(familyId)) {
+      return Promise.reject(new ApiError({ kind: 'not_found', status: 404 }));
+    }
+    return api.get<Family>(`/org/families/${id(familyId)}`);
+  },
 };

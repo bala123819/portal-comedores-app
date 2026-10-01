@@ -3,7 +3,8 @@ import type { BodyOf } from '../types';
 
 export type LoginBody = BodyOf<'/api/auth/login', 'post'>;
 export type ProfileBody = BodyOf<'/api/auth/profile', 'put'>;
-export type PasswordBody = BodyOf<'/api/auth/password', 'put'>;
+/** El OpenAPI no lista `new_password_confirmation`, pero el servidor la exige (docs/bda 2/6). */
+export type PasswordBody = BodyOf<'/api/auth/password', 'put'> & { new_password_confirmation: string };
 
 export const authApi = {
   /** Rate limit 10/min. Sin Authorization. */

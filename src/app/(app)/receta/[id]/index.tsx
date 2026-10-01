@@ -25,7 +25,8 @@ import { colors } from '@/theme/tokens';
 export default function RecetaScreen() {
   const { id, personas: personasParam } = useLocalSearchParams<{ id: string; personas?: string }>();
   const q = useReceta(id);
-  const serviceCount = useSession((s) => s.organization?.service_count ?? null);
+  // Personas asistidas (el Banco lo recalcula con las familias cargadas)
+  const serviceCount = useSession((s) => s.organization?.total_beneficiaries ?? null);
   const r = q.data;
   const [personas, setPersonas] = useState<number | null>(personasParam ? Number(personasParam) : null);
 
@@ -73,7 +74,7 @@ export default function RecetaScreen() {
         <View className="flex-row flex-wrap gap-2">
           <Chip label={`Receta original (${r.raciones_base})`} selected={n === r.raciones_base} onPress={() => setPersonas(r.raciones_base)} />
           {serviceCount && serviceCount !== r.raciones_base ? (
-            <Chip label={`Mis raciones (${serviceCount})`} selected={n === serviceCount} onPress={() => setPersonas(serviceCount)} />
+            <Chip label={`Mis personas (${serviceCount})`} selected={n === serviceCount} onPress={() => setPersonas(serviceCount)} />
           ) : null}
         </View>
         {factor !== 1 ? (

@@ -3,10 +3,14 @@ import { MutationCache, QueryCache, QueryClient, type Query } from '@tanstack/re
 import { isApiError } from './api/errors';
 import { storage, STORAGE_KEYS } from './storage';
 
+/**
+ * El cliente HTTP ya reintenta cada GET hasta 2 veces ante 500/429/red (docs/bda 4/6).
+ * Acá sólo se agrega un reintento más, espaciado, para cortes de red; nunca en ráfaga
+ * (el servidor corta a 60 pedidos/min y responde 500).
+ */
 function shouldRetry(failureCount: number, error: unknown): boolean {
-  if (!isApiError(error)) return failureCount < 2;
-  if (error.kind === 'rate_limit') return failureCount < 1;
-  return error.isTransient && failureCount < 2;
+  if (!isApiError(error)) return failureCount < 1;
+  return (error.kind === 'network' || error.kind === 'timeout') && failureCount < 1;
 }
 
 function retryDelay(attempt: number, error: unknown): number {

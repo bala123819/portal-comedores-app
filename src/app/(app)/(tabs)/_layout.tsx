@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
-import { ChefHat, House, Menu, ShoppingBasket, Truck } from 'lucide-react-native';
+import { ChefHat, House, Menu, ShoppingBasket, Truck, Users } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { features } from '@/lib/features';
 import { colors } from '@/theme/tokens';
 
 export default function TabsLayout() {
@@ -27,16 +28,29 @@ export default function TabsLayout() {
         name="index"
         options={{ title: 'Inicio', tabBarIcon: ({ color }) => <House size={24} color={color} /> }}
       />
+      {/* Mermas/retiros: sólo si el backend los habilita (hoy no, ver docs/bda 1/6 §6). `href: null` oculta la pestaña. */}
       <Tabs.Screen
         name="disponibles"
         options={{
+          href: features.mermas ? undefined : null,
           title: 'Disponibles',
           tabBarIcon: ({ color }) => <ShoppingBasket size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="retiros"
-        options={{ title: 'Mis retiros', tabBarIcon: ({ color }) => <Truck size={24} color={color} /> }}
+        options={{
+          href: features.mermas ? undefined : null,
+          title: 'Mis retiros', tabBarIcon: ({ color }) => <Truck size={24} color={color} /> }}
+      />
+      {/* Con mermas activas, Familias pasa al menú "Más" para no superar 5 pestañas */}
+      <Tabs.Screen
+        name="familias"
+        options={{
+          href: features.mermas ? null : undefined,
+          title: 'Familias',
+          tabBarIcon: ({ color }) => <Users size={24} color={color} />,
+        }}
       />
       <Tabs.Screen
         name="recetas"

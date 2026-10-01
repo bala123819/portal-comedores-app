@@ -36,7 +36,12 @@ export default function LoginScreen() {
     try {
       await signIn(email.trim(), password);
     } catch (e) {
-      if (isApiError(e) && e.kind === 'unauthorized') {
+      // Clave incorrecta: el servidor responde 422 con el mensaje en `errors.email` (docs/bda 2/6).
+      const credentials =
+        isApiError(e) &&
+        (e.kind === 'unauthorized' ||
+          (e.kind === 'validation' && /credencial/i.test(e.fieldErrors?.email?.[0] ?? '')));
+      if (credentials) {
         setFormError('El email o la contraseña no son correctos.');
       } else if (!applyFieldErrors(e, setError)) {
         setFormError(humanMessage(e));

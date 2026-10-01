@@ -23,7 +23,9 @@ const INITIAL: Step[] = [
   { key: 'login', title: '2. Sesión (login de prueba o token actual)', status: 'idle' },
   { key: 'me', title: '3. GET /auth/me con Bearer', status: 'idle' },
   { key: 'capabilities', title: '4. GET /capabilities con Bearer', status: 'idle' },
-  { key: 'org', title: '5. GET /org/mermas/available?per_page=1', status: 'idle' },
+  { key: 'org', title: '5. GET /org/profile', status: 'idle' },
+  { key: 'families', title: '6. GET /org/families?per_page=1 (data + meta)', status: 'idle' },
+  { key: 'notif', title: '7. GET /notifications?per_page=1 (paginación anidada)', status: 'idle' },
 ];
 
 const icons = { idle: CircleDashed, running: Loader, ok: CheckCircle2, fail: XCircle };
@@ -85,9 +87,19 @@ export default function DiagnosticoScreen() {
           return { detail: 'Módulos y acciones habilitados', sample: maskPersonalData(r.data) };
         });
         await step('org', async () => {
-          const r = await request<unknown[]>('GET', '/org/mermas/available', { query: { per_page: 1 } });
+          const r = await request<{ organization?: { id?: string; name?: string } }>('GET', '/org/profile');
+          if (!r.data.organization?.id) throw new Error('La respuesta no trae organization.id');
+          return { detail: `Organización: ${r.data.organization.name ?? '?'}`, sample: maskPersonalData(r.data) };
+        });
+        await step('families', async () => {
+          const r = await request<unknown[]>('GET', '/org/families', { query: { per_page: 1 } });
           if (!r.meta) throw new Error('La respuesta no trae meta');
           return { detail: `data: ${Array.isArray(r.data) ? r.data.length : '?'} ítems · meta.total: ${r.meta.total}`, sample: maskPersonalData(r) };
+        });
+        await step('notif', async () => {
+          const r = await request<{ data?: unknown[]; meta?: { total?: number } }>('GET', '/notifications', { query: { per_page: 1 } });
+          if (!Array.isArray(r.data.data)) throw new Error('Se esperaba { data: { data: [...], meta } }');
+          return { detail: `avisos: ${r.data.meta?.total ?? '?'}`, sample: maskPersonalData(r.data) };
         });
       }
     } finally {

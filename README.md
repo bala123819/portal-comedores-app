@@ -1,56 +1,92 @@
-# Welcome to your Expo app 👋
+# Portal Comedores
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App para comedores y organizaciones sociales del **Banco de Alimentos**, sobre la **API Mermab**.
+Android, iOS y web (PWA) desde una sola base de código: Expo SDK 57 + Expo Router + TypeScript.
 
-## Get started
+> Fuente de verdad del backend: **`docs/bda/`** (guía del Banco, probada contra el servidor).
 
-1. Install dependencies
+## Qué hace hoy (con la API real)
 
-   ```bash
-   npm install
-   ```
+| Pantalla | Endpoints |
+|---|---|
+| Ingreso y sesión | `/auth/login`, `/auth/me`, `/auth/refresh`, `/auth/logout` |
+| Inicio | `/org/profile`, `/org/stats` (impacto), `/org/families/demographics`, `/notifications/unread-count` |
+| Familias (lectura) | `/org/families` (búsqueda y filtro por estado), `/org/families/{id}`, `/org/families/demographics` |
+| Mi organización | `/org/profile`, `PUT /org/address` (con ubicación del dispositivo) |
+| Nutrición | cuota mensual (`monthly_quota_kg`) y necesidades de las familias |
+| Avisos | `/notifications*` (leer, marcar, borrar, aviso de prueba) |
+| Perfil y clave | `PUT /auth/profile`, `PUT /auth/password` |
+| Recetario | local (`src/data/recetas`), con escalado por cantidad de personas y modo cocina |
+| Asistente y WhatsApp | interfaz de agentes (simulada hasta tener endpoint) y `wa.me` |
 
-2. Start the app
+**Apagado hasta que el Banco lo habilite** (pantallas hechas, ver `docs/api-gaps.md` G-13): mermas y
+retiros, alta de familias, contactos, documentación, jornadas/talleres y endpoints de nutrición.
+Se activan sin tocar código con `EXPO_PUBLIC_ENABLE_MODULES` (ver `src/lib/features.ts`).
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Instalación
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env      # y completar
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Variables (`.env`, nunca se versiona):
 
-### Other setup steps
+| Variable | Para qué |
+|---|---|
+| `EXPO_PUBLIC_API_URL` | `https://cloud.mermab.com/api` |
+| `EXPO_PUBLIC_USE_MOCKS` | `true` = datos simulados (no toca el servidor) |
+| `EXPO_PUBLIC_MODULES_SCOPE` | con mocks: `real` muestra sólo lo que existe hoy; vacío = todo (prototipo) |
+| `EXPO_PUBLIC_ENABLE_MODULES` | forzar módulos: `mermas,familiasAlta,contactos,documentacion,programas,nutricionApi` |
+| `EXPO_PUBLIC_WHATSAPP_NUMBER` | número del chatbot (sin `+`) |
+| `EXPO_PUBLIC_AGENTS_URL` | endpoint de agentes (n8n/GoDubi); vacío = simulado |
+| `EXPO_PUBLIC_VAPID_PUBLIC_KEY` | clave pública Web Push (si el Banco la da) |
+| `CHECK_API_EMAIL` / `CHECK_API_PASSWORD` | sólo para `npm run smoke`; no entran al bundle |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+`.env.local` tiene prioridad sobre `.env`: si existe con `EXPO_PUBLIC_USE_MOCKS=true`, la app usa
+datos simulados. **Para usar la API real, borrá `.env.local`.**
 
-## Learn more
+## Correr
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm run web       # navegador en http://localhost:3000 (el único puerto que acepta el CORS de la API)
+npm run android   # Expo Go / emulador
+npm run ios
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+> La API real es **producción compartida**: nada de pruebas de carga ni loops. Límite: 60 pedidos/min
+> (login 10/min). Usar sólo el usuario de prueba que dio el Banco.
 
-## Join the community
+## Scripts
 
-Join our community of developers creating universal apps.
+| Script | Qué hace |
+|---|---|
+| `npm run smoke` | Verifica la API real (equivalente a `scripts/smoke-test.sh` del Banco, sin jq). Esperado: `21 PASS, 0 FAIL` |
+| `npm run smoke:samples` | Igual, y guarda respuestas enmascaradas en `docs/api/samples/` (no se versionan) |
+| `npm run gen:api` | Regenera `src/services/api/schema.d.ts` desde el OpenAPI (corrige operationId duplicados) |
+| `npm run recetas:convertir` | Convierte `docs/recetarios/*.json|csv` → `src/data/recetas/` |
+| `npm run typecheck` / `npm run lint` | Calidad |
+| `npm run build:web` | Exporta la PWA a `dist/` |
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Estructura
+
+```
+src/
+  app/            rutas (Expo Router): (auth), (app)/(tabs), (app)/…, dev/
+  components/ui/  librería propia (tokens, esquinas redondeadas, 4 estados)
+  components/…    componentes por dominio
+  features/       hooks de React Query, tipos y lógica por módulo
+  services/api/   cliente HTTP, endpoints, errores, idempotencia, schema generado
+  services/agents interfaz de agentes (mock / HTTP)
+  lib/            labels, estados, formatos, módulos (features.ts), recetas
+  mocks/          API simulada con las formas reales
+  data/recetas/   recetario (generado)
+docs/
+  bda/            guía del Banco (fuente de verdad)
+  api/            OpenAPI, Postman, llms.txt
+  00-inventario.md, api-gaps.md, decisiones.md, mapa-pantallas.md
+scripts/          smoke test, gen-api, convertir-recetas
+```
+
+## Pantallas de desarrollo
+En modo desarrollo, "Más" muestra **Diagnóstico de la API** (checklist de conexión) y **Componentes (UI)**.

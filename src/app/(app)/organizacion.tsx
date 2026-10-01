@@ -1,6 +1,24 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Location from 'expo-location';
-import { Building2, LocateFixed, MapPin, Pencil, Phone, ShieldCheck, ShieldOff, UserPlus, Users } from 'lucide-react-native';
+import {
+  Building2,
+  CalendarDays,
+  Car,
+  Clock,
+  LocateFixed,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Scale,
+  ShieldCheck,
+  ShieldOff,
+  Snowflake,
+  Truck,
+  UserPlus,
+  Users,
+  Utensils,
+} from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { View } from 'react-native';
@@ -31,16 +49,30 @@ import {
 import type { OrganizationContact } from '@/features/asignaciones/types';
 import { useOrgProfile, useUpdateAddress } from '@/features/org/hooks';
 import type { Organization } from '@/features/org/types';
-import { formatDate, formatNumber } from '@/lib/format';
-import { label, organizationStatusLabels, organizationTypeLabels, pickupScopeLabels } from '@/lib/labels';
+import { features } from '@/lib/features';
+import { formatDate, formatNumber, formatTimeRange } from '@/lib/format';
+import {
+  label,
+  organizationStatusLabels,
+  organizationTypeLabels,
+  pickupDayLabels,
+  pickupPreferenceLabels,
+  pickupScopeLabels,
+} from '@/lib/labels';
 import { humanMessage } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 
 function addressText(o: Organization): string | null {
-  if (typeof o.address === 'string') return [o.address, o.city, o.state].filter(Boolean).join(', ');
   const a = o.address;
-  if (!a) return [o.city, o.state].filter(Boolean).join(', ') || null;
-  return a.full_address || [[a.street, a.street_number].filter(Boolean).join(' '), a.neighborhood, a.city, a.state].filter(Boolean).join(', ');
+  if (!a) return null;
+  return a.full_address || [[a.street, a.street_number].filter(Boolean).join(' '), a.neighborhood, a.city, a.state].filter(Boolean).join(', ') || null;
+}
+
+/** La API manda las coordenadas como número o como string ("-38.95160000") */
+function toCoord(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined || v === '') return null;
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
 /** Campos de `PUT /org/address`: street*, city*, state*, latitude*, longitude* (+ opcionales) */
@@ -56,9 +88,11 @@ type AddressValues = z.infer<typeof addressSchema>;
 
 function AddressSheet({ org, visible, onClose }: { org: Organization; visible: boolean; onClose: () => void }) {
   const update = useUpdateAddress();
-  const a = typeof org.address === 'object' && org.address ? org.address : null;
+  const a = org.address ?? null;
+  const lat0 = toCoord(a?.latitude);
+  const lng0 = toCoord(a?.longitude);
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(
-    a?.latitude != null && a?.longitude != null ? { latitude: a.latitude, longitude: a.longitude } : null,
+    lat0 !== null && lng0 !== null ? { latitude: lat0, longitude: lng0 } : null,
   );
   const [locating, setLocating] = useState(false);
   const { control, handleSubmit, setError, formState: { errors } } = useForm<AddressValues>({
@@ -67,8 +101,8 @@ function AddressSheet({ org, visible, onClose }: { org: Organization; visible: b
       street: a?.street ?? '',
       street_number: a?.street_number ?? '',
       neighborhood: a?.neighborhood ?? '',
-      city: a?.city ?? org.city ?? '',
-      state: a?.state ?? org.state ?? '',
+      city: a?.city ?? '',
+      state: a?.state ?? '',
       postal_code: a?.postal_code ?? '',
     },
   });
@@ -232,7 +266,8 @@ function NewContactSheet({ orgId, visible, onClose }: { orgId: string; visible: 
 export default function OrganizacionScreen() {
   const profile = useOrgProfile();
   const org = profile.data;
-  const contacts = useContacts(org?.id ?? null);
+  // Contactos y autorizaciones: el backend no los ofrece hoy (docs/bda 1/6 §6) → no se llaman.
+  const contacts = useContacts(features.contactos ? (org?.id ?? null) : null);
   const [editAddress, setEditAddress] = useState(false);
   const [newContact, setNewContact] = useState(false);
   const [selected, setSelected] = useState<OrganizationContact | null>(null);
@@ -245,47 +280,80 @@ export default function OrganizacionScreen() {
     );
   }
 
+  const pickupDays = (org.preferred_pickup_days ?? []).map((d) => label(pickupDayLabels, d)).join(', ');
+  const pickupHours = formatTimeRange(org.preferred_pickup_time_start, org.preferred_pickup_time_end);
+  const yesNo = (v?: boolean | null) => (v == null ? null : v ? 'Sí' : 'No');
+
   return (
-    <Screen header={<Header title="Mi organización" back backFallback="/mas" />} refreshing={profile.isRefetching} onRefresh={() => { void profile.refetch(); void contacts.refetch(); }}>
+    <Screen
+      header={<Header title="Mi organización" back backFallback="/mas" />}
+      refreshing={profile.isRefetching}
+      onRefresh={() => {
+        void profile.refetch();
+        if (features.contactos) void contacts.refetch();
+      }}
+    >
       <Card className="gap-4">
         <View className="gap-1">
           <Text variant="title">{org.name}</Text>
-          <View className="flex-row flex-wrap gap-2">
+          {org.legal_name && org.legal_name !== org.name ? <Text variant="caption">{org.legal_name}</Text> : null}
+          <View className="flex-row flex-wrap gap-2 pt-1">
             {org.organization_type ? <Badge label={label(organizationTypeLabels, org.organization_type)} tone="accent" icon={Building2} /> : null}
             {org.status ? <Badge label={label(organizationStatusLabels, org.status)} tone={org.status === 'aprobada' ? 'success' : 'warning'} /> : null}
           </View>
         </View>
         <InfoRow icon={MapPin} label="Dirección" value={addressText(org)} />
         <InfoRow icon={Phone} label="Teléfono" value={org.phone} />
-        <InfoRow icon={Users} label="Personas asistidas" value={org.total_beneficiaries != null ? formatNumber(org.total_beneficiaries) : null} />
-        <InfoRow icon={Users} label="Familias declaradas" value={org.declared_families != null ? formatNumber(org.declared_families) : null} />
-        <InfoRow icon={Users} label="Raciones por servicio" value={org.service_count != null ? formatNumber(org.service_count) : null} />
+        <InfoRow icon={Mail} label="Email" value={org.email} />
         <Button title="Actualizar dirección" icon={Pencil} variant="outline" size="sm" className="self-start" onPress={() => setEditAddress(true)} />
+        <Text variant="caption">Para cambiar el teléfono o el email, comunicate con el Banco de Alimentos.</Text>
       </Card>
 
-      <SectionHeader title="Contactos y quién puede retirar" />
-      {contacts.isPending ? (
-        <SkeletonList count={2} />
-      ) : contacts.isError ? (
-        <ErrorState error={contacts.error} onRetry={() => contacts.refetch()} />
-      ) : (
-        <View className="gap-2">
-          {(contacts.data ?? []).map((c) => (
-            <Card key={c.id} onPress={() => setSelected(c)} className="gap-1">
-              <View className="flex-row items-center gap-2">
-                <Text variant="label" className="flex-1">{c.name}</Text>
-                {c.is_primary ? <Badge label="Referente principal" tone="accent" size="sm" /> : null}
-              </View>
-              <Text variant="caption">{[c.position, c.dni ? `DNI ${c.dni}` : 'Sin DNI', c.phone].filter(Boolean).join(' · ')}</Text>
-            </Card>
-          ))}
-          <Button title="Agregar contacto" icon={UserPlus} variant="outline" onPress={() => setNewContact(true)} />
-        </View>
-      )}
+      <SectionHeader title="Personas y cuota" />
+      <Card className="gap-4">
+        <InfoRow icon={Users} label="Personas asistidas" value={org.total_beneficiaries != null ? formatNumber(org.total_beneficiaries) : null} />
+        <InfoRow icon={Utensils} label="Servicios por día" value={org.services_per_day != null ? formatNumber(org.services_per_day) : null} />
+        <InfoRow icon={Scale} label="Cuota mensual" value={org.monthly_quota_kg != null ? `${formatNumber(org.monthly_quota_kg)} kg` : null} />
+        <Text variant="caption">Las personas asistidas y la cuota se calculan solas a partir de las familias cargadas.</Text>
+      </Card>
+
+      <SectionHeader title="Retiro de alimentos" />
+      <Card className="gap-4">
+        <InfoRow icon={Truck} label="Modalidad" value={org.pickup_preference ? label(pickupPreferenceLabels, org.pickup_preference) : null} />
+        <InfoRow icon={CalendarDays} label="Días preferidos" value={pickupDays || null} />
+        <InfoRow icon={Clock} label="Horario preferido" value={pickupHours || null} />
+        <InfoRow icon={Snowflake} label="Tienen heladera o freezer" value={yesNo(org.has_refrigeration)} />
+        <InfoRow icon={Car} label="Tienen vehículo propio" value={yesNo(org.has_own_vehicle)} />
+        {org.vehicle_capacity_kg ? <InfoRow icon={Car} label="Capacidad del vehículo" value={`${formatNumber(org.vehicle_capacity_kg)} kg`} /> : null}
+      </Card>
+
+      {features.contactos ? (
+        <>
+          <SectionHeader title="Contactos y quién puede retirar" />
+          {contacts.isPending ? (
+            <SkeletonList count={2} />
+          ) : contacts.isError ? (
+            <ErrorState error={contacts.error} onRetry={() => contacts.refetch()} />
+          ) : (
+            <View className="gap-2">
+              {(contacts.data ?? []).map((c) => (
+                <Card key={c.id} onPress={() => setSelected(c)} className="gap-1">
+                  <View className="flex-row items-center gap-2">
+                    <Text variant="label" className="flex-1">{c.name}</Text>
+                    {c.is_primary ? <Badge label="Referente principal" tone="accent" size="sm" /> : null}
+                  </View>
+                  <Text variant="caption">{[c.position, c.dni ? `DNI ${c.dni}` : 'Sin DNI', c.phone].filter(Boolean).join(' · ')}</Text>
+                </Card>
+              ))}
+              <Button title="Agregar contacto" icon={UserPlus} variant="outline" onPress={() => setNewContact(true)} />
+            </View>
+          )}
+          <NewContactSheet orgId={org.id} visible={newContact} onClose={() => setNewContact(false)} />
+          {selected ? <ContactSheet orgId={org.id} contact={selected} onClose={() => setSelected(null)} /> : null}
+        </>
+      ) : null}
 
       <AddressSheet org={org} visible={editAddress} onClose={() => setEditAddress(false)} />
-      <NewContactSheet orgId={org.id} visible={newContact} onClose={() => setNewContact(false)} />
-      {selected ? <ContactSheet orgId={org.id} contact={selected} onClose={() => setSelected(null)} /> : null}
     </Screen>
   );
 }

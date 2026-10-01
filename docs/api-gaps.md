@@ -1,5 +1,11 @@
 # API gaps — pedidos y drift respecto de la API Mermab
 
+> **Actualización 2026-09-30.** El Banco mandó la guía de la API de organizaciones (`docs/bda/`), con
+> respuestas reales. Quedan **resueltos**: G-01 para los endpoints que usamos (forma real de login, me,
+> org profile/stats/address, familias, demografía y avisos), G-02 (qué endpoints puede usar el rol
+> `organization_coordinator`) y G-03 (CORS: `localhost:3000` y `3001`). Abajo, los bugs conocidos que
+> reportó el Banco (G-12) y lo que falta pedir (G-13).
+
 Registro de lo que falta o no coincide en la API. No se modifica el backend desde este repo: esto es lo que se le pide al Banco / equipo Mermab. Mientras tanto se usa un mock tipado (`mocks/`) detrás de la misma interfaz.
 
 Formato: **qué falta · qué pantalla lo necesita · propuesta · mientras tanto**.
@@ -74,3 +80,32 @@ Formato: **qué falta · qué pantalla lo necesita · propuesta · mientras tant
 
 ### G-11 · Brief GoDubi inaccesible
 - El link de `llms.txt` a GitLab devuelve 403 (challenge de Cloudflare). Se necesita una copia en `docs/` para definir contexto y acciones sensibles de los agentes (Fase 7).
+
+### G-12 · Bugs conocidos del backend (reportados por el Banco, `docs/bda/01-guia.md` §4)
+| Bug | Cómo lo maneja la app |
+|---|---|
+| `PUT /org/address` con dato inválido → 500 (no 422) | Validación con zod + coordenadas obligatorias antes de enviar |
+| `{id}` no UUID → 500 (no 404) | `orgApi.family()` corta antes con "no encontrado" |
+| Pasarse de 60 req/min → 500 (no 429) | Cliente autolimitado a 50/min; GET reintenta con espera |
+| `/notifications/subscribe` → 200 con `"message":"201"` | Se toma el 200 como éxito |
+| Dos formas de paginación | `toPage()` soporta ambas |
+| `/org/stats` sólo sirve `impacto` | La app sólo muestra `impacto` |
+| Clave incorrecta en login → 422 en `errors.email` (no 401) | La pantalla de login lo muestra como "email o contraseña incorrectos" |
+| `PUT /auth/password` exige `new_password_confirmation` (no está en el OpenAPI) | Se envía |
+| `?source=x` inválido → 422 en inglés | La app no deja elegir `source` |
+| Cambiar la clave no cierra las sesiones abiertas | Informativo |
+
+### G-13 · Lo que falta para completar la app (pedir al Banco)
+| Falta | Pantalla que lo espera (ya hecha, apagada) | Módulo |
+|---|---|---|
+| Mermas: postular y retirar probado para este rol | Disponibles, pedido, retiro, quién retira | `mermas` |
+| Alta y edición de familias | Registrar familia | `familiasAlta` |
+| Contactos y autorizaciones de retiro | Mi organización › Contactos | `contactos` |
+| Documentos, ficha social, carta compromiso | Documentación | `documentacion` |
+| Jornadas y talleres con vista de organización | Jornadas y talleres | `programas` |
+| Lectura de grupos nutricionales / resumen nutricional para este rol | Nutrición (secciones extra) | `nutricionApi` |
+| Push nativo (FCM/APNs/Expo) y clave VAPID pública para Web Push | Avisos en el dispositivo | — |
+| Recuperar contraseña (los mails no salen del servidor) | Login | — |
+| Editar teléfono y mail de la organización | Mi organización | — |
+
+Cuando el Banco habilite un módulo: `EXPO_PUBLIC_ENABLE_MODULES=<módulo>` y se prueba, sin tocar código.

@@ -1,16 +1,18 @@
 /**
- * Cliente HTTP de la API Mermab.
+ * Cliente HTTP de la API Mermab, ajustado a las reglas del Banco (docs/bda/04-05-cliente-y-uso.md).
  *
- * - Headers: `Accept` y `Content-Type: application/json`, `Authorization: Bearer` (Sanctum).
+ * - Headers: `Accept` (+ `Content-Type` si hay body), `Authorization: Bearer` (Sanctum).
  *   NUNCA `X-API-Key` (son credenciales máquina-a-máquina del tenant).
- * - Desenvuelve `{ success, data, meta?, message?, errors? }`.
- * - 401 → avisa al store de sesión (limpia y vuelve a login).
- * - 429 → espera `Retry-After` y reintenta (máx. 2 veces, con la MISMA Idempotency-Key).
- * - Mutaciones: `Idempotency-Key` obligatoria en POST, recomendada en PUT/DELETE.
+ * - Desenvuelve `{ success, data, meta?, message?, errors? }`; pagina en las dos formas que usa la API.
+ * - 401 con token → avisa al store de sesión (borra el token y vuelve a login).
+ * - Se autolimita a 50 pedidos/min (el servidor corta a 60 y hoy responde 500 en vez de 429).
+ * - GET: reintenta hasta 2 veces ante 500/429/red, con espera. Escrituras: nunca solas.
+ * - POST: `Idempotency-Key` siempre (una por intención del usuario; se reusa en reintentos).
  */
 import { env } from '@/lib/env';
 import { ApiError, kindFromStatus } from './errors';
-import type { Envelope, Page, QueryParams } from './types';
+import { newIdempotencyKey } from './idempotency';
+import type { Envelope, Meta, Page, QueryParams } from './types';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -18,7 +20,7 @@ export interface RequestOptions {
   query?: QueryParams;
   body?: unknown;
   formData?: FormData;
-  /** Requerida en POST mutantes. Generarla una vez por intención y reusarla en reintentos. */
+  /** POST: si no se pasa, se genera una. Para reintentos manuales, pasar la misma. */
   idempotencyKey?: string;
   /** false = no manda Authorization (health, login) */
   auth?: boolean;
@@ -32,7 +34,8 @@ const state: {
   token: string | null;
   onUnauthorized: (() => void) | null;
   mock: MockHandler | null;
-} = { token: null, onUnauthorized: null, mock: null };
+  sent: number[];
+} = { token: null, onUnauthorized: null, mock: null, sent: [] };
 
 export const apiConfig = {
   setToken(token: string | null) {
@@ -49,9 +52,22 @@ export const apiConfig = {
   },
 };
 
-const MAX_RATE_LIMIT_RETRIES = 2;
-const MAX_AUTO_WAIT_SECONDS = 30;
+const MAX_PER_MINUTE = 50;
+const GET_ATTEMPTS = 3;
 const DEFAULT_TIMEOUT = 20_000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** No pasar de 50 pedidos por minuto (ventana deslizante). */
+async function throttle(): Promise<void> {
+  const now = Date.now();
+  state.sent = state.sent.filter((t) => now - t < 60_000);
+  if (state.sent.length >= MAX_PER_MINUTE) {
+    await sleep(60_000 - (now - state.sent[0]) + 50);
+    return throttle();
+  }
+  state.sent.push(Date.now());
+}
 
 function buildUrl(path: string, query?: QueryParams): string {
   const url = `${env.apiUrl}${path.startsWith('/') ? path : `/${path}`}`;
@@ -62,7 +78,8 @@ function buildUrl(path: string, query?: QueryParams): string {
   return params.length ? `${url}?${params.join('&')}` : url;
 }
 
-function parseRetryAfter(value: string | null): number | undefined {
+function parseRetryAfter(value: string | null, bodyValue?: unknown): number | undefined {
+  if (typeof bodyValue === 'number') return bodyValue;
   if (!value) return undefined;
   const seconds = Number(value);
   if (!Number.isNaN(seconds)) return Math.max(0, Math.ceil(seconds));
@@ -71,13 +88,13 @@ function parseRetryAfter(value: string | null): number | undefined {
   return undefined;
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 async function doFetch(method: HttpMethod, path: string, opts: RequestOptions): Promise<Response> {
   if (state.mock) return state.mock(method, path, opts);
+  await throttle();
 
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (!opts.formData) headers['Content-Type'] = 'application/json';
+  const hasBody = opts.body !== undefined || !!opts.formData;
+  if (hasBody && !opts.formData) headers['Content-Type'] = 'application/json';
   if (opts.auth !== false && state.token) headers.Authorization = `Bearer ${state.token}`;
   if (opts.idempotencyKey) headers['Idempotency-Key'] = opts.idempotencyKey;
 
@@ -108,64 +125,84 @@ export async function request<T>(
   path: string,
   opts: RequestOptions = {},
 ): Promise<Envelope<T>> {
-  if (method === 'POST' && !opts.idempotencyKey && opts.auth !== false && __DEV__) {
-    console.warn(`[api] POST ${path} sin Idempotency-Key`);
-  }
+  const o: RequestOptions =
+    method === 'POST' && !opts.idempotencyKey ? { ...opts, idempotencyKey: newIdempotencyKey() } : opts;
+  const attempts = method === 'GET' ? GET_ATTEMPTS : 1;
 
-  for (let attempt = 0; ; attempt++) {
-    const res = await doFetch(method, path, opts);
+  for (let attempt = 1; ; attempt++) {
+    let res: Response;
+    try {
+      res = await doFetch(method, path, o);
+    } catch (e) {
+      if (method === 'GET' && attempt < attempts && e instanceof ApiError) {
+        await sleep(attempt * 1000);
+        continue;
+      }
+      throw e;
+    }
+
     const text = await res.text();
-    let json: Partial<Envelope<T>> & { code?: string; error?: string } = {};
+    let json: (Partial<Envelope<T>> & { code?: string; error?: string; retry_after?: number }) | null =
+      null;
     if (text) {
       try {
         json = JSON.parse(text);
       } catch {
-        json = {};
+        json = null;
       }
     }
 
     if (res.ok) {
-      // Algunos endpoints (health) no usan el envoltorio: lo normalizamos.
+      // /health no usa el envoltorio: lo normalizamos.
       if (json && typeof json === 'object' && 'data' in json) return json as Envelope<T>;
-      return { success: true, data: json as T };
+      return { success: true, data: (json ?? {}) as T, message: json?.message };
     }
 
-    const kind = kindFromStatus(res.status);
-    const retryAfter = parseRetryAfter(res.headers.get('Retry-After'));
-
-    if (
-      kind === 'rate_limit' &&
-      attempt < MAX_RATE_LIMIT_RETRIES &&
-      (retryAfter ?? 5) <= MAX_AUTO_WAIT_SECONDS
-    ) {
-      await sleep((retryAfter ?? 5) * 1000);
+    const retryAfter = parseRetryAfter(res.headers.get('Retry-After'), json?.retry_after);
+    // Hoy el servidor responde 500 al pasarse del límite de pedidos: en GET se reintenta con espera.
+    if (method === 'GET' && (res.status === 500 || res.status === 429) && attempt < attempts) {
+      await sleep((retryAfter ?? attempt * 2) * 1000);
       continue;
     }
 
-    const code = json.code ?? json.error;
+    const code = json?.code ?? json?.error;
     if (res.status === 400 && (code === 'IDEMPOTENCY_KEY_REQUIRED' || /idempotency/i.test(text))) {
-      // Es un bug nuestro: toda mutación debe llevar la key.
       console.error(`[api] BUG: ${method} ${path} requiere Idempotency-Key`);
     }
-
-    if (kind === 'unauthorized' && opts.auth !== false) state.onUnauthorized?.();
+    if (res.status === 403 && __DEV__) {
+      // Según el Banco, un 403 es un bug de la app: llamó a una ruta que este rol no usa.
+      console.warn(`[api] 403 en ${method} ${path}: ¿módulo apagado que se está llamando?`);
+    }
+    if (res.status === 401 && o.auth !== false && state.token) state.onUnauthorized?.();
 
     throw new ApiError({
-      kind,
+      kind: kindFromStatus(res.status),
       status: res.status,
-      serverMessage: typeof json.message === 'string' ? json.message : undefined,
-      fieldErrors: json.errors,
+      serverMessage: typeof json?.message === 'string' ? json.message : undefined,
+      fieldErrors: json?.errors,
       retryAfter,
       code,
     });
   }
 }
 
-function toPage<T>(env: Envelope<T[]>): Page<T> {
-  const items = Array.isArray(env.data) ? env.data : [];
+/**
+ * La API pagina de dos formas:
+ * - familias: `{ data: [...], meta }`
+ * - avisos:   `{ data: { data: [...], meta } }`
+ */
+export function toPage<T>(env: Envelope<unknown>): Page<T> {
+  const d = env.data as unknown;
+  let items: T[] = [];
+  let meta: Meta | undefined = env.meta;
+  if (Array.isArray(d)) items = d as T[];
+  else if (d && typeof d === 'object' && Array.isArray((d as { data?: unknown }).data)) {
+    items = (d as { data: T[] }).data;
+    meta = (d as { meta?: Meta }).meta ?? meta;
+  }
   return {
     items,
-    meta: env.meta ?? { current_page: 1, last_page: 1, per_page: items.length, total: items.length },
+    meta: meta ?? { current_page: 1, last_page: 1, per_page: items.length, total: items.length },
   };
 }
 
@@ -174,7 +211,7 @@ export const api = {
     return (await request<T>('GET', path, { ...opts, query })).data;
   },
   async getPage<T>(path: string, query?: QueryParams, opts: RequestOptions = {}): Promise<Page<T>> {
-    return toPage(await request<T[]>('GET', path, { ...opts, query }));
+    return toPage<T>(await request<unknown>('GET', path, { ...opts, query }));
   },
   async post<T>(path: string, body: unknown, idempotencyKey: string, opts: RequestOptions = {}) {
     return (await request<T>('POST', path, { ...opts, body, idempotencyKey })).data;
@@ -189,10 +226,14 @@ export const api = {
   async raw(path: string, opts: RequestOptions = {}): Promise<Response> {
     const res = await doFetch('GET', path, opts);
     if (!res.ok) {
-      if (res.status === 401) state.onUnauthorized?.();
+      if (res.status === 401 && state.token) state.onUnauthorized?.();
       throw new ApiError({ kind: kindFromStatus(res.status), status: res.status });
     }
     return res;
   },
   url: buildUrl,
 };
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Un id que no es UUID hace que el servidor responda 500: validarlo antes (docs/bda trampa 2). */
+export const isUuid = (v: string) => UUID_RE.test(v);

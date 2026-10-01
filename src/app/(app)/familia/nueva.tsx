@@ -91,7 +91,7 @@ export default function NuevaFamiliaScreen() {
   const orgId = useOrgId();
   const types = useFamilyTypes();
   const create = useCreateFamily(orgId ?? '', (id) => {
-    if (id) router.replace({ pathname: '/familias/[id]', params: { id } });
+    if (id) router.replace({ pathname: '/familia/[id]', params: { id } });
     else router.back();
   });
 

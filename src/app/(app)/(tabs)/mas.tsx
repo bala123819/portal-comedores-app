@@ -20,6 +20,7 @@ import { Avatar, Card, ConfirmDialog, Header, ListItem, Screen, SectionHeader, T
 import { useSession } from '@/features/auth/store';
 import { displayName } from '@/features/auth/types';
 import { env } from '@/lib/env';
+import { features } from '@/lib/features';
 import { colors } from '@/theme/tokens';
 
 export default function MasScreen() {
@@ -41,15 +42,21 @@ export default function MasScreen() {
 
       <SectionHeader title="Mi organización" />
       <View className="gap-2">
-        <ListItem icon={Building2} title="Datos de la organización" subtitle="Dirección y contactos que retiran" onPress={() => router.push('/organizacion')} />
-        <ListItem icon={Users} title="Familias" subtitle="Personas que asiste la organización" onPress={() => router.push('/familias')} />
-        <ListItem icon={CalendarDays} title="Jornadas y talleres" subtitle="Recolecciones y capacitaciones" onPress={() => router.push('/jornadas')} />
-        <ListItem icon={FileText} title="Documentación" subtitle="Papeles y ficha social" onPress={() => router.push('/documentacion')} />
+        <ListItem icon={Building2} title="Datos de la organización" subtitle={features.contactos ? 'Dirección y contactos que retiran' : 'Dirección y datos de retiro'} onPress={() => router.push('/organizacion')} />
+        {features.mermas ? (
+          <ListItem icon={Users} title="Familias" subtitle="Personas que asiste la organización" onPress={() => router.push('/familias')} />
+        ) : null}
+        {features.programas ? (
+          <ListItem icon={CalendarDays} title="Jornadas y talleres" subtitle="Recolecciones y capacitaciones" onPress={() => router.push('/jornadas')} />
+        ) : null}
+        {features.documentacion ? (
+          <ListItem icon={FileText} title="Documentación" subtitle="Papeles y ficha social" onPress={() => router.push('/documentacion')} />
+        ) : null}
       </View>
 
       <SectionHeader title="Alimentación" />
       <View className="gap-2">
-        <ListItem icon={Salad} title="Nutrición" subtitle="Qué aporta lo que reciben" onPress={() => router.push('/nutricion')} />
+        <ListItem icon={Salad} title="Nutrición" subtitle="Cuota mensual y alimentación" onPress={() => router.push('/nutricion')} />
         <ListItem icon={Sparkles} title="Asistente" subtitle="Recetas, nutrición y dudas" onPress={() => router.push('/asistente')} />
       </View>
 

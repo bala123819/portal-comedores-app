@@ -7,8 +7,11 @@ import { storage, STORAGE_KEYS } from '@/services/storage';
 import type { Organization } from '@/features/org/types';
 import { extractToken, meSchema, type Me } from './types';
 
-/** Rotamos el token Sanctum (POST /auth/refresh) si tiene más de un día. */
-const REFRESH_AFTER_MS = 24 * 60 * 60 * 1000;
+/**
+ * El token dura 24 h (docs/bda 2/6). Se rota con POST /auth/refresh al abrir la app si tiene
+ * más de 12 h; el anterior deja de servir en el acto, por eso se guarda el nuevo antes de seguir.
+ */
+const REFRESH_AFTER_MS = 12 * 60 * 60 * 1000;
 
 type Status = 'loading' | 'signedOut' | 'signedIn';
 
@@ -41,8 +44,8 @@ async function loadProfile(): Promise<{ me: Me; organization: Organization | nul
   // La pertenencia a una organización se confirma con el Portal Organización:
   // si /org/profile responde 403/404, el usuario no es de una organización.
   try {
-    const organization = await orgApi.profile();
-    return { me, organization };
+    const { organization } = await orgApi.profile();
+    return { me, organization: organization ?? null };
   } catch (e) {
     if (isApiError(e) && (e.kind === 'forbidden' || e.kind === 'not_found')) {
       return { me, organization: null };

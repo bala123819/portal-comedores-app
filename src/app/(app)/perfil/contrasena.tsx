@@ -31,7 +31,7 @@ export default function ContrasenaScreen() {
   });
   const submit = handleSubmit((v) =>
     change.mutate(
-      { current_password: v.current_password, new_password: v.new_password },
+      { current_password: v.current_password, new_password: v.new_password, new_password_confirmation: v.confirm },
       { onError: (e) => applyFieldErrors(e, setError) },
     ),
   );

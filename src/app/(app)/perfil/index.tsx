@@ -20,7 +20,7 @@ import {
 } from '@/components/ui';
 import { useSession } from '@/features/auth/store';
 import { displayName, roleNames } from '@/features/auth/types';
-import { humanize } from '@/lib/labels';
+import { label, roleLabels } from '@/lib/labels';
 import { authApi } from '@/services/api/endpoints';
 import { humanMessage } from '@/services/api/errors';
 import { useAction, applyFieldErrors } from '@/services/api/use-action';
@@ -84,7 +84,8 @@ export default function PerfilScreen() {
         <Avatar name={displayName(me) || 'Usuario'} uri={me?.avatar_url} size="lg" />
         <Text variant="heading">{displayName(me)}</Text>
         <Text tone="muted">{me?.email}</Text>
-        {roles.length ? <Text variant="caption">{roles.map(humanize).join(' · ')}</Text> : null}
+        {roles.length ? <Text variant="caption">{roles.map((r) => label(roleLabels, r)).join(' · ')}</Text> : null}
+        {me?.tenant?.name ? <Text variant="caption">{me.tenant.name}</Text> : null}
       </View>
 
       <SectionHeader title="Tus datos" />

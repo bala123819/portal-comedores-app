@@ -19,6 +19,7 @@ import {
   useNotifications,
   useRemoveAllNotifications,
   useRemoveNotification,
+  useSendTestNotification,
 } from '@/features/notificaciones/hooks';
 import {
   isUnread,
@@ -28,6 +29,7 @@ import {
   type AppNotification,
 } from '@/features/notificaciones/types';
 import { cn } from '@/lib/cn';
+import { features } from '@/lib/features';
 import { formatRelative } from '@/lib/format';
 import { label, notificationTypeLabels } from '@/lib/labels';
 import { enablePush, getPushStatus, type PushStatus } from '@/services/push';
@@ -74,12 +76,16 @@ export default function NotificacionesScreen() {
   const markAll = useMarkAllRead();
   const remove = useRemoveNotification();
   const removeAll = useRemoveAllNotifications();
+  const sendTest = useSendTestNotification();
   const [confirmClear, setConfirmClear] = useState(false);
 
   const open = (n: AppNotification) => {
     if (isUnread(n)) markRead.mutate(n.id);
     const t = notificationTarget(n);
-    if (t?.kind === 'merma') router.push({ pathname: '/merma/[id]', params: { id: t.id } });
+    // Sólo se navega a pantallas de módulos activos (las de mermas están apagadas con la API real)
+    if (t?.kind === 'family') router.push({ pathname: '/familia/[id]', params: { id: t.id } });
+    else if (!features.mermas) return;
+    else if (t?.kind === 'merma') router.push({ pathname: '/merma/[id]', params: { id: t.id } });
     else if (t?.kind === 'assignment') router.push({ pathname: '/retiro/[id]', params: { id: t.id } });
     else if (t?.kind === 'application') router.push({ pathname: '/postulacion/[id]', params: { id: t.id } });
   };
@@ -132,7 +138,8 @@ export default function NotificacionesScreen() {
             );
           }}
           emptyTitle="No tenés notificaciones"
-          emptyMessage="Acá te avisamos de alimentos nuevos y cambios en tus retiros."
+          emptyMessage="Acá te llegan los avisos del Banco de Alimentos."
+          emptyAction={{ label: 'Mandarme un aviso de prueba', onPress: () => sendTest.mutate() }}
         />
       </View>
       <ConfirmDialog

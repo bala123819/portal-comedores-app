@@ -67,51 +67,96 @@ function transition(id: string, from: string[], to: string, extra: Record<string
   return ok(a);
 }
 
-// ─── Sistema / auth ─────────────────────────────────────────────────────────
+// ─── Sistema / auth (formas de docs/bda/02) ─────────────────────────────────
 on('GET', '/health', () => json(200, { status: 'ok', timestamp: now(), version: '4.0.0 (mock)' }));
 on('GET', '/capabilities', () =>
-  ok({ modules: ['org_portal', 'notifications', 'nutrition'], permissions: db.me.permissions }),
+  ok({ modules: ['org_portal', 'notifications'], permissions: db.me.permissions, rate_limits: { general: 60, auth: 10 } }),
 );
 on('POST', '/auth/login', (_, o) => {
   const b = body(o);
   const errors: Record<string, string[]> = {};
-  if (!b.email) errors.email = ['El email es obligatorio.'];
+  if (!b.email) errors.email = ['El correo electrónico es obligatorio.'];
   if (!b.password) errors.password = ['La contraseña es obligatoria.'];
-  if (Object.keys(errors).length) return fail(422, 'Datos inválidos', errors);
-  if (b.password === 'incorrecta') return fail(401, 'Credenciales inválidas');
-  return ok({ token: MOCK_TOKEN, user: db.me });
+  if (Object.keys(errors).length) return fail(422, Object.values(errors)[0][0], errors);
+  // El servidor real responde 422 (no 401) con clave incorrecta
+  if (b.password === 'incorrecta')
+    return fail(422, 'Las credenciales proporcionadas son incorrectas.', {
+      email: ['Las credenciales proporcionadas son incorrectas.'],
+    });
+  const { phone: _p, tenant: _t, is_active: _a, last_login_at: _l, preferences: _pr, ...user } = db.me;
+  return ok({ user, access_token: MOCK_TOKEN, token_type: 'Bearer', expires_in: 86400 });
 });
-on('POST', '/auth/logout', () => ok(null));
-on('POST', '/auth/refresh', () => ok({ token: MOCK_TOKEN }));
+on('POST', '/auth/logout', () => json(200, { success: true, message: 'Sesión cerrada exitosamente' }));
+on('POST', '/auth/refresh', () =>
+  json(200, { success: true, message: 'Token renovado exitosamente', data: { access_token: MOCK_TOKEN, token_type: 'Bearer', expires_in: 86400 } }),
+);
 on('GET', '/auth/me', () => ok(db.me));
 on('PUT', '/auth/profile', (_, o) => {
-  Object.assign(db.me, body(o));
-  return ok(db.me);
+  const b = body(o);
+  if (b.phone != null && !/^[\d\s+\-()]{6,20}$/.test(String(b.phone)))
+    return fail(422, 'El formato del teléfono no es válido', { phone: ['El formato del teléfono no es válido'] });
+  Object.assign(db.me, b);
+  db.me.full_name = `${db.me.first_name} ${db.me.last_name}`;
+  return json(200, { success: true, message: 'Perfil actualizado exitosamente', data: db.me });
 });
 on('PUT', '/auth/password', (_, o) => {
   const b = body(o);
   if (b.current_password === 'incorrecta')
-    return fail(422, 'La contraseña actual no es correcta', {
-      current_password: ['La contraseña actual no es correcta.'],
+    return fail(422, 'La contraseña actual es incorrecta.', { current_password: ['La contraseña actual es incorrecta.'] });
+  if (String(b.new_password ?? '').length < 8 || b.new_password !== b.new_password_confirmation)
+    return fail(422, 'La confirmación de la nueva contraseña no coincide.', {
+      new_password: ['La confirmación de la nueva contraseña no coincide.'],
     });
-  return ok(null);
+  return json(200, { success: true, message: 'Contraseña actualizada exitosamente' });
 });
 
 // ─── Portal Organización ───────────────────────────────────────────────────
-on('GET', '/org/profile', () => ok(db.organization));
+on('GET', '/org/profile', () =>
+  ok({ organization: db.organization, user: { id: db.me.id, full_name: db.me.full_name, email: db.me.email } }),
+);
 on('GET', '/org/stats', () =>
   ok({
-    total_applications: db.applications.length,
-    pending_applications: db.applications.filter((a) => a.status === 'pendiente').length,
-    completed_assignments: db.assignments.filter((a) => a.status === 'completada').length,
-    total_kg_received: 30,
+    postulaciones: {
+      total: db.applications.length,
+      pendientes: db.applications.filter((a) => a.status === 'pendiente').length,
+      aprobadas: db.applications.filter((a) => a.status === 'aprobada').length,
+      rechazadas: 0,
+    },
+    asignaciones: {
+      total: db.assignments.length,
+      pendientes: db.assignments.filter((a) => ['asignada', 'confirmada', 'en_camino'].includes(String(a.status))).length,
+      completadas: db.assignments.filter((a) => a.status === 'completada').length,
+      canceladas: 0,
+      este_mes: 1,
+    },
+    impacto: { total_kg_recibidos: 30, total_distribuciones: 1 },
+    disponibilidad: { mermas_disponibles: db.mermas.filter((m) => m.status === 'activa').length },
   }),
 );
 on('PUT', '/org/address', (_, o) => {
   const b = body(o);
-  db.organization.address = [b.street, b.street_number].filter(Boolean).join(' ');
-  db.organization.city = (b.city as string) ?? db.organization.city;
-  return ok(db.organization);
+  const lat = Number(b.latitude);
+  const lng = Number(b.longitude);
+  // Bug conocido del servidor: dato inválido → 500 (no 422). La app valida antes de enviar.
+  if (!b.street || !b.city || !b.state || !(lat >= -90 && lat <= 90) || !(lng >= -180 && lng <= 180))
+    return fail(500, 'Error interno del servidor');
+  const address = {
+    street: String(b.street),
+    street_number: (b.street_number as string) ?? null,
+    neighborhood: (b.neighborhood as string) ?? null,
+    city: String(b.city),
+    state: String(b.state),
+    postal_code: (b.postal_code as string) ?? null,
+    full_address: [[b.street, b.street_number].filter(Boolean).join(' '), b.neighborhood, b.city, b.state].filter(Boolean).join(', '),
+    latitude: lat.toFixed(8),
+    longitude: lng.toFixed(8),
+  };
+  db.organization.address = address;
+  return json(200, {
+    success: true,
+    message: 'Dirección actualizada. No se encontró una zona geográfica compatible.',
+    data: { address, geographic_zone: null, zone_assigned: false },
+  });
 });
 on('GET', '/org/mermas/available', (_, o) => {
   let items = db.mermas.filter((m) => m.status === 'activa');
@@ -158,7 +203,8 @@ on('POST', '/org/applications', (_, o) => {
     id: `n-${Date.now()}`,
     type: 'postulacion_recibida',
     title: 'Recibimos tu pedido',
-    message: `${merma.title}: el Banco lo va a revisar.`,
+    body: `${merma.title}: el Banco lo va a revisar.`,
+    is_read: false,
     read_at: null,
     created_at: now(),
     data: { application_id: app.id },
@@ -207,20 +253,55 @@ on('POST', '/org/assignments/:id/cancel', (p, o) =>
     cancelled_at: now(),
   }),
 );
-on('GET', '/org/families', (_, o) => paginate(db.families, o.query));
+on('GET', '/org/families', (_, o) => {
+  const q = o.query ?? {};
+  if (q.source && !['manual', 'program_enrollment', 'all'].includes(String(q.source)))
+    return fail(422, 'The selected source is invalid.', { source: ['The selected source is invalid.'] });
+  let items = db.families;
+  if (q.status) items = items.filter((f) => f.status === q.status);
+  if (q.search) {
+    const t = String(q.search).toLowerCase();
+    items = items.filter((f) => f.name.toLowerCase().includes(t) || (f.code ?? '').toLowerCase().includes(t));
+  }
+  return paginate(items, { per_page: 25, ...q });
+});
 on('GET', '/org/families/demographics', () => {
   const members = db.families.flatMap((f) => f.members ?? []);
+  const count = (fn: (m: (typeof members)[number]) => boolean) => members.filter(fn).length;
+  const types = new Map<string, { name: string; code: string; count: number }>();
+  for (const f of db.families) {
+    if (!f.family_type) continue;
+    const t = types.get(f.family_type.code ?? f.family_type.name) ?? { name: f.family_type.name, code: f.family_type.code ?? '', count: 0 };
+    t.count++;
+    types.set(t.code, t);
+  }
   return ok({
     total_families: db.families.length,
     total_members: members.length,
-    children: members.filter((m) => m.relationship === 'hijo').length,
-    celiac: members.filter((m) => m.is_celiac).length,
-    diabetic: members.filter((m) => m.is_diabetic).length,
+    weighted_beneficiaries: members.reduce((a, m) => a + (m.nutritional_weight ?? 1), 0),
+    family_types: [...types.values()],
+    age_groups: {
+      infants_0_2: count((m) => m.age_group === 'infants_0_2'),
+      children_3_12: count((m) => m.age_group === 'children_3_12'),
+      teens_13_17: count((m) => m.age_group === 'teens_13_17'),
+      adults_18_64: count((m) => m.age_group === 'adults_18_64'),
+      seniors_65_plus: count((m) => m.age_group === 'seniors_65_plus'),
+    },
+    special_conditions: {
+      pregnant_women: count((m) => !!m.is_pregnant),
+      nursing_mothers: count((m) => !!m.is_nursing_mother),
+      diabetics: count((m) => !!m.is_diabetic),
+      celiacs: count((m) => !!m.is_celiac),
+      lactose_intolerant: count((m) => !!m.is_lactose_intolerant),
+      disabled: count((m) => !!m.has_disability),
+    },
   });
 });
 on('GET', '/org/families/:id', (p) => {
+  // Bug conocido: id no UUID → 500
+  if (!/^[0-9a-f-]{36}$/i.test(p.id)) return fail(500, 'Error interno del servidor');
   const f = db.families.find((x) => x.id === p.id);
-  return f ? ok(f) : fail(404, 'Familia no encontrada');
+  return f ? ok(f) : fail(404, 'Ruta no encontrada');
 });
 
 // ─── Quién retira ──────────────────────────────────────────────────────────
@@ -319,34 +400,74 @@ on('GET', '/unified-products/search', (_, o) => {
   );
 });
 
-// ─── Notificaciones ────────────────────────────────────────────────────────
+// ─── Notificaciones (formas de docs/bda/03: paginación anidada) ──────────
+const unreadCount = () => db.notifications.filter((n) => !n.is_read).length;
 on('GET', '/notifications', (_, o) => {
   let items = db.notifications;
-  if (o.query?.unread === 'true') items = items.filter((n) => !n.read_at);
-  return paginate(items, o.query);
+  if (o.query?.unread === 'true') items = items.filter((n) => !n.is_read);
+  const perPage = Number(o.query?.per_page ?? 20);
+  const page = Number(o.query?.page ?? 1);
+  return ok({
+    data: items.slice((page - 1) * perPage, page * perPage),
+    meta: {
+      current_page: page,
+      last_page: Math.max(1, Math.ceil(items.length / perPage)),
+      per_page: perPage,
+      total: items.length,
+      unread_count: unreadCount(),
+    },
+  });
 });
-on('GET', '/notifications/unread-count', () =>
-  ok({ count: db.notifications.filter((n) => !n.read_at).length }),
-);
+on('GET', '/notifications/unread-count', () => ok({ count: unreadCount() }));
+on('POST', '/notifications/test', () => {
+  const n = {
+    id: `a2dd8761-${Date.now().toString(16).padStart(4, '0').slice(-4)}-4000-8000-${String(Date.now()).slice(-12)}`,
+    type: 'sistema',
+    title: 'Notificación de Prueba',
+    body: '¡Las notificaciones están funcionando correctamente!',
+    data: { test: true },
+    action_url: '/notifications',
+    icon: '/icons/notification-default.png',
+    is_read: false,
+    read_at: null,
+    created_at: now(),
+  };
+  db.notifications.unshift(n);
+  return ok({ message: 'Notificación de prueba enviada', notification: n });
+});
 on('POST', '/notifications/read-all', () => {
-  db.notifications.forEach((n) => (n.read_at ??= now()));
-  return ok(null);
+  let marked = 0;
+  db.notifications.forEach((n) => {
+    if (!n.is_read) {
+      n.is_read = true;
+      n.read_at = now();
+      marked++;
+    }
+  });
+  return ok({ marked_count: marked, unread_count: 0 });
 });
 on('POST', '/notifications/:id/read', (p) => {
   const n = db.notifications.find((x) => x.id === p.id);
-  if (n) n.read_at ??= now();
-  return ok(n ?? null);
+  if (!n) return fail(404, 'Notificación no encontrada');
+  n.is_read = true;
+  n.read_at ??= now();
+  return ok(n);
 });
 on('DELETE', '/notifications', () => {
+  const deleted = db.notifications.length;
   db.notifications = [];
-  return ok(null);
+  return ok({ deleted_count: deleted, unread_count: 0 });
 });
 on('DELETE', '/notifications/:id', (p) => {
+  if (!db.notifications.some((n) => n.id === p.id)) return fail(404, 'Notificación no encontrada');
   db.notifications = db.notifications.filter((n) => n.id !== p.id);
-  return ok(null);
+  return ok({ message: 'Notificación eliminada', unread_count: unreadCount() });
 });
-on('POST', '/notifications/subscribe', () => ok(null));
-on('POST', '/notifications/unsubscribe', () => ok(null));
+on('POST', '/notifications/subscribe', () =>
+  // Bug conocido: HTTP 200 con message "201"
+  json(200, { success: true, message: '201', data: { message: 'Suscripción registrada', subscription_id: 'a2dd8766-0000-4000-8000-000000000001' } }),
+);
+on('POST', '/notifications/unsubscribe', () => ok({ message: 'Suscripción cancelada' }));
 
 // ─── Organización: documentos, familias, jornadas ─────────────────────────
 on('GET', '/organizations/:org/requirements', () => ok(db.requirements));
@@ -431,5 +552,5 @@ export async function mockHandler(
     }
     return res;
   }
-  return fail(404, `Mock sin ruta: ${method} ${cleanPath}`);
+  return fail(404, 'Ruta no encontrada');
 }

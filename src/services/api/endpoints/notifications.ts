@@ -13,8 +13,9 @@ export const notificationsApi = {
       per_page: perPage,
       unread: unread ? 'true' : undefined,
     }),
-  unreadCount: () =>
-    api.get<{ count?: number; unread_count?: number } | number>('/notifications/unread-count'),
+  unreadCount: async () => (await api.get<{ count: number }>('/notifications/unread-count')).count ?? 0,
+  /** Crea un aviso de prueba en la propia bandeja */
+  sendTest: (key: string) => api.post<{ message: string; notification: AppNotification }>('/notifications/test', {}, key),
   markRead: (notificationId: string, key: string) =>
     api.post<unknown>(`/notifications/${id(notificationId)}/read`, {}, key),
   markAllRead: (key: string) => api.post<unknown>('/notifications/read-all', {}, key),

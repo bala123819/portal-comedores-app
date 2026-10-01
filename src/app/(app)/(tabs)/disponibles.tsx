@@ -1,6 +1,7 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { MapPin, TriangleAlert } from 'lucide-react-native';
 import { useState } from 'react';
+import { features } from '@/lib/features';
 import { ScrollView, View } from 'react-native';
 import { MermaCard } from '@/components/mermas/MermaCard';
 import { NotificationBell } from '@/components/notificaciones/NotificationBell';
@@ -17,7 +18,7 @@ const FILTERS: { key: FilterKey; label: string; value: AvailableMermasFilters; i
   { key: 'alta', label: 'Prioridad alta', value: { priority: 'alta' } },
 ];
 
-export default function DisponiblesScreen() {
+function DisponiblesScreenContent() {
   const [filter, setFilter] = useState<FilterKey>('todos');
   const current = FILTERS.find((f) => f.key === filter)!;
   const query = useAvailableMermas(current.value);
@@ -65,4 +66,10 @@ export default function DisponiblesScreen() {
       </View>
     </View>
   );
+}
+
+/** Módulo de mermas apagado (el backend no lo ofrece hoy): la pestaña está oculta y la URL redirige. */
+export default function DisponiblesScreen() {
+  if (!features.mermas) return <Redirect href="/" />;
+  return <DisponiblesScreenContent />;
 }

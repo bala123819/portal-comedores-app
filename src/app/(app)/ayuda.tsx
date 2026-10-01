@@ -5,10 +5,12 @@ import { Pressable, View } from 'react-native';
 import { WhatsAppButton } from '@/components/agentes/WhatsAppButton';
 import { Button, Card, Header, Screen, SectionHeader, Text } from '@/components/ui';
 import { env } from '@/lib/env';
+import { features } from '@/lib/features';
 import { whatsappAvailable } from '@/lib/whatsapp';
 import { colors } from '@/theme/tokens';
 
-const FAQ = [
+/** Las preguntas de pedidos y retiros sólo aparecen si el módulo de mermas está activo */
+const FAQ_MERMAS = [
   {
     q: '¿Cómo pido alimentos?',
     a: 'Entrá a “Disponibles”, elegí una donación y tocá “Quiero retirarlo”. El Banco revisa los pedidos y te avisa si te los asigna.',
@@ -25,9 +27,24 @@ const FAQ = [
     q: '¿Y si no podemos ir?',
     a: 'Entrá al retiro y tocá “No podemos ir”. Así los alimentos quedan disponibles para otra organización. Avisá lo antes posible.',
   },
+];
+
+const FAQ_GENERAL = [
+  {
+    q: '¿Cómo se calcula la cuota mensual?',
+    a: 'El Banco la calcula solo, a partir de las familias cargadas: cada persona pesa según su necesidad nutricional. Si falta una familia o cambió algún dato, avisale al Banco.',
+  },
+  {
+    q: '¿Puedo cargar o corregir familias?',
+    a: 'Por ahora las familias las carga el Banco de Alimentos. En la app podés verlas; para agregar o corregir, comunicate con el Banco.',
+  },
+  {
+    q: '¿Cómo uso el recetario?',
+    a: 'En “Recetas” elegí una receta y poné para cuántas personas cocinan: las cantidades se calculan solas. Con “Cocinar paso a paso” ves un paso por pantalla con letra grande.',
+  },
   {
     q: '¿Funciona sin internet?',
-    a: 'Podés ver lo último que se cargó y el recetario. Para pedir o confirmar retiros necesitás conexión; si falla, podés reintentar sin que se duplique.',
+    a: 'Podés ver lo último que se cargó y el recetario. Para guardar cambios necesitás conexión; si falla, podés reintentar sin que se duplique.',
   },
 ];
 
@@ -67,7 +84,7 @@ export default function AyudaScreen() {
 
       <SectionHeader title="Preguntas frecuentes" />
       <View className="gap-2">
-        {FAQ.map((f) => (
+        {[...(features.mermas ? FAQ_MERMAS : []), ...FAQ_GENERAL].map((f) => (
           <Faq key={f.q} {...f} />
         ))}
       </View>

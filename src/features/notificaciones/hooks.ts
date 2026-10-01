@@ -20,11 +20,7 @@ export function useNotifications() {
 export function useUnreadCount() {
   return useQuery({
     queryKey: qk.unreadCount,
-    queryFn: async () => {
-      const data = await notificationsApi.unreadCount();
-      if (typeof data === 'number') return data;
-      return data?.count ?? data?.unread_count ?? 0;
-    },
+    queryFn: notificationsApi.unreadCount,
     staleTime: 60_000,
     refetchInterval: 120_000,
     refetchIntervalInBackground: false,
@@ -47,6 +43,13 @@ export function useMarkAllRead() {
 
 export function useRemoveNotification() {
   return useAction((id: string, key) => notificationsApi.remove(id, key), { invalidate });
+}
+
+export function useSendTestNotification() {
+  return useAction((_: void, key) => notificationsApi.sendTest(key), {
+    invalidate,
+    successMessage: 'Te mandamos un aviso de prueba',
+  });
 }
 
 export function useRemoveAllNotifications() {

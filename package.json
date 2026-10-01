@@ -69,9 +69,10 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "gen:api": "node scripts/gen-api.mjs",
-    "check:api": "tsx scripts/check-api.ts",
     "recetas:convertir": "tsx scripts/convertir-recetas.ts",
-    "build:web": "expo export -p web"
+    "build:web": "expo export -p web",
+    "smoke": "tsx scripts/smoke-test.ts",
+    "smoke:samples": "tsx scripts/smoke-test.ts --samples"
   },
   "private": true
 }

@@ -1,5 +1,6 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
+import { features } from '@/lib/features';
 import { View } from 'react-native';
 import { NotificationBell } from '@/components/notificaciones/NotificationBell';
 import { ApplicationCard } from '@/components/retiros/ApplicationCard';
@@ -60,7 +61,7 @@ function PedidosList() {
   );
 }
 
-export default function RetirosScreen() {
+function RetirosScreenContent() {
   const params = useLocalSearchParams<{ tab?: Tab }>();
   const [tab, setTab] = useState<Tab>(params.tab === 'pedidos' ? 'pedidos' : 'retiros');
 
@@ -83,4 +84,10 @@ export default function RetirosScreen() {
       </View>
     </View>
   );
+}
+
+/** Módulo de mermas apagado (el backend no lo ofrece hoy): la pestaña está oculta y la URL redirige. */
+export default function RetirosScreen() {
+  if (!features.mermas) return <Redirect href="/" />;
+  return <RetirosScreenContent />;
 }

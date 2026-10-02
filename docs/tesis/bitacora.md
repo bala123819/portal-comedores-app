@@ -281,7 +281,7 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 
 ---
 
-## (este commit) · docs: ajustar el mensaje al Banco (Santiago es dueño de GoDubi)
+## 95f7973 · docs: ajustar el mensaje al Banco (Santiago es dueño de GoDubi)
 - **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
 - **Etapa:** Coordinación con el Banco
 

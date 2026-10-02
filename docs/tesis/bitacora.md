@@ -176,7 +176,7 @@ Se confirma que los agentes se construirán en **GoDubi**. El equipo aportó la 
 
 ---
 
-## (este commit) · docs: análisis de la API de GoDubi
+## d6ae016 · docs: análisis de la API de GoDubi
 - **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
 - **Etapa:** Planificación de agentes
 

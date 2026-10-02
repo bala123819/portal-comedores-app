@@ -251,3 +251,23 @@ El equipo aportó la documentación del servidor MCP de GoDubi (`https://mcp.god
 **Pendientes.** Tomar las decisiones A–E; reunión con el área social; empezar el agente de Recetas y las pantallas de pedidos.
 
 **Archivos principales.** `docs/propuesta/*`, `docs/tesis/plan-de-accion.md`, `docs/tesis/bitacora.md`.
+
+---
+
+## (este commit) · docs: pedido integral al Banco y propuestas de contrato
+- **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Coordinación con el Banco
+
+**Objetivo.** Pedir al Banco, en un solo mensaje, todo lo que el proyecto necesita de su lado (backend, WhatsApp, agentes/GoDubi, contenidos y validación) según la propuesta de tesis.
+
+**Qué se hizo.**
+- `docs/comunicaciones/2026-10-02-pedido-integral-al-banco.md`: 22 pedidos agrupados (backend, WhatsApp, agentes y GoDubi, contenidos, validación y avisos) con prioridades. Reemplaza al borrador del 1/10, que no se envió.
+- `docs/api-gaps.md` G-14: propuestas de contrato para pedidos, alta/edición de familias, muro de necesidades, stock interno (organización → familia) y cursos.
+
+**Decisiones.** Ninguna cerrada; el mensaje plantea al Banco la alternativa de backend propio liviano para muro, stock y cursos, y Telegram como canal alternativo a WhatsApp.
+
+**Verificación.** No aplica (documentación).
+
+**Pendientes.** Completar el resultado del smoke test y enviar el mensaje; registrar la respuesta como hito.
+
+**Archivos principales.** `docs/comunicaciones/2026-10-02-pedido-integral-al-banco.md`, `docs/api-gaps.md`.

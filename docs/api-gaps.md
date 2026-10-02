@@ -109,3 +109,31 @@ Formato: **qué falta · qué pantalla lo necesita · propuesta · mientras tant
 | Editar teléfono y mail de la organización | Mi organización | — |
 
 Cuando el Banco habilite un módulo: `EXPO_PUBLIC_ENABLE_MODULES=<módulo>` y se prueba, sin tocar código.
+
+### G-14 · Propuestas de contrato para los módulos de la propuesta de tesis (2026-10-02)
+Propuestas para conversar con el Banco (nombres de rutas tentativos; se ajustan a sus convenciones).
+Todas bajo el usuario de la organización (Bearer), con el envoltorio `{success, data, meta}`, `Idempotency-Key` en los POST y acciones de estado por endpoint.
+
+**Pedidos (gestión de pedidos)** — el comedor solicita alimentos/insumos.
+- `GET /org/orders?status=&page=` · `GET /org/orders/{id}`
+- `POST /org/orders` `{ items: [{ product_id?, description, quantity, unit }], reason, urgency: baja|normal|alta, needed_by?, notes? }`
+- `POST /org/orders/{id}/cancel` `{ reason? }`
+- Estados sugeridos: `borrador → enviado → en_revision → aprobado | rechazado → en_preparacion → listo_para_retirar → entregado` (+ `cancelado`). Respuesta del Banco: `response_notes`, cantidades aprobadas por ítem.
+
+**Alta y edición de familias** — los campos ya existen en `POST /organizations/{id}/families` (admin); falta habilitarlo para la organización:
+- `POST /org/families` · `PUT /org/families/{id}` · `POST /org/families/{id}/members` · `PUT /org/families/{id}/members/{memberId}`
+- Usado también por el agente de registro por audio/texto (siempre con confirmación del usuario).
+
+**Muro de necesidades** — publicaciones visibles para el Banco.
+- `GET /org/needs` · `POST /org/needs` `{ title, description, category: infraestructura|equipamiento|alimentos|otro, urgency, photos? }` · `POST /org/needs/{id}/close`
+- El Banco responde/comenta y cambia el estado (`abierta → en_gestion → resuelta`).
+
+**Stock interno del comedor (trazabilidad organización → familia)**
+- `GET /org/stock` (existencias por producto, alimentadas por las entregas del Banco)
+- `POST /org/stock/movements` `{ type: entrega_familia|consumo_comedor|ajuste|merma, items: [{ product, quantity, unit }], family_id?, date, notes? }`
+- `GET /org/stock/movements?family_id=&from=&to=`
+
+**Cursos y capacitación**
+- `GET /org/courses?category=` · `GET /org/courses/{id}` (`title, category, description, duration, format: video|pdf|presencial, url?, schedule?`) · `POST /org/courses/{id}/enroll`
+
+Si alguno no entra en la planificación del Banco, la alternativa del equipo es un backend propio liviano sólo para esos módulos (ver `docs/tesis/plan-de-accion.md`, decisión A).

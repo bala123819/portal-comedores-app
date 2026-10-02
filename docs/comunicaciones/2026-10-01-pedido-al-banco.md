@@ -1,4 +1,5 @@
 # Mensaje al Banco de Alimentos — 2026-10-01
+n> **Reemplazado** por [2026-10-02-pedido-integral-al-banco.md](2026-10-02-pedido-integral-al-banco.md) (no se envió).
 
 **Canal:** hilo de la guía de la API de organizaciones. **Estado:** borrador (enviar desde la cuenta del equipo).
 **Antes de enviar:** completar la línea del resultado del smoke test.

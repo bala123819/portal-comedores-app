@@ -254,7 +254,7 @@ El equipo aportó la documentación del servidor MCP de GoDubi (`https://mcp.god
 
 ---
 
-## (este commit) · docs: pedido integral al Banco y propuestas de contrato
+## 914005c · docs: pedido integral al Banco y propuestas de contrato
 - **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
 - **Etapa:** Coordinación con el Banco
 

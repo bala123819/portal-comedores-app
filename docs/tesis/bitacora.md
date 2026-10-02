@@ -271,3 +271,20 @@ El equipo aportó la documentación del servidor MCP de GoDubi (`https://mcp.god
 **Pendientes.** Completar el resultado del smoke test y enviar el mensaje; registrar la respuesta como hito.
 
 **Archivos principales.** `docs/comunicaciones/2026-10-02-pedido-integral-al-banco.md`, `docs/api-gaps.md`.
+
+---
+
+## Hito · Santiago Helguera es el dueño de GoDubi
+- **Fecha:** 2026-10-02 · **Sin commit propio** (se registra en el commit siguiente)
+
+El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofreció los créditos necesarios para construir y probar los agentes. Los temas de plataforma (cuenta, créditos, modo Builder, conector Mermab, canal de entrada) se coordinan directamente con él. Se ajustó el mensaje integral (puntos 10, 14 y 15).
+
+---
+
+## (este commit) · docs: ajustar el mensaje al Banco (Santiago es dueño de GoDubi)
+- **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Coordinación con el Banco
+
+**Qué se hizo.** Puntos 10, 14 y 15 del mensaje integral reescritos para pedirle a Santiago directamente la cuenta con créditos, el modo Builder y la información del canal de entrada de GoDubi.
+
+**Verificación.** No aplica (documentación).

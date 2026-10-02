@@ -1,6 +1,6 @@
 # Mensaje al Banco de Alimentos — 2026-10-02 (pedido integral)
 
-**Para:** Santiago Helguera (y equipo técnico del Banco). **Reemplaza** al borrador del 2026-10-01 (no enviado).
+**Para:** Santiago Helguera (referente del Banco y dueño de GoDubi) y equipo técnico del Banco. **Reemplaza** al borrador del 2026-10-01 (no enviado).
 **Antes de enviar:** completar la línea del smoke test. **Adjuntos:** `docs/agentes-contrato.md` y la sección G-14 de `docs/api-gaps.md` (propuestas de contrato).
 
 ---
@@ -32,12 +32,12 @@ Hola Santiago, ¿cómo estás? Te escribimos con el estado del proyecto y con to
 
 ### 3. Agentes de IA y GoDubi
 
-10. **Cuenta de GoDubi:** ¿la cuenta es del Banco o creamos una nuestra? ¿Cuántos **créditos** hay para desarrollo y para la prueba con comedores?
+10. **Cuenta y créditos de GoDubi:** gracias por ofrecernos los créditos. ¿Cómo lo armamos? ¿Nos creás una cuenta u organización para el proyecto y le asignás los créditos ahí?
 11. **API key del modelo de lenguaje** (OpenAI económico o DeepSeek) que mencionaste en la reunión, para que la usen los agentes.
 12. **Conector Mermab de GoDubi:** ¿qué acciones tiene y con qué credencial se configura? Necesitaríamos que apunte al **tenant de pruebas** y con permisos mínimos.
 13. **Brief de integración GoDubi ↔ Mermab** (el link de GitLab nos da 403) y, si es posible, acceso al catálogo de herramientas del **MCP server de Mermab** (`mcp-server/TOOLS.md`).
-14. **Modo Builder de GoDubi** (beta, por invitación): ¿nos pueden habilitar? Nos permitiría crear los agentes desde nuestro entorno de desarrollo.
-15. **Canal de entrada:** ¿saben si GoDubi tiene alguna forma oficial de que una app externa le hable a un agente y reciba la respuesta? Si no, armamos un servicio intermedio propio.
+14. **Modo Builder de GoDubi** (beta, por invitación): ¿nos lo podés habilitar? Nos permitiría crear los agentes desde nuestro entorno de desarrollo.
+15. **Canal de entrada:** ¿GoDubi tiene alguna forma oficial de que una app externa le hable a un agente y reciba la respuesta (API o webhook)? Si no, armamos un servicio intermedio propio que delegue en los workers.
 
 ### 4. Contenidos
 

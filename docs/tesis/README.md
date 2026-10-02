@@ -8,9 +8,11 @@ para usarlo como material de la documentación final de la tesis (Banco de Alime
 | [bitacora.md](bitacora.md) | Una entrada por commit: objetivo, qué se hizo, decisiones, problemas, verificación y pendientes. Incluye hitos sin commit (reuniones, material recibido). | **En cada commit** |
 | [arquitectura.md](arquitectura.md) | Stack, capas, flujos (sesión, datos, idempotencia, offline, módulos, agentes) y su justificación. | Cuando cambia la arquitectura |
 | [problemas-y-soluciones.md](problemas-y-soluciones.md) | Registro técnico de problemas encontrados, causa y solución. | Cuando aparece/se resuelve un problema |
+| [plan-de-accion.md](plan-de-accion.md) | Propuesta vs. estado, decisiones pendientes, cronograma hasta la entrega, riesgos. | Al replanificar |
 | [estado-actual.md](estado-actual.md) | Foto del estado del proyecto: qué funciona, qué está apagado, qué falta (front, back, agentes). | Al cerrar cada etapa |
 
 Documentos relacionados (fuera de esta carpeta):
+- `docs/propuesta/` — **propuesta de tesis** acordada con el Banco (alcance oficial).
 - `docs/00-inventario.md` — relevamiento inicial de la API (Fase 0).
 - `docs/bda/` — guía de la API que mandó el Banco (fuente de verdad del backend).
 - `docs/api-gaps.md` — faltantes y bugs del backend, y qué pedirle al Banco.

@@ -6,6 +6,13 @@ problemas `P-xx` en [problemas-y-soluciones.md](problemas-y-soluciones.md), falt
 
 ---
 
+## Hito · Reunión con el Banco de Alimentos: definición de la propuesta
+- **Fecha:** 2026-09-08 · **Sin commit** (anterior al repositorio)
+
+Reunión del equipo (Balardini Tomás, Martina Gonella, Julieta Leiro) con Santiago Helguera (Banco de Alimentos). Se descarta la vertical de logística con La Anónima (ya la implementa el Banco) y se define la vertical de **organizaciones sociales (comedores)**: gestión de pedidos, registro de familias, panel nutricional, cursos, stock interno y muro de necesidades, con dos interfaces (app móvil minimalista y chatbot de WhatsApp con agentes de IA). El Banco desarrolla el backend; el equipo hace el frontend y los agentes (aporte central). Documento: `docs/propuesta/propuesta-tesis.md`.
+
+---
+
 ## 456bf60 · Initial commit
 - **Fecha:** 2026-09-25 16:48 · **Autoría:** bala123819
 - **Etapa:** Inicio del proyecto
@@ -221,3 +228,26 @@ El equipo aportó la documentación del servidor MCP de GoDubi (`https://mcp.god
 **Pendientes.** Crear en GoDubi la orden "Portal Comedores" y el worker Recetas; conectar Claude Code por OAuth; resolver canal de entrada, WhatsApp, conector Mermab y créditos.
 
 **Archivos principales.** `docs/godubi/02-mcp.md`, `docs/godubi/analisis.md`.
+
+---
+
+## (este commit) · docs: propuesta de tesis y plan de acción
+- **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Planificación
+
+**Objetivo.** Alinear el trabajo con el alcance acordado en la propuesta de tesis y ordenar lo que falta hasta la entrega.
+
+**Qué se hizo.**
+- `docs/propuesta/`: documento original de la propuesta (reunión del 8/9) y su transcripción.
+- `docs/tesis/plan-de-accion.md`: comparación funcionalidad por funcionalidad (pedidos, familias, panel nutricional, cursos, stock interno, muro, app, WhatsApp/agentes), avance estimado contra la propuesta (~30 %), decisiones urgentes, procesos candidatos a automatizar con agentes, cronograma semanal hasta noviembre, responsabilidades y riesgos.
+- Hito de la reunión del 8/9 agregado al comienzo de la bitácora.
+
+**Hallazgos.** "Gestión de pedidos" de la propuesta (solicitar alimentos con cantidades y motivo) no es el flujo de mermas construido; el backend de pedidos (`/org/distributions`) no existe todavía. Stock interno, muro y cursos no tienen backend ni están en la guía del Banco. Los agentes son el aporte central y están sin construir.
+
+**Decisiones.** Quedan planteadas (A–E en el plan) para el equipo.
+
+**Verificación.** No aplica (documentación).
+
+**Pendientes.** Tomar las decisiones A–E; reunión con el área social; empezar el agente de Recetas y las pantallas de pedidos.
+
+**Archivos principales.** `docs/propuesta/*`, `docs/tesis/plan-de-accion.md`, `docs/tesis/bitacora.md`.

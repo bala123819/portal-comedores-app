@@ -166,3 +166,31 @@ El equipo del Banco envió 6 posts con la guía de la API para la app de organiz
 **Pendientes.** Enviar el mensaje al Banco (completar el resultado del smoke test). Definir quién construye los agentes. Prueba de la app con la API real y en celular.
 
 **Archivos principales.** `docs/agentes-contrato.md`, `docs/comunicaciones/2026-10-01-pedido-al-banco.md`, `src/services/agents/http.ts`, `docs/decisiones.md`.
+
+---
+
+## Hito · Documentación de GoDubi (1): API de AI Workers
+- **Fecha:** 2026-10-02 · **Sin commit propio** (se registra en el commit siguiente)
+
+Se confirma que los agentes se construirán en **GoDubi**. El equipo aportó la documentación de la API de AI Workers (49 endpoints). Hallazgo clave: es una API del lado del agente, autenticada con una key secreta por worker y con límite de 500 pedidos/hora; no ofrece un canal para que una app de usuarios finales converse con un agente. Se propone un **gateway** propio del lado servidor que implemente el contrato de la app y delegue en los workers. Quedan dudas (canal de entrada, WhatsApp, MCP) para la próxima documentación.
+
+---
+
+## (este commit) · docs: análisis de la API de GoDubi
+- **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Planificación de agentes
+
+**Objetivo.** Evaluar qué ofrece GoDubi para construir los agentes y cómo se conecta con la app.
+
+**Qué se hizo.**
+- `docs/godubi/01-api-ai-workers.md`: documentación de la API de AI Workers (autenticación, capabilities, persona, instrucciones, tareas, archivos con procesamiento, knowledge base, memoria, external API calls, multi-agente, eventos, MCP helpers, catálogo).
+- `docs/godubi/analisis.md`: qué sirve (persona, instrucciones, knowledge base para el recetario, procesamiento de los recetarios del Banco, external_api_call hacia Mermab, multi-agente, revisión humana), qué no (reuniones, media, workspace, conectores ajenos), arquitectura con gateway y dudas abiertas.
+- `docs/agentes-contrato.md`: nota de que con GoDubi la URL de agentes apunta al gateway.
+
+**Decisiones.** Ninguna nueva cerrada; la arquitectura con gateway queda como hipótesis hasta conocer el resto de la documentación.
+
+**Verificación.** No aplica (documentación).
+
+**Pendientes.** Recibir el resto de la documentación de GoDubi (canal de entrada, WhatsApp, MCP) y cerrar la arquitectura.
+
+**Archivos principales.** `docs/godubi/01-api-ai-workers.md`, `docs/godubi/analisis.md`, `docs/agentes-contrato.md`.

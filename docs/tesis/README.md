@@ -17,6 +17,7 @@ Documentos relacionados (fuera de esta carpeta):
 - `docs/decisiones.md` — decisiones técnicas numeradas (D-01, D-02…).
 - `docs/mapa-pantallas.md` — propuesta original de navegación.
 - `docs/agentes-contrato.md` — contrato entre la app y los agentes de IA.
+- `docs/godubi/` — documentación de GoDubi (plataforma de agentes) y su análisis.
 - `docs/comunicaciones/` — mensajes enviados al Banco y otros actores (registro de la coordinación).
 
 ## Cómo se mantiene (proceso)

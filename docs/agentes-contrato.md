@@ -18,6 +18,8 @@ backend o la API Mermab del lado servidor).
 
 ## 2. Conexión
 
+> **Con GoDubi (2026-10-02):** la API de GoDubi es del lado del agente y su key (`gd_aiw_…`) es secreta, así que la app no puede llamarla directo. `EXPO_PUBLIC_AGENTS_URL` apunta a un **gateway** propio del lado servidor que implementa este contrato y delega en los workers de GoDubi. Ver `docs/godubi/analisis.md`.
+
 - **Base URL:** la que se configure en la app como `EXPO_PUBLIC_AGENTS_URL` (p. ej. `https://agentes.ejemplo.org/portal`). Si está vacía, la app usa el agente simulado.
 - **Método:** siempre `POST` con JSON. Headers que manda la app:
   - `Accept: application/json`

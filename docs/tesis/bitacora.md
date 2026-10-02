@@ -204,7 +204,7 @@ El equipo aportó la documentación del servidor MCP de GoDubi (`https://mcp.god
 
 ---
 
-## (este commit) · docs: documentación del MCP de GoDubi y plan de trabajo con agentes
+## 7b16291 · docs: documentación del MCP de GoDubi y plan de trabajo con agentes
 - **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
 - **Etapa:** Planificación de agentes
 

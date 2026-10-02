@@ -1,65 +1,76 @@
 # Análisis de GoDubi para el proyecto
 
-**Documentos analizados:** [01-api-ai-workers.md](01-api-ai-workers.md) (2026-10-02). Se actualiza a medida que llegue más documentación.
+**Documentos analizados:** [01-api-ai-workers.md](01-api-ai-workers.md) y [02-mcp.md](02-mcp.md) (2026-10-02).
+Se actualiza a medida que llegue más documentación.
 
-## 1. Qué es esta API (y qué no)
+## 1. Qué es GoDubi para nosotros
 
-Es la API **del lado del agente**: la usa un AI Worker (o un cliente externo que se autentica *como* worker)
-para leer su orden, tareas, archivos y conocimiento, y para actuar (crear tareas, pedir revisión, llamar APIs externas, delegar en otros workers).
+Una plataforma donde viven los **AI Workers** (agentes). Cada worker tiene persona (identidad y tono),
+capabilities (permisos), knowledge base (RAG), memoria, conectores y órdenes asignadas (proyectos).
+Se usa de dos formas, con las mismas credenciales y datos:
+- **API REST** (`/api/ai/*`) — 49 endpoints.
+- **Servidor MCP** (`https://mcp.godubi.com/mcp`) — las mismas operaciones como *tools*; un cliente MCP (por ejemplo Claude Code) actúa **como un worker**.
 
-**No es** una API para que una app de usuarios finales "chatee" con un agente:
-- La key `gd_aiw_…` es la identidad del worker y da acceso a su orden, conocimiento y memoria → **es un secreto**. No puede ir en la app (mismo criterio que la `X-API-Key` de Mermab).
-- No hay un endpoint del tipo "mandar mensaje de usuario y recibir respuesta". Lo más cercano es `POST /delegate` con `waitForCompletion` y `POST /events/send-message`, pero son **de worker a worker**.
-- Límite de **500 pedidos/hora** por key: compartido entre todos los usuarios si se usa una sola key para la app.
+Ambas son **del lado del agente**: no hay un canal para que una app de usuarios finales converse con un worker.
 
-**Consecuencia:** la app no puede hablar directo con GoDubi. Hace falta **un servicio intermedio (gateway)** del lado servidor que guarde la key y traduzca nuestro contrato (`docs/agentes-contrato.md`) a GoDubi. La app no cambia.
+## 2. Hallazgos clave
 
-## 2. Qué nos sirve
+1. **Hay un conector nativo de Mermab** ("gestión de banco de alimentos: inventario, distribuciones, organizaciones"). Es probablemente el camino para que los agentes lean datos del Banco, en lugar del MCP de Mermab o de `external_api_call`. Hay que ver sus acciones y con qué credencial se configura (se configura desde el panel; quien tenga la credencial del tenant).
+2. **Claude Code puede conectarse a GoDubi por MCP con OAuth** (sin copiar claves): `claude mcp add --transport http godubi https://mcp.godubi.com/mcp` y luego autenticar eligiendo un worker. **1 conexión = 1 worker.**
+3. **Modo Builder** (beta, por invitación): crear workers completos (persona, skills, conocimiento, triggers, órdenes) desde el editor. Si nos habilitan, se puede construir la flota de agentes desde acá.
+4. **Telegram sí, WhatsApp no** entre los conectores (Telegram tiene `send_message` y `set_webhook`). El chatbot de WhatsApp sigue sin resolver; Telegram podría ser un canal alternativo para la tesis.
+5. **Todo se paga en créditos** (por acción y por tokens). Sin balance → error `insufficient_credits`. Hay que saber quién tiene la cuenta y cuántos créditos hay para desarrollo y para la prueba con comedores.
+6. **Acciones destructivas** requieren aprobación humana con token que vence en 15 min; `review_request` puede bloquear hasta que el usuario responde. Encaja con nuestra regla de que los agentes sólo proponen.
+7. **Aislamiento por orden:** un worker sólo ve las órdenes asignadas → una orden "Portal Comedores" con todos los workers del proyecto.
 
-| Recurso de GoDubi | Para qué lo usaríamos | Prioridad |
+## 3. Qué nos sirve
+
+| Recurso | Uso | Prioridad |
 |---|---|---|
-| **Persona** (`tone`, `language`, `forbiddenTopics`, `responseFormat.useMarkdown=false`, `maxLength`) | Fijar el estilo de los agentes: español rioplatense, cálido, sin tecnicismos, texto plano, respuestas cortas | Alta |
-| **Instrucciones de orden** (`projectContext`, `objectives`, `constraints`, `requiresApproval`) | Volcar las reglas del contrato: sólo proponer acciones, nunca ejecutar postulaciones/retiros, no inventar datos nutricionales | Alta |
-| **Knowledge base** (`knowledge/save`, `knowledge/search`) | Cargar el **recetario** y tablas nutricionales para el agente de recetas y el nutricional (RAG) | **Alta — fase 1** |
-| **Archivos con procesamiento** (`files/:id/content`: PDF, Word, Excel) | Subir los **recetarios del Banco** tal como vengan (Excel/Word/PDF) y que GoDubi extraiga el texto | Alta |
-| **external_api_call** con `integrationId` | Que el agente consulte la **API Mermab** con credenciales guardadas cifradas en GoDubi (alternativa o complemento al MCP de Mermab), con auditoría | Media — fase 2 |
-| **Multi-agente** (`delegate`, Concierge) | Un worker "recepción" que deriva a Recetas / Nutrición / Operación | Media |
-| **request_review** | Aprobación humana en GoDubi para acciones sensibles (complementa la regla de que en la app confirma el usuario) | Media |
-| **Memoria** (`memory`, `core memory`) | Preferencias por organización (p. ej. cantidad habitual de personas). Cuidar privacidad | Baja |
-| **Skills** | Empaquetar instrucciones reutilizables (p. ej. "escalar recetas") | Baja |
-| **Servidor MCP de GoDubi** (`/mcp/init-context`) | GoDubi tiene un MCP propio: un cliente externo (por ejemplo Claude Code) podría actuar como worker para preparar y probar agentes | A confirmar |
+| Persona (`tone`, `language: es`, `responseFormat.useMarkdown=false`, `maxLength`, `forbiddenTopics`) | Estilo de los agentes: rioplatense, cálido, sin tecnicismos, texto plano, corto | Alta |
+| Instrucciones de orden (`constraints`, `requiresApproval`) | Reglas del contrato: sólo proponer acciones, no inventar datos nutricionales, no pedir datos personales | Alta |
+| Knowledge base (`knowledge_save` / `knowledge_search`) | Recetario y tablas nutricionales para los agentes de recetas y nutrición | **Alta — fase 1** |
+| `file_read` (PDF, Word, Excel) | Leer los recetarios del Banco tal como vengan y pasarlos al knowledge base | Alta |
+| Conector **Mermab** | Datos de la organización para el agente de operación (fase 2) | Media |
+| `delegate_to_worker` / `get_delegation_status` | Gateway que deriva a Recetas / Nutrición / Operación | Media |
+| `review_request` | Aprobación humana de acciones sensibles | Media |
+| Conector Telegram | Canal de chat alternativo a WhatsApp | A evaluar |
+| Modo Builder | Crear los workers desde Claude Code | Si nos habilitan |
 
-## 3. Qué no nos sirve
+**No nos sirve:** workspace/deploy/shell, reuniones, imagen/audio/video, conectores de Google/Notion/Slack/Shopify/Jira/Asana/Strava/Supabase/CleverFox/AFIP.
 
-Reuniones (Recall.ai), generación de imagen/video/audio, workspace/deploy, conectores de Google/Notion/Slack/Supabase/CleverFox/AFIP, board de tareas como interfaz de usuario. Telegram aparece como conector; **WhatsApp no** (ver dudas).
-
-## 4. Arquitectura propuesta (hipótesis a validar)
+## 4. Arquitectura propuesta
 
 ```
-App ──HTTP (contrato v1)──▶ Gateway (servidor propio, guarda la key gd_aiw_)
-                               │  POST /api/ai/orders/:orderId/delegate
-                               │       { toWorkerId: <Recetas|Nutrición|Concierge>, prompt, waitForCompletion: true }
-                               │  GET  /api/ai/orders/:orderId/delegations/:id  (si no bloquea)
-                               ▼
-                         GoDubi: workers Recetas / Nutrición / Operación
-                               │  knowledge base: recetario, tablas nutricionales
-                               │  external_api_call / MCP Mermab (fase 2)
-                               ▼
-                         API Mermab (Banco)
+App ──HTTP (contrato v1)──▶ Gateway propio (servidor; guarda la key del worker "gateway")
+                              │  delegate_to_worker / POST /delegate { toWorkerId, prompt, waitForCompletion: true }
+                              ▼
+                         GoDubi · orden "Portal Comedores"
+                              ├─ Worker Recetas    (knowledge: recetario)
+                              ├─ Worker Nutrición  (knowledge: tablas nutricionales)
+                              └─ Worker Operación  (conector Mermab, fase 2)
+                                          │
+                                          ▼
+                                     API Mermab (Banco)
 ```
+- La key de GoDubi nunca va en la app (D-10 y regla general de secretos).
+- El gateway arma el prompt, pide la respuesta en el formato del contrato y la valida.
+- **A validar:** latencia de una delegación bloqueante; forma del resultado; consumo de créditos por mensaje; si 500 pedidos/hora por key alcanzan.
 
-El gateway arma el `prompt` con el pedido de la app (alimentos, personas, pregunta) e indica el formato de
-respuesta (JSON del contrato). Valida la respuesta antes de devolverla a la app.
+## 5. Cómo trabajamos los agentes desde Claude Code
 
-**A validar:** que una key de worker "gateway" con `orchestrate_workers` pueda delegar y obtener el resultado
-de forma bloqueante, la latencia real (objetivo < 8 s, máximo 30 s) y la forma del resultado de una delegación.
+1. En GoDubi (UI, lo hace el equipo): crear la orden **"Portal Comedores"** y un worker **Recetas** con capabilities mínimas (`read_order_context`, `read_files`, `knowledge_search`, `knowledge_write`), asignado a la orden.
+2. Conectar Claude Code a GoDubi por **OAuth** eligiendo el worker Recetas (comando de la sección 2.2; lo ejecuta el equipo, no se copian claves).
+3. Desde Claude Code, actuando como ese worker: cargar el recetario en su knowledge base, probar búsquedas, leer los recetarios del Banco subidos a la orden y armar casos de prueba.
+4. Persona e instrucciones: se redactan acá y se pegan en la UI (por API sólo se leen).
+5. Para el resto de los workers: una conexión por worker, o modo Builder si nos habilitan.
 
-## 5. Dudas para la próxima documentación / el equipo de GoDubi
+## 6. Dudas abiertas
 
-1. **Canal de entrada para usuarios finales:** ¿hay forma oficial de que una app o un webhook dispare a un worker y reciba la respuesta (API de chat, webhook entrante, trigger HTTP)? Si existe, el gateway se simplifica o desaparece.
-2. **WhatsApp:** no figura entre los conectores. ¿Cómo se conecta el chatbot de WhatsApp a GoDubi?
-3. **Servidor MCP de GoDubi:** ¿URL o paquete, transporte y cómo se autentica (¿con la key `gd_aiw_`?)? ¿Y cómo se conecta un **MCP externo** (el de Mermab) a un worker?
-4. **Órdenes:** ¿qué es una "orden" en nuestro caso? ¿Una sola orden "Portal Comedores" con todos los workers, o una por organización?
-5. **Formato de salida:** ¿se puede forzar salida estructurada (JSON) en un worker (`responseFormat.structuredOutput`)?
-6. **Costos y límites:** 500 pedidos/hora por key, ¿alcanza para la prueba con comedores? ¿Hay límites por modelo/proveedor?
-7. **Delegación:** ¿qué devuelve `GET /delegations/:id` (texto final, archivos, posts)?
+1. **Canal de entrada para usuarios finales:** ¿API/webhook oficial para que una app dispare un worker y reciba la respuesta? (Si no, gateway con delegación.)
+2. **WhatsApp:** ¿cómo se conecta? ¿Telegram es aceptable como alternativa?
+3. **Conector Mermab:** acciones disponibles, credencial que usa (¿API key del tenant de pruebas?), quién lo configura.
+4. **Créditos:** de quién es la cuenta, cuántos créditos hay, costo estimado por conversación.
+5. **Modo Builder:** ¿nos pueden habilitar?
+6. **Salida estructurada:** ¿`responseFormat.structuredOutput` garantiza JSON?
+7. **Delegación:** qué devuelve `get_delegation_status` y cuánto tarda.

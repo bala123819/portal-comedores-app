@@ -194,3 +194,30 @@ Se confirma que los agentes se construirán en **GoDubi**. El equipo aportó la 
 **Pendientes.** Recibir el resto de la documentación de GoDubi (canal de entrada, WhatsApp, MCP) y cerrar la arquitectura.
 
 **Archivos principales.** `docs/godubi/01-api-ai-workers.md`, `docs/godubi/analisis.md`, `docs/agentes-contrato.md`.
+
+---
+
+## Hito · Documentación de GoDubi (2): servidor MCP
+- **Fecha:** 2026-10-02 · **Sin commit propio** (se registra en el commit siguiente)
+
+El equipo aportó la documentación del servidor MCP de GoDubi (`https://mcp.godubi.com/mcp`). Hallazgos: Claude Code puede conectarse como un AI Worker por OAuth (1 conexión = 1 worker); existe un **conector nativo de Mermab** en GoDubi; Telegram figura como conector pero WhatsApp no; todo consumo se factura en créditos; las acciones destructivas requieren aprobación humana; existe un modo Builder (beta) para crear workers desde el editor.
+
+---
+
+## (este commit) · docs: documentación del MCP de GoDubi y plan de trabajo con agentes
+- **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Planificación de agentes
+
+**Objetivo.** Definir cómo se construyen y prueban los agentes en GoDubi y cómo se conectan con la app y con Mermab.
+
+**Qué se hizo.**
+- `docs/godubi/02-mcp.md`: conexión (OAuth / API Key / Builder), tools, conectores (incluido Mermab), facturación, confirmación de acciones destructivas, lectura de archivos, recursos, persona, instrucciones, seguridad.
+- `docs/godubi/analisis.md` actualizado: hallazgos, qué sirve, arquitectura (app → gateway → workers Recetas/Nutrición/Operación → conector Mermab), plan para trabajar los agentes desde Claude Code y dudas abiertas.
+
+**Decisiones.** Ninguna cerrada: la conexión de Claude Code a GoDubi requiere que el equipo cree el worker y autorice por OAuth.
+
+**Verificación.** No aplica (documentación).
+
+**Pendientes.** Crear en GoDubi la orden "Portal Comedores" y el worker Recetas; conectar Claude Code por OAuth; resolver canal de entrada, WhatsApp, conector Mermab y créditos.
+
+**Archivos principales.** `docs/godubi/02-mcp.md`, `docs/godubi/analisis.md`.

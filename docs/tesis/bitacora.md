@@ -231,7 +231,7 @@ El equipo aportó la documentación del servidor MCP de GoDubi (`https://mcp.god
 
 ---
 
-## (este commit) · docs: propuesta de tesis y plan de acción
+## ba74931 · docs: propuesta de tesis y plan de acción
 - **Fecha:** 2026-10-02 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
 - **Etapa:** Planificación
 

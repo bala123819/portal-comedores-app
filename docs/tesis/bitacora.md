@@ -288,3 +288,27 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 **Qué se hizo.** Puntos 10, 14 y 15 del mensaje integral reescritos para pedirle a Santiago directamente la cuenta con créditos, el modo Builder y la información del canal de entrada de GoDubi.
 
 **Verificación.** No aplica (documentación).
+
+---
+
+## (este commit) · feat: diseño del agente de Nutrición y Cocina para GoDubi
+- **Fecha:** 2026-10-05 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Agentes de IA
+
+**Objetivo.** Empezar el aporte central de la tesis: el primer agente, que sugiere qué cocinar y cómo alimentar mejor según los ingredientes disponibles y las características de la organización (edades, celiaquía, diabetes, embarazo, lactancia, intolerancia a la lactosa).
+
+**Qué se hizo.**
+- `docs/agentes/nutricion/README.md`: guía paso a paso en GoDubi (orden, worker, modelo, permisos, persona, instrucciones, conocimiento, pruebas, conexión MCP, integración con la app).
+- `persona.md`: configuración y system prompt con reglas que no se rompen (TACC y contaminación cruzada, miel en menores de 1 año, sin azúcar para diabéticos, sin diagnósticos ni dosis, sin inventar números, sin afirmar acciones).
+- `instrucciones-orden.md`: contexto, objetivos, restricciones y formato de respuesta JSON (recetas del recetario o sugeridas, adaptaciones por condición, advertencias, faltantes, preguntas).
+- `conocimiento/recetario.md` (generado) y `conocimiento/pautas-alimentarias.md` (borrador a validar por nutricionista); referencia a las Guías Alimentarias para la Población Argentina.
+- `casos-de-prueba.md`: 12 casos con resultado esperado y tabla de registro (resultado, costo, tiempo).
+- `npm run agentes:conocimiento`: exporta el recetario de la app para el knowledge base.
+
+**Decisiones.** D-11 (diseño del agente).
+
+**Verificación.** El script de exportación genera el recetario (8 recetas). El agente no se probó todavía: falta crearlo en GoDubi.
+
+**Pendientes.** Crear el worker en GoDubi; cargar el conocimiento; correr los casos de prueba; validar las pautas con una nutricionista del Banco; contrato v2 y gateway.
+
+**Archivos principales.** `docs/agentes/nutricion/*`, `scripts/exportar-conocimiento-agente.ts`, `docs/decisiones.md`.

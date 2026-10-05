@@ -73,7 +73,8 @@
     "build:web": "expo export -p web",
     "smoke": "tsx scripts/smoke-test.ts",
     "smoke:samples": "tsx scripts/smoke-test.ts --samples",
-    "bitacora": "node scripts/bitacora.mjs"
+    "bitacora": "node scripts/bitacora.mjs",
+    "agentes:conocimiento": "tsx scripts/exportar-conocimiento-agente.ts"
   },
   "private": true
 }

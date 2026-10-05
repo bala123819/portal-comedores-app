@@ -291,7 +291,7 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 
 ---
 
-## (este commit) · feat: diseño del agente de Nutrición y Cocina para GoDubi
+## 8d87a72 · feat: diseño del agente de Nutrición y Cocina para GoDubi
 - **Fecha:** 2026-10-05 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
 - **Etapa:** Agentes de IA
 

@@ -434,3 +434,13 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 - Probar las pantallas a mano en web y en el celular.
 - Avisar al Banco lo del `null`.
 - Confirmar el `status` de una familia suspendida y el 409 por entregas.
+
+---
+
+## 3466ed8 · chore(bitacora): ignorar los commits de merge
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Trabajo en equipo
+
+**Qué se hizo.** `npm run bitacora` ignora los commits de merge (`git log --no-merges`). El equipo trabaja en tres ramas, una por módulo (Familias, Pedidos de mercadería, Interacciones), que se unen a `main` con un merge commit. Ese commit no agrega trabajo propio: cada commit de la rama ya tiene su entrada. Se usa merge, no *squash* ni *rebase*, para que los hashes de la bitácora sigan existiendo en `main`.
+
+**Verificación.** `npm run bitacora` sin faltantes.

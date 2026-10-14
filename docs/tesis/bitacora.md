@@ -399,3 +399,38 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 **Decisiones.** Amplía D-08 (acoplarse al backend): un módulo se prende en el código cuando el Banco confirma que lo habilitó.
 
 **Verificación.** `tsc --noEmit` y `expo lint` sin errores. Falta probar el flujo en la app contra el servidor.
+
+---
+
+## a43f9a0 · fix(familias): ajustar la app a lo verificado contra el servidor
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** CRUD de familias (rama `feature-tomas-familias`)
+
+**Objetivo.** Probar el módulo de Familias contra el servidor real y separar lo verificado de lo supuesto. Tomás pidió revisar qué partes salían de la documentación y cuáles eran supuestos.
+
+**Qué se hizo.**
+- `npm run smoke -- --familias` contra `https://cloud.mermab.com/api` con el usuario de prueba: **33 PASS, 0 FAIL** (12 de escritura de familias). La familia de prueba se borró.
+- Script temporal, borrado después de usarlo, con los mismos helpers de la app (`familyBody`, `memberBody`, `changedFields`). Verificó los supuestos:
+  - el alta acepta todos los campos que manda la app;
+  - el `PUT` acepta `family_type_id`;
+  - `null` o `""` borra un dato;
+  - un nuevo referente del hogar desmarca al anterior;
+  - un miembro inactivo sigue en la familia y en la búsqueda por DNI;
+  - una familia inactiva deja de contar en `demographics`;
+  - el `DELETE` borra la familia con sus miembros.
+- Se quitó el aviso incorrecto de "Editar familia" y se ajustaron los textos de inactivar y reactivar para que digan sólo lo comprobado.
+- Los mocks reproducen el borrado con `null` y el referente único.
+- `docs/api-gaps.md` G-15 reescrito con los resultados.
+
+**Problemas.** P-14 (la documentación de la API contradice al servidor en el borrado con `null`).
+
+**Verificación.**
+- Smoke test y script de supuestos contra el servidor, con los resultados de arriba.
+- `tsc --noEmit` y `expo lint` sin errores.
+- El bundle web compila con los cambios.
+- Las pantallas no se probaron con clics: no hay un navegador automatizado en esta sesión.
+
+**Pendientes.**
+- Probar las pantallas a mano en web y en el celular.
+- Avisar al Banco lo del `null`.
+- Confirmar el `status` de una familia suspendida y el 409 por entregas.

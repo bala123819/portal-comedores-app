@@ -80,3 +80,8 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 - **Síntoma:** el smoke test respondía "Las credenciales proporcionadas son incorrectas".
 - **Causa:** la clave se había escrito entre `< >`, copiando el formato de los ejemplos (`<CLAVE>`).
 - **Solución:** escribir la clave sin signos. Se diagnosticó sin mostrar la clave (sólo largo y caracteres especiales).
+
+### P-14 · La documentación de la API decía que `null` no borra un dato, y sí lo borra
+- **Síntoma:** la pantalla "Editar familia" avisaba que vaciar un campo no lo cambiaba, siguiendo el post 5 de la API organizaciones ("un `null` en un campo que no tocaron se toma como no enviado").
+- **Causa:** al probar contra el servidor, `PUT /org/families/{id}` con `phone: null` (o `""`) borró el teléfono.
+- **Solución:** se quitó el aviso y los mocks se comportan como el servidor. Antes de mostrar una regla del backend en la interfaz, se verifica contra el servidor con el usuario de prueba. Registrado en `docs/api-gaps.md` G-15 para avisar al Banco.

@@ -7,6 +7,7 @@ import {
   HeartHandshake,
   LifeBuoy,
   LogOut,
+  MessagesSquare,
   Salad,
   Sparkles,
   Stethoscope,
@@ -42,6 +43,7 @@ export default function MasScreen() {
 
       <SectionHeader title="Mi organización" />
       <View className="gap-2">
+        <ListItem icon={MessagesSquare} title="Comunicación con el Banco" subtitle="Sucesos, solicitudes, consultas y reclamos" onPress={() => router.push('/banco')} />
         <ListItem icon={Building2} title="Datos de la organización" subtitle={features.contactos ? 'Dirección y contactos que retiran' : 'Dirección y datos de retiro'} onPress={() => router.push('/organizacion')} />
         {features.mermas ? (
           <ListItem icon={Users} title="Familias" subtitle="Personas que asiste la organización" onPress={() => router.push('/familias')} />

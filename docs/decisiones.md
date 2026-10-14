@@ -41,3 +41,13 @@ Fase 1 (recetas y nutrición general): la app no manda el token del usuario, só
 
 ### D-11 · Diseño del agente de Nutrición y Cocina (2026-10-05)
 Un solo worker en GoDubi para recetas y nutrición. **Sin entrenar un modelo:** modelo general + persona (system prompt con reglas de seguridad alimentaria) + knowledge base (recetario, pautas, Guías Alimentarias para la Población Argentina, y los materiales del Banco cuando lleguen) + contexto de la organización en cada consulta. La demografía (edades y condiciones, sólo cantidades) la manda la app desde la sesión del usuario: el agente no accede a la API del Banco. El agente responde JSON con recetas del recetario (`recetaId`) o sugeridas (base 10 porciones); la app escala las cantidades. Permisos mínimos (`read_order_context`, `read_files`, `knowledge_search`). Guía: `docs/agentes/nutricion/`.
+
+### D-12 · Comunicación con el Banco (interacciones) (2026-10-14)
+Se implementa el canal de la organización con el Banco según el post 8/14 publicado en GoDubi (`docs/bda/08-interacciones.md`), que el Banco ordenó como paso 4 del orden sugerido.
+- **Sin interruptor de módulo:** el Banco lo documentó con respuestas reales del servidor, así que se usa siempre (como avisos y familias). Si un 403 mostrara lo contrario, se agrega `interacciones` a `src/lib/features.ts`.
+- **Tipos escritos a mano** (`src/features/interacciones/types.ts`): `/org/interactions` no está en el OpenAPI del repo.
+- **Rutas** `/banco` (lista), `/banco/nueva` (alta, acepta `?tipo=` para llegar con el tipo elegido) y `/banco/[id]` (detalle). Acceso desde Inicio (con la cantidad de pendientes), Más › Mi organización y Ayuda.
+- **Sólo alta y lectura:** la API no permite editar ni borrar interacciones, así que la app tampoco lo ofrece. Para seguir un tema se manda un mensaje nuevo.
+- **Seguimiento** con el `Stepper` de la app en tres pasos (Enviado → Esperando al Banco → Atendido), porque la API sólo tiene `pendiente`/`atendida` con `attended_at`.
+- **Formulario** con los límites del backend (asunto ≤ 255, detalle ≤ 5000), errores 422 en el campo y `Idempotency-Key` por intención (reintentar no duplica el mensaje).
+- La solicitud se presenta como el camino para "insumos u otras necesidades que no estén en el catálogo", tal como lo define el Banco en el mapa de la API (post 6509).

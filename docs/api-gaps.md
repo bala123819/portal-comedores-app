@@ -137,3 +137,11 @@ Todas bajo el usuario de la organización (Bearer), con el envoltorio `{success,
 - `GET /org/courses?category=` · `GET /org/courses/{id}` (`title, category, description, duration, format: video|pdf|presencial, url?, schedule?`) · `POST /org/courses/{id}/enroll`
 
 Si alguno no entra en la planificación del Banco, la alternativa del equipo es un backend propio liviano sólo para esos módulos (ver `docs/tesis/plan-de-accion.md`, decisión A).
+
+### G-15 · Interacciones con el banco: preguntas abiertas (2026-10-14)
+Implementado según `docs/bda/08-interacciones.md`. Para cerrar el circuito falta confirmar con el Banco:
+- **Respuesta del Banco:** al pasar a `atendida` sólo llega `attended_at`. ¿Puede sumarse un texto de respuesta (`response` / `attended_notes`) para mostrarle a la organización qué se resolvió?
+- **Aviso a la organización:** ¿se genera una notificación cuando el Banco atiende la interacción? Si viene con `data.interaction_id`, la app puede abrir el detalle desde la bandeja.
+- **Editar o cancelar** una interacción pendiente (hoy no existe; la app no lo ofrece).
+- **Adjuntos** (foto de la mercadería dañada en un reclamo o suceso).
+- Los endpoints no figuran en el OpenAPI (ver P-14).

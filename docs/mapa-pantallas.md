@@ -29,6 +29,9 @@ Principio: una acción principal por pantalla, 4 pestañas + "Más". Términos d
   /recetas/[id]/cocinar                 Modo paso a paso, letra grande
   /recetas/sugerir                      Agente de recetas: "¿Qué tenés y para cuántos?"
   /notificaciones                       Bandeja
+  /banco                                Comunicación con el Banco: lista con filtros (estado, tipo) y accesos por tipo
+  /banco/nueva?tipo=                    Nuevo mensaje: suceso | solicitud | consulta | reclamo
+  /banco/[id]                           Detalle con seguimiento (Enviado → Esperando al Banco → Atendido)
   /mas/nutricion                        Grupos, resumen de lo recibido, cuota (si existe)
   /mas/familias, /mas/familias/[id]     Familias + resumen demográfico
   /mas/jornadas                         Jornadas de recolección y talleres (si hay permiso)
@@ -50,6 +53,7 @@ dev/ (solo __DEV__)
 | Mis retiros → Pedidos | Postulaciones con StatusBadge | Abrir / cancelar | `/org/applications` |
 | Mis retiros → Retiros | Asignaciones agrupadas: "Para confirmar", "Próximos", "Historial" | Abrir | `/org/assignments` |
 | Detalle retiro | Stepper `asignada → confirmada → en camino → completada`; fecha/hora; dirección de la sucursal; productos; quién retira | Según estado: **Confirmar** / **Salimos para allá** / **Ya lo retiramos**; secundaria: cancelar (con confirmación) | `/org/assignments/{id}` + acciones |
+| Comunicación con el Banco | Accesos por tipo (suceso, solicitud, consulta, reclamo); mensajes con estado `pendiente`/`atendida`; filtros por estado y tipo con contadores | **Escribirle al Banco** | `/org/interactions`, `/org/interactions/summary`, `POST /org/interactions` |
 | Recetas | Búsqueda, chips de categoría, cards | Abrir | local |
 | Detalle receta | Selector "¿Para cuántas personas?" (+/−), ingredientes escalados, pasos | **Empezar a cocinar** | local |
 

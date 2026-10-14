@@ -332,7 +332,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 
 ---
 
-## (pendiente) · feat: comunicación de la organización con el Banco (interacciones)
+## d184ac1 · feat: comunicación de la organización con el Banco (interacciones)
 - **Fecha:** 2026-10-14 · **Autoría:** martinagonella + asistencia de IA (Claude Code, conectado a GoDubi por MCP como "Agente Martu")
 - **Etapa:** Acople a la API real — módulos CRUD
 

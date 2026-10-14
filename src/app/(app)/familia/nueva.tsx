@@ -17,15 +17,21 @@ import {
   Text,
   TextArea,
 } from '@/components/ui';
-import { useCreateFamily, useFamilyTypes } from '@/features/familias/hooks';
-import { useOrgId } from '@/features/org/hooks';
-import { genderLabels, housingLabels, relationshipLabels } from '@/lib/labels';
+import { useCreateFamily, useFamilyFormConfig, useFamilyTypes } from '@/features/familias/hooks';
+import type { CreateFamilyInput, FamilyFormConfig } from '@/features/familias/types';
+import { educationLabels, employmentLabels, genderLabels, housingLabels, label, relationshipLabels } from '@/lib/labels';
 import { humanMessage, isApiError } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
-import type { CreateFamilyBody } from '@/services/api/endpoints/organizations';
 import { colors } from '@/theme/tokens';
 
-const options = (map: Record<string, string>) => Object.entries(map).map(([value, label]) => ({ value, label }));
+/** Opciones de una lista según form-config (las define el banco); sin config, las de labels.ts */
+const options = (values: string[] | undefined, map: Record<string, string>) =>
+  (values ?? Object.keys(map)).map((value) => ({ value, label: label(map, value) }));
+
+type Field = { enabled: boolean; required: boolean };
+const fieldConfig = (cfg: FamilyFormConfig | undefined, name: string): Field =>
+  cfg?.config.required_fields[name] ?? { enabled: true, required: false };
+const fieldLabel = (text: string, f: Field) => (f.required ? text : `${text} (opcional)`);
 
 const CONDITIONS = [
   ['is_pregnant', 'Embarazada'],
@@ -47,6 +53,8 @@ const memberSchema = z.object({
     .optional(),
   relationship: z.string().optional(),
   gender: z.string().optional(),
+  employment_level: z.string().optional(),
+  education_level: z.string().optional(),
   is_pregnant: z.boolean(),
   is_nursing_mother: z.boolean(),
   is_celiac: z.boolean(),
@@ -55,11 +63,12 @@ const memberSchema = z.object({
   has_disability: z.boolean(),
 });
 
-/** Campos de `POST /organizations/{id}/families` (family_type_id*, name*, members[]) */
+/** Campos de `POST /org/families` (family_type_id*, name*, members[]) */
 const schema = z.object({
   name: z.string().trim().min(2, 'Escribí un nombre para la familia').max(255),
   family_type_id: z.string().min(1, 'Elegí el tipo de familia'),
   phone: z.string().trim().max(50).optional(),
+  email: z.union([z.literal(''), z.string().trim().email('Revisá el email')]).optional(),
   housing_situation: z.string().optional(),
   notes: z.string().max(2000).optional(),
   members: z.array(memberSchema),
@@ -74,6 +83,8 @@ const emptyMember = (): MemberValues => ({
   birth_date: '',
   relationship: undefined,
   gender: undefined,
+  employment_level: undefined,
+  education_level: undefined,
   is_pregnant: false,
   is_nursing_mother: false,
   is_celiac: false,
@@ -88,9 +99,15 @@ const toIso = (d?: string) => {
 };
 
 export default function NuevaFamiliaScreen() {
-  const orgId = useOrgId();
   const types = useFamilyTypes();
-  const create = useCreateFamily(orgId ?? '', (id) => {
+  const formConfig = useFamilyFormConfig();
+  const cfg = formConfig.data;
+  const opts = cfg?.options;
+  const housing = fieldConfig(cfg, 'housing_situation');
+  const email = fieldConfig(cfg, 'email');
+  const employment = fieldConfig(cfg, 'employment_level');
+  const education = fieldConfig(cfg, 'education_level');
+  const create = useCreateFamily((id) => {
     if (id) router.replace({ pathname: '/familia/[id]', params: { id } });
     else router.back();
   });
@@ -102,17 +119,31 @@ export default function NuevaFamiliaScreen() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', family_type_id: '', phone: '', notes: '', members: [{ ...emptyMember(), relationship: 'jefe_hogar' }] },
+    defaultValues: { name: '', family_type_id: '', phone: '', email: '', notes: '', members: [{ ...emptyMember(), relationship: 'jefe_hogar' }] },
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'members' });
 
+  /** Los campos que el banco marca `required` en form-config: la API los exige en el alta. */
+  const missingRequired = (v: FormValues) => {
+    const missing: [Parameters<typeof setError>[0], string][] = [];
+    if (housing.enabled && housing.required && !v.housing_situation) missing.push(['housing_situation', 'Elegí la situación de vivienda']);
+    if (email.enabled && email.required && !v.email?.trim()) missing.push(['email', 'Escribí un email']);
+    v.members.forEach((m, i) => {
+      if (employment.enabled && employment.required && !m.employment_level) missing.push([`members.${i}.employment_level`, 'Elegí la situación laboral']);
+      if (education.enabled && education.required && !m.education_level) missing.push([`members.${i}.education_level`, 'Elegí el nivel educativo']);
+    });
+    missing.forEach(([field, message]) => setError(field, { type: 'required', message }));
+    return missing.length > 0;
+  };
+
   const onSubmit = handleSubmit((v) => {
-    const body: CreateFamilyBody = {
+    if (missingRequired(v)) return;
+    const body: CreateFamilyInput = {
       name: v.name.trim(),
       family_type_id: v.family_type_id,
-      source: 'manual',
       phone: v.phone?.trim() || null,
-      housing_situation: (v.housing_situation as CreateFamilyBody['housing_situation']) || null,
+      email: email.enabled ? v.email?.trim() || null : undefined,
+      housing_situation: housing.enabled ? v.housing_situation || null : undefined,
       notes: v.notes?.trim() || null,
       members: v.members.map((m) => ({
         first_name: m.first_name.trim(),
@@ -120,9 +151,11 @@ export default function NuevaFamiliaScreen() {
         document_number: m.document_number?.trim() || null,
         document_type: m.document_number?.trim() ? 'dni' : null,
         birth_date: toIso(m.birth_date),
-        relationship: (m.relationship as 'jefe_hogar') || null,
+        relationship: m.relationship || null,
         is_head_of_household: m.relationship === 'jefe_hogar',
-        gender: (m.gender as 'no_especificado') || null,
+        gender: m.gender || null,
+        employment_level: employment.enabled ? m.employment_level || null : undefined,
+        education_level: education.enabled ? m.education_level || null : undefined,
         is_pregnant: m.is_pregnant,
         is_nursing_mother: m.is_nursing_mother,
         is_celiac: m.is_celiac,
@@ -139,7 +172,7 @@ export default function NuevaFamiliaScreen() {
   return (
     <Screen
       header={<Header title="Registrar familia" back backFallback="/familias" />}
-      footer={<Button title="Guardar familia" icon={Save} size="lg" fullWidth loading={create.isPending} onPress={onSubmit} disabled={!orgId} />}
+      footer={<Button title="Guardar familia" icon={Save} size="lg" fullWidth loading={create.isPending} onPress={onSubmit} />}
     >
       <Card className="gap-3">
         <Controller
@@ -163,20 +196,31 @@ export default function NuevaFamiliaScreen() {
             />
           )}
         />
-        <Controller
-          control={control}
-          name="housing_situation"
-          render={({ field }) => (
-            <Select label="Vivienda (opcional)" value={field.value} onChange={field.onChange} options={options(housingLabels)} />
-          )}
-        />
+        {housing.enabled ? (
+          <Controller
+            control={control}
+            name="housing_situation"
+            render={({ field }) => (
+              <Select label={fieldLabel('Vivienda', housing)} value={field.value} onChange={field.onChange} options={options(opts?.housing_situations, housingLabels)} error={errors.housing_situation?.message} />
+            )}
+          />
+        ) : null}
         <Controller
           control={control}
           name="phone"
           render={({ field }) => (
-            <Input label="Teléfono (opcional)" value={field.value} onChangeText={field.onChange} keyboardType="phone-pad" />
+            <Input label="Teléfono (opcional)" value={field.value} onChangeText={field.onChange} keyboardType="phone-pad" error={errors.phone?.message} />
           )}
         />
+        {email.enabled ? (
+          <Controller
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <Input label={fieldLabel('Email', email)} value={field.value} onChangeText={field.onChange} keyboardType="email-address" autoCapitalize="none" error={errors.email?.message} />
+            )}
+          />
+        ) : null}
         <Controller
           control={control}
           name="notes"
@@ -206,7 +250,7 @@ export default function NuevaFamiliaScreen() {
           <Controller
             control={control}
             name={`members.${i}.document_number`}
-            render={({ field }) => <Input label="DNI (opcional)" value={field.value} onChangeText={field.onChange} keyboardType="number-pad" maxLength={30} />}
+            render={({ field }) => <Input label="DNI (opcional)" value={field.value} onChangeText={field.onChange} keyboardType="number-pad" maxLength={30} error={errors.members?.[i]?.document_number?.message} />}
           />
           <Controller
             control={control}
@@ -218,13 +262,31 @@ export default function NuevaFamiliaScreen() {
           <Controller
             control={control}
             name={`members.${i}.relationship`}
-            render={({ field }) => <Select label="Parentesco" value={field.value} onChange={field.onChange} options={options(relationshipLabels)} />}
+            render={({ field }) => <Select label="Parentesco" value={field.value} onChange={field.onChange} options={options(opts?.relationships, relationshipLabels)} />}
           />
           <Controller
             control={control}
             name={`members.${i}.gender`}
-            render={({ field }) => <Select label="Género" value={field.value} onChange={field.onChange} options={options(genderLabels)} />}
+            render={({ field }) => <Select label="Género" value={field.value} onChange={field.onChange} options={options(opts?.genders, genderLabels)} />}
           />
+          {employment.enabled ? (
+            <Controller
+              control={control}
+              name={`members.${i}.employment_level`}
+              render={({ field }) => (
+                <Select label={fieldLabel('Situación laboral', employment)} value={field.value} onChange={field.onChange} options={options(opts?.employment_levels, employmentLabels)} error={errors.members?.[i]?.employment_level?.message} />
+              )}
+            />
+          ) : null}
+          {education.enabled ? (
+            <Controller
+              control={control}
+              name={`members.${i}.education_level`}
+              render={({ field }) => (
+                <Select label={fieldLabel('Nivel educativo', education)} value={field.value} onChange={field.onChange} options={options(opts?.education_levels, educationLabels)} error={errors.members?.[i]?.education_level?.message} />
+              )}
+            />
+          ) : null}
           <Text variant="label">Situaciones de salud</Text>
           <View className="flex-row flex-wrap gap-2">
             {CONDITIONS.map(([key, text]) => (

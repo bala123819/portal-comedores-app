@@ -1,13 +1,5 @@
-import type { Family, FamilyMember, FamilyType } from '@/features/familias/types';
 import type { DocumentRequirement, OrganizationDocument, SocialData } from '@/features/org/types';
 import { api } from '../client';
-import type { BodyOf } from '../types';
-
-export type CreateFamilyBody = BodyOf<'/api/organizations/{organization_id}/families', 'post'>;
-export type CreateMemberBody = BodyOf<
-  '/api/organizations/{organization_id}/families/{family_id}/members',
-  'post'
->;
 
 const id = (v: string) => encodeURIComponent(v);
 
@@ -25,14 +17,4 @@ export const organizationsApi = {
     api.get<Record<string, unknown>>(`/organizations/${id(orgId)}/collection-commitments`, {
       year,
     }),
-
-  familyTypes: () => api.get<FamilyType[]>('/family-types'),
-  createFamily: (orgId: string, body: CreateFamilyBody, key: string) =>
-    api.post<Family>(`/organizations/${id(orgId)}/families`, body, key),
-  addMember: (orgId: string, familyId: string, body: CreateMemberBody, key: string) =>
-    api.post<FamilyMember>(
-      `/organizations/${id(orgId)}/families/${id(familyId)}/members`,
-      body,
-      key,
-    ),
 };

@@ -3,6 +3,8 @@
  * estado solo por acción, Idempotency-Key obligatoria en POST).
  */
 import { apiConfig, type HttpMethod, type RequestOptions } from '@/services/api/client';
+import { randomUUID } from 'expo-crypto';
+import type { Family, FamilyMember } from '@/features/familias/types';
 import { createMockDb, ORG_ID } from './data';
 
 let db = createMockDb();
@@ -297,6 +299,216 @@ on('GET', '/org/families/demographics', () => {
     },
   });
 });
+// ─── Alta y edición de familias (posts 5–7 de la API en GoDubi) ──────────────────────────
+const digits = (v: unknown) => String(v ?? '').replace(/\D/g, '');
+const findFamily = (familyId: string) => db.families.find((x) => x.id === familyId);
+/** Otra persona de la organización con el mismo DNI (se compara sólo por los números) */
+const dniTaken = (dni: unknown, exceptMemberId?: string) => {
+  const d = digits(dni);
+  if (!d) return null;
+  for (const f of db.families)
+    for (const m of f.members ?? [])
+      if (m.id !== exceptMemberId && digits(m.document_number) === d) return f;
+  return null;
+};
+const dniMessage = (f: Family) =>
+  `Ya hay una persona con ese DNI en la organización (familia ${f.code ?? f.id}, ${f.name}).`;
+const failCode = (status: number, message: string, error_code: string) =>
+  json(status, { success: false, message, error_code });
+/** Reglas comunes de edición: suspendida por el banco o cargada por un programa */
+const notEditable = (f: Family) => {
+  if (f.status === 'suspendida')
+    return failCode(409, 'El banco suspendió esta familia. Para reactivarla o cambiarla, pedíselo al banco.', 'FAMILY_SUSPENDED_BY_BANK');
+  if (f.source && f.source !== 'manual')
+    return failCode(409, 'Esta familia la carga el banco por un programa: no se edita desde la app.', 'FAMILY_MANAGED_BY_BANK');
+  return null;
+};
+const newMember = (familyId: string, m: Record<string, unknown>): FamilyMember => ({
+  is_head_of_household: false,
+  is_pregnant: false,
+  is_nursing_mother: false,
+  is_diabetic: false,
+  is_celiac: false,
+  is_lactose_intolerant: false,
+  has_disability: false,
+  document_type: m.document_number ? 'dni' : null,
+  status: 'activo',
+  nutritional_weight: 1,
+  ...(m as Partial<FamilyMember>),
+  id: randomUUID(),
+  family_id: familyId,
+  first_name: String(m.first_name),
+  last_name: String(m.last_name),
+  full_name: `${m.first_name} ${m.last_name}`,
+});
+const refreshHead = (f: Family) => {
+  f.total_members = f.members?.length ?? 0;
+  const h = f.members?.find((m) => m.is_head_of_household);
+  f.head_of_household = h
+    ? { id: h.id, full_name: h.full_name ?? `${h.first_name} ${h.last_name}`, document_number: h.document_number }
+    : null;
+};
+/** Un null en un campo que no tocaron se toma como "no enviado" */
+const assignSent = (target: object, b: Record<string, unknown>) => {
+  for (const [k, v] of Object.entries(b)) if (v !== null && v !== undefined) (target as Record<string, unknown>)[k] = v;
+};
+
+on('GET', '/org/family-types', () => ok(db.familyTypes));
+on('GET', '/org/families/form-config', () =>
+  ok({
+    config: {
+      required_fields: {
+        housing_situation: { enabled: true, required: false },
+        employment_level: { enabled: true, required: false },
+        education_level: { enabled: true, required: false },
+        email: { enabled: true, required: false },
+      },
+    },
+    options: {
+      housing_situations: ['propietario', 'alquilado', 'prestado', 'tomado', 'en_situacion_de_calle', 'otro'],
+      family_statuses: ['activa', 'inactiva'],
+      member_statuses: ['activo', 'inactivo'],
+      genders: ['masculino', 'femenino', 'otro', 'no_especificado'],
+      relationships: ['jefe_hogar', 'conyuge', 'hijo', 'padre_madre', 'abuelo', 'nieto', 'hermano', 'tio', 'sobrino', 'otro_familiar', 'no_familiar'],
+      document_types: ['dni', 'pasaporte', 'otro'],
+      employment_levels: ['empleado_formal', 'empleado_informal', 'desempleado', 'jubilado_pensionado', 'trabajo_domestico', 'otro'],
+      education_levels: ['sin_instruccion', 'primario_incompleto', 'primario_completo', 'secundario_incompleto', 'secundario_completo', 'terciario_universitario', 'otro'],
+    },
+  }),
+);
+on('GET', '/org/families/members/search', (_, o) => {
+  const d = digits(o.query?.document_number);
+  if (!d) return fail(422, 'Indicá el DNI.', { document_number: ['Indicá el DNI.'] });
+  for (const f of db.families)
+    for (const m of f.members ?? [])
+      if (digits(m.document_number) === d)
+        return ok({
+          found: true,
+          member: {
+            id: m.id,
+            first_name: m.first_name,
+            last_name: m.last_name,
+            status: m.status,
+            family: { id: f.id, name: f.name, code: f.code, source: f.source },
+          },
+        });
+  return ok({ found: false });
+});
+on('POST', '/org/families', (_, o) => {
+  const b = body(o);
+  const errors: Record<string, string[]> = {};
+  if (!b.name) errors.name = ['El nombre es obligatorio.'];
+  if (!b.family_type_id) errors.family_type_id = ['Elegí el tipo de familia.'];
+  const members = (b.members as Record<string, unknown>[] | undefined) ?? [];
+  const seen = new Set<string>();
+  members.forEach((m, i) => {
+    if (!m.first_name) errors[`members.${i}.first_name`] = ['El nombre es obligatorio.'];
+    if (!m.last_name) errors[`members.${i}.last_name`] = ['El apellido es obligatorio.'];
+    const d = digits(m.document_number);
+    const taken = dniTaken(m.document_number);
+    if (taken) errors[`members.${i}.document_number`] = [dniMessage(taken)];
+    else if (d && seen.has(d)) errors[`members.${i}.document_number`] = ['Ese DNI está repetido en la familia.'];
+    if (d) seen.add(d);
+  });
+  if (Object.keys(errors).length) return fail(422, Object.values(errors)[0][0], errors);
+  const familyId = randomUUID();
+  const f: Family = {
+    id: familyId,
+    organization_id: ORG_ID,
+    is_direct: false,
+    source: 'manual',
+    code: `FAM-${new Date().getFullYear()}-${String(db.families.length + 100).padStart(4, '0')}`,
+    name: String(b.name),
+    registration_date: now().slice(0, 10),
+    phone: (b.phone as string) ?? null,
+    email: (b.email as string) ?? null,
+    status: 'activa',
+    notes: (b.notes as string) ?? null,
+    special_needs_notes: (b.special_needs_notes as string) ?? null,
+    housing_situation: (b.housing_situation as string) ?? null,
+    family_type: db.familyTypes.find((t) => t.id === b.family_type_id) ?? null,
+    members: members.map((m) => newMember(familyId, m)),
+  };
+  refreshHead(f);
+  db.families.push(f);
+  return json(201, { success: true, message: 'Familia creada exitosamente', data: f });
+});
+on('PUT', '/org/families/:id', (p, o) => {
+  const f = findFamily(p.id);
+  if (!f) return failCode(404, 'Familia no encontrada', 'FAMILY_NOT_FOUND');
+  const blocked = notEditable(f);
+  if (blocked) return blocked;
+  const b = body(o);
+  if (b.status && !['activa', 'inactiva'].includes(String(b.status)))
+    return fail(422, 'El estado no es válido.', { status: ['El estado no es válido.'] });
+  assignSent(f, b);
+  if (b.family_type_id) f.family_type = db.familyTypes.find((t) => t.id === b.family_type_id) ?? f.family_type;
+  return json(200, { success: true, message: 'Familia actualizada exitosamente', data: f });
+});
+on('DELETE', '/org/families/:id', (p) => {
+  const f = findFamily(p.id);
+  if (!f) return failCode(404, 'Familia no encontrada', 'FAMILY_NOT_FOUND');
+  const blocked = notEditable(f);
+  if (blocked) return blocked;
+  // En los mocks, las familias que venían cargadas "tienen entregas"; las dadas de alta acá se pueden borrar.
+  if (f.code && Number(f.code.slice(-4)) < 100)
+    return json(409, {
+      success: false,
+      message: 'No se puede borrar la familia porque tiene entregas registradas. Podés pasarla a inactiva.',
+      errors: { reasons: ['tiene entregas registradas'] },
+    });
+  db.families = db.families.filter((x) => x.id !== f.id);
+  return json(200, { success: true, message: 'Familia dada de baja' });
+});
+on('GET', '/org/families/:id/members', (p) => {
+  const f = findFamily(p.id);
+  return f ? ok(f.members ?? []) : failCode(404, 'Familia no encontrada', 'FAMILY_NOT_FOUND');
+});
+on('POST', '/org/families/:id/members', (p, o) => {
+  const f = findFamily(p.id);
+  if (!f) return failCode(404, 'Familia no encontrada', 'FAMILY_NOT_FOUND');
+  const blocked = notEditable(f);
+  if (blocked) return blocked;
+  const b = body(o);
+  const errors: Record<string, string[]> = {};
+  if (!b.first_name) errors.first_name = ['El nombre es obligatorio.'];
+  if (!b.last_name) errors.last_name = ['El apellido es obligatorio.'];
+  const taken = dniTaken(b.document_number);
+  if (taken) errors.document_number = [dniMessage(taken)];
+  if (Object.keys(errors).length) return fail(422, Object.values(errors)[0][0], errors);
+  const m = newMember(f.id, b);
+  f.members = [...(f.members ?? []), m];
+  refreshHead(f);
+  return json(201, { success: true, message: 'Miembro agregado exitosamente', data: m });
+});
+on('PUT', '/org/families/:id/members/:member', (p, o) => {
+  const f = findFamily(p.id);
+  if (!f) return failCode(404, 'Familia no encontrada', 'FAMILY_NOT_FOUND');
+  const blocked = notEditable(f);
+  if (blocked) return blocked;
+  const m = f.members?.find((x) => x.id === p.member);
+  if (!m) return fail(404, 'Miembro no encontrado');
+  const b = body(o);
+  const taken = b.document_number ? dniTaken(b.document_number, m.id) : null;
+  if (taken) return fail(422, dniMessage(taken), { document_number: [dniMessage(taken)] });
+  assignSent(m, b);
+  m.full_name = `${m.first_name} ${m.last_name}`;
+  m.has_special_conditions = !!(
+    m.is_pregnant || m.is_nursing_mother || m.is_diabetic || m.is_celiac || m.is_lactose_intolerant || m.has_disability
+  );
+  refreshHead(f);
+  return json(200, { success: true, message: 'Miembro actualizado exitosamente', data: m });
+});
+on('DELETE', '/org/families/:id/members/:member', (p) => {
+  const f = findFamily(p.id);
+  if (!f) return failCode(404, 'Familia no encontrada', 'FAMILY_NOT_FOUND');
+  const blocked = notEditable(f);
+  if (blocked) return blocked;
+  if (!f.members?.some((x) => x.id === p.member)) return fail(404, 'Miembro no encontrado');
+  f.members = f.members.filter((x) => x.id !== p.member);
+  refreshHead(f);
+  return json(200, { success: true, message: 'Miembro quitado' });
+});
 on('GET', '/org/families/:id', (p) => {
   // Bug conocido: id no UUID → 500
   if (!/^[0-9a-f-]{36}$/i.test(p.id)) return fail(500, 'Error interno del servidor');
@@ -469,7 +681,7 @@ on('POST', '/notifications/subscribe', () =>
 );
 on('POST', '/notifications/unsubscribe', () => ok({ message: 'Suscripción cancelada' }));
 
-// ─── Organización: documentos, familias, jornadas ─────────────────────────
+// ─── Organización: documentos y jornadas ─────────────────────────
 on('GET', '/organizations/:org/requirements', () => ok(db.requirements));
 on('GET', '/organizations/:org/documents', () =>
   ok([{ id: 'doc-1', document_type: 'personeria_juridica', document_name: 'Personería 2024.pdf', created_at: now() }]),
@@ -492,23 +704,6 @@ on('GET', '/organizations/:org/terms-pdf', () => fail(404, 'La carta compromiso 
 on('GET', '/organizations/:org/collection-commitments', () =>
   ok({ year: new Date().getFullYear(), scheduled: 4, attended: 3, no_show: 1 }),
 );
-on('GET', '/family-types', () => ok(db.familyTypes));
-on('POST', '/organizations/:org/families', (_, o) => {
-  const b = body(o);
-  const errors: Record<string, string[]> = {};
-  if (!b.name) errors.name = ['El nombre es obligatorio.'];
-  if (!b.family_type_id) errors.family_type_id = ['Elegí el tipo de familia.'];
-  if (Object.keys(errors).length) return fail(422, 'Datos inválidos', errors);
-  const members = ((b.members as Record<string, unknown>[] | undefined) ?? []).map((m, i) => ({
-    id: `fm-${Date.now()}-${i}`,
-    first_name: String(m.first_name),
-    last_name: String(m.last_name),
-    ...m,
-  }));
-  const f = { id: `fam-${Date.now()}`, name: String(b.name), status: 'activa', members };
-  db.families.push(f);
-  return json(201, { success: true, data: f });
-});
 on('GET', '/programs', (_, o) => paginate(db.programs, o.query));
 on('GET', '/programs/:id/trainings', (p, o) => paginate(db.trainings[p.id] ?? [], o.query));
 on('GET', '/collection-sessions', (_, o) => paginate(db.sessions, o.query));

@@ -1,3 +1,4 @@
+import type { InteractionsFilter } from './interacciones/types';
 import type { AvailableMermasFilters } from './mermas/types';
 
 export const qk = {
@@ -31,6 +32,10 @@ export const qk = {
   family: (id: string) => ['families', 'detail', id] as const,
   demographics: ['families', 'demographics'] as const,
   familyTypes: ['families', 'types'] as const,
+  interactions: (f: InteractionsFilter = {}) => ['interactions', 'list', f] as const,
+  interactionsAll: ['interactions'] as const,
+  interaction: (id: string) => ['interactions', 'detail', id] as const,
+  interactionsSummary: ['interactions', 'summary'] as const,
   requirements: (orgId: string) => ['docs', 'requirements', orgId] as const,
   documents: (orgId: string) => ['docs', 'documents', orgId] as const,
   socialData: (orgId: string) => ['docs', 'social', orgId] as const,

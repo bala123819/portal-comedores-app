@@ -315,6 +315,13 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 
 ---
 
+## Hito · El Banco publica la API completa en GoDubi
+- **Fecha:** 2026-10-07 · **Sin commit propio** (se registra en el commit de la comunicación con el Banco)
+
+El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14) … (14/14)" (más de 75 endpoints con llamadas y respuestas reales) y un mapa de todo lo que la app puede hacer, con un orden sugerido: sesión y avisos, familias, pedidos, **interacciones**, lo recibido y nutrición, contactos y documentación, y mermas al final. En la reunión de sincronización del mismo día se acordó priorizar los CRUD tradicionales y dejar la capa de IA para el final. Esos posts pasan a ser la fuente de verdad vigente del backend; cada módulo que se implementa copia su post en `docs/bda/`.
+
+---
+
 ## 4b2d1c0 · commit final
 - **Fecha:** 2026-10-14 · **Autoría:** bala123819
 - **Etapa:** Agentes de IA
@@ -444,3 +451,37 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 **Qué se hizo.** `npm run bitacora` ignora los commits de merge (`git log --no-merges`). El equipo trabaja en tres ramas, una por módulo (Familias, Pedidos de mercadería, Interacciones), que se unen a `main` con un merge commit. Ese commit no agrega trabajo propio: cada commit de la rama ya tiene su entrada. Se usa merge, no *squash* ni *rebase*, para que los hashes de la bitácora sigan existiendo en `main`.
 
 **Verificación.** `npm run bitacora` sin faltantes.
+
+---
+
+## d184ac1 · feat: comunicación de la organización con el Banco (interacciones)
+- **Fecha:** 2026-10-14 · **Autoría:** martinagonella + asistencia de IA (Claude Code, conectado a GoDubi por MCP como "Agente Martu")
+- **Etapa:** Acople a la API real — módulos CRUD
+
+**Objetivo.** Implementar el punto 4 del mapa de la API que publicó el Banco en GoDubi: el canal por el que la organización le cuenta al Banco un **suceso** ("se cortó la luz"), le hace una **solicitud** de algo que no está en el catálogo ("necesitamos leche"), una **consulta** o un **reclamo**, y ve si el Banco ya lo atendió.
+
+**Qué se hizo.**
+- Se leyó la orden 1149 de GoDubi (briefing, tablero, posts 8/14 de interacciones, mapa general y resumen de la reunión del 07/10) y se copió el post 8/14 a `docs/bda/08-interacciones.md`.
+- Datos: `src/features/interacciones/` (tipos y hooks de React Query), `orgApi.interactions / interaction / interactionsSummary / createInteraction`, query keys, etiquetas y estados (`pendiente` en amarillo con reloj, `atendida` en verde con tilde; nunca sólo color).
+- Pantallas, con los componentes y la paleta de la app (verde institucional, tarjetas, badges, `SegmentedControl`, `Chip`, `Stepper`):
+  - `/banco`: accesos por tipo ("¿Qué querés contarle al Banco?"), lista paginada con filtro por estado (con contador de pendientes) y por tipo (con totales), y los cuatro estados (carga, vacío, error, datos).
+  - `/banco/nueva`: selección del tipo como opciones de radio con ícono y ejemplo, asunto y detalle con los límites del backend, placeholders según el tipo, nota para solicitudes, errores 422 en el campo.
+  - `/banco/[id]`: tipo, estado, texto completo, seguimiento en tres pasos, quién lo envió, fechas de envío y de atención.
+- Accesos: Inicio ("Escribirle al Banco", con la cantidad de mensajes pendientes), Más › Mi organización y Ayuda (botón + pregunta frecuente).
+- Mocks con la forma real (lista con filtros, resumen, detalle, alta y 422 por tipo inválido o título vacío).
+
+**Decisiones.** D-13.
+
+**Problemas y soluciones.** P-15 (endpoints fuera del OpenAPI), P-16 (`watch` vs. React Compiler), P-17 (sin credenciales para la API real).
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true`), manejada con Chrome headless por CDP en tamaño de celular (390×844): lista y contadores, filtro "Pendientes", detalle pendiente y atendido, validación del formulario vacío, alta de una solicitud (aviso "Le enviamos tu mensaje al Banco" y paso al detalle). Sin errores en la consola.
+- **No probado contra la API real** (P-17).
+
+**Pendientes.**
+- Probar con el usuario real del tenant de pruebas (títulos con el prefijo `[PRUEBA TESIS]`).
+- Preguntas al Banco en `docs/api-gaps.md` G-16 (texto de respuesta, aviso al atender, adjuntos).
+- Si el Banco avisa cuando atiende, abrir el detalle desde la bandeja de notificaciones.
+
+**Archivos principales.** `src/app/(app)/banco/*`, `src/features/interacciones/*`, `src/components/interacciones/InteractionCard.tsx`, `src/services/api/endpoints/org.ts`, `src/mocks/*`, `docs/bda/08-interacciones.md`, `docs/decisiones.md`, `docs/api-gaps.md`.

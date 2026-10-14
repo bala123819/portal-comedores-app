@@ -4,6 +4,7 @@
  */
 import type { Assignment, OrganizationContact, Picker } from '@/features/asignaciones/types';
 import type { Family, FamilyMember } from '@/features/familias/types';
+import type { Interaction } from '@/features/interacciones/types';
 import type { Merma } from '@/features/mermas/types';
 import type { AppNotification } from '@/features/notificaciones/types';
 import type { NutritionalGroup } from '@/features/nutricion/types';
@@ -17,6 +18,14 @@ const day = (offset: number) => {
   return d.toISOString().slice(0, 10);
 };
 const at = (offset: number, hour: string) => `${day(offset)} ${hour}`;
+/** Las interacciones vienen en ISO con zona (`2026-10-07T15:13:19.000000Z`) */
+const isoAt = (offset: number, hour: string) => {
+  const [h, m] = hour.split(':').map(Number);
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  d.setHours(h, m, 0, 0);
+  return d.toISOString();
+};
 
 export const ORG_ID = 'org-0001';
 
@@ -384,9 +393,19 @@ export function createMockDb() {
     ],
   };
 
+  // Formas de docs/bda/08-interacciones.md
+  const coordinadora = { id: 'e2e1ba9d-852a-4cc7-89e5-3ca84e1c5598', name: 'Marta Coordinadora' };
+  const interactions: Interaction[] = [
+    { id: '12dccc21-f38f-46c7-b1bf-a83d77f8667d', interaction_type: 'suceso', type_label: 'Suceso', title: 'Se cortó la luz en el comedor', notes: 'Perdimos parte de la mercadería fresca.', status: 'pendiente', attended_at: null, created_by: coordinadora, created_at: isoAt(0, '09:40') },
+    { id: '26a2f75c-3051-45d1-bf32-8bff943987ed', interaction_type: 'solicitud', type_label: 'Solicitud', title: 'Necesitamos leche', notes: 'Para 40 chicos, esta semana.', status: 'pendiente', attended_at: null, created_by: coordinadora, created_at: isoAt(-2, '15:13') },
+    { id: '3b5e0d2a-6c1f-4f7e-9a2b-1d4c5e6f7a8b', interaction_type: 'consulta', type_label: 'Consulta', title: '¿Podemos cambiar el día de retiro?', notes: 'Los martes no tenemos quién maneje la camioneta.', status: 'atendida', attended_at: isoAt(-5, '11:20'), created_by: coordinadora, created_at: isoAt(-6, '18:05') },
+    { id: '4c6f1e3b-7d2a-4a8f-8b3c-2e5d6f7a8b9c', interaction_type: 'reclamo', type_label: 'Reclamo', title: 'La entrega llegó incompleta', notes: 'Faltaron 2 cajas de fideos del pedido del jueves.', status: 'atendida', attended_at: isoAt(-12, '10:00'), created_by: coordinadora, created_at: isoAt(-13, '17:30') },
+  ];
+
   return {
     me,
     organization,
+    interactions,
     mermas,
     applications,
     assignments,

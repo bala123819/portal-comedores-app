@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, MessagesSquare, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { WhatsAppButton } from '@/components/agentes/WhatsAppButton';
@@ -31,12 +31,16 @@ const FAQ_MERMAS = [
 
 const FAQ_GENERAL = [
   {
+    q: '¿Cómo le aviso algo al Banco?',
+    a: 'Entrá a “Comunicación con el Banco” (en “Más” o en el inicio) y elegí el tipo: suceso si pasó algo, solicitud si necesitan algo que no está en el catálogo, consulta o reclamo. Al Banco le llega un aviso y en la app ves si ya lo atendió.',
+  },
+  {
     q: '¿Cómo se calcula la cuota mensual?',
     a: 'El Banco la calcula solo, a partir de las familias cargadas: cada persona pesa según su necesidad nutricional. Si falta una familia o cambió algún dato, avisale al Banco.',
   },
   {
     q: '¿Puedo cargar o corregir familias?',
-    a: 'Por ahora las familias las carga el Banco de Alimentos. En la app podés verlas; para agregar o corregir, comunicate con el Banco.',
+    a: 'Por ahora las familias las carga el Banco de Alimentos. En la app podés verlas; para agregar o corregir, mandale una solicitud desde “Comunicación con el Banco”.',
   },
   {
     q: '¿Cómo uso el recetario?',
@@ -79,6 +83,7 @@ export default function AyudaScreen() {
             : 'Comunicate con el Banco de Alimentos por los canales habituales.'}
         </Text>
         <WhatsAppButton context={{ kind: 'general' }} variant="primary" />
+        <Button title="Escribirle al Banco" icon={MessagesSquare} variant="secondary" onPress={() => router.push('/banco')} />
         <Button title="Preguntarle al asistente" icon={Sparkles} variant="outline" onPress={() => router.push('/asistente')} />
       </Card>
 

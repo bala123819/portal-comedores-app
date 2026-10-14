@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-**Última actualización:** 2026-10-01. Conexión con la API real verificada con `npm run smoke:samples` (formas de respuesta coinciden con la app).
+**Última actualización:** 2026-10-14 (comunicación con el Banco). Antes: 2026-10-01. Conexión con la API real verificada con `npm run smoke:samples` (formas de respuesta coinciden con la app).
 
 ## Funciona con la API real del Banco
 | Pantalla | Endpoints | Probado contra la API real |
@@ -13,6 +13,7 @@
 | Nutrición | cuota mensual del perfil + demografía | Pendiente |
 | Avisos | `/notifications*` | Pendiente |
 | Perfil y clave | `PUT /auth/profile`, `PUT /auth/password` | Pendiente |
+| Comunicación con el Banco (sucesos, solicitudes, consultas, reclamos) | `/org/interactions`, `/org/interactions/{id}`, `/org/interactions/summary`, `POST /org/interactions` | Pendiente (sin credenciales en `.env`, P-17); probado en web en modo simulado |
 
 Probado en web con datos simulados que tienen la forma real de la API.
 

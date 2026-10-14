@@ -1,8 +1,15 @@
 import type { Assignment } from '@/features/asignaciones/types';
+import type {
+  CreateInteractionBody,
+  Interaction,
+  InteractionsFilter,
+  InteractionsSummary,
+} from '@/features/interacciones/types';
 import type { AvailableMermasFilters, Merma } from '@/features/mermas/types';
 import type { OrgProfileResponse, OrgStats, UpdateAddressResponse } from '@/features/org/types';
 import type { Application } from '@/features/postulaciones/types';
-import { api } from '../client';
+import { api, isUuid } from '../client';
+import { ApiError } from '../errors';
 import type { BodyOf } from '../types';
 
 export type CreateApplicationBody = BodyOf<'/api/org/applications', 'post'>;
@@ -52,4 +59,22 @@ export const orgApi = {
     api.post<Assignment>(`/org/assignments/${id(assignmentId)}/complete`, body, key),
   cancelAssignment: (assignmentId: string, body: CancelAssignmentBody, key: string) =>
     api.post<Assignment>(`/org/assignments/${id(assignmentId)}/cancel`, body, key),
+
+  /** Comunicación con el Banco (docs/bda/08-interacciones.md) */
+  interactions: (page: number, perPage: number, f: InteractionsFilter = {}) =>
+    api.getPage<Interaction>('/org/interactions', {
+      page,
+      per_page: perPage,
+      type: f.type,
+      status: f.status,
+    }),
+  interactionsSummary: () => api.get<InteractionsSummary>('/org/interactions/summary'),
+  interaction: (interactionId: string) => {
+    if (!isUuid(interactionId)) {
+      return Promise.reject(new ApiError({ kind: 'not_found', status: 404 }));
+    }
+    return api.get<Interaction>(`/org/interactions/${id(interactionId)}`);
+  },
+  createInteraction: (body: CreateInteractionBody, key: string) =>
+    api.post<Interaction>('/org/interactions', body, key),
 };

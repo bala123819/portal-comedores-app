@@ -44,3 +44,13 @@ Un solo worker en GoDubi para recetas y nutrición. **Sin entrenar un modelo:** 
 
 ### D-12 · Familias sobre `/org/families*` y un módulo por persona (2026-10-14)
 El Banco habilitó el 7/10 el alta, la edición y la baja de familias y miembros en el portal de la organización (`/org/families*`, posts 5–7 de la serie "API organizaciones" en GoDubi). La app deja de usar `/organizations/{id}/families` y `/family-types` y pasa a `/org/families*` y `/org/family-types`: la organización la resuelve el backend por el usuario, igual que el resto del portal. El formulario se arma con `GET /org/families/form-config` (qué campos se muestran, cuáles son obligatorios y las opciones de cada lista); las etiquetas siguen en `labels.ts`. Para trabajar en paralelo sin conflictos (Familias, Pedidos e Interacciones, una persona cada uno), cada módulo tiene su propio archivo de endpoints (`src/services/api/endpoints/familias.ts`) y sus query keys locales, sin tocar archivos compartidos. El módulo sigue detrás del interruptor `familiasAlta` hasta verificarlo contra el servidor con el smoke test.
+
+### D-13 · Comunicación con el Banco (interacciones) (2026-10-14)
+Se implementa el canal de la organización con el Banco según el post 8/14 publicado en GoDubi (`docs/bda/08-interacciones.md`), que el Banco ordenó como paso 4 del orden sugerido.
+- **Sin interruptor de módulo:** el Banco lo documentó con respuestas reales del servidor, así que se usa siempre (como avisos y familias). Si un 403 mostrara lo contrario, se agrega `interacciones` a `src/lib/features.ts`.
+- **Tipos escritos a mano** (`src/features/interacciones/types.ts`): `/org/interactions` no está en el OpenAPI del repo.
+- **Rutas** `/banco` (lista), `/banco/nueva` (alta, acepta `?tipo=` para llegar con el tipo elegido) y `/banco/[id]` (detalle). Acceso desde Inicio (con la cantidad de pendientes), Más › Mi organización y Ayuda.
+- **Sólo alta y lectura:** la API no permite editar ni borrar interacciones, así que la app tampoco lo ofrece. Para seguir un tema se manda un mensaje nuevo.
+- **Seguimiento** con el `Stepper` de la app en tres pasos (Enviado → Esperando al Banco → Atendido), porque la API sólo tiene `pendiente`/`atendida` con `attended_at`.
+- **Formulario** con los límites del backend (asunto ≤ 255, detalle ≤ 5000), errores 422 en el campo y `Idempotency-Key` por intención (reintentar no duplica el mensaje).
+- La solicitud se presenta como el camino para "insumos u otras necesidades que no estén en el catálogo", tal como lo define el Banco en el mapa de la API (post 6509).

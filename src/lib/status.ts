@@ -17,11 +17,12 @@ import {
   applicationStatusLabels,
   assignmentStatusLabels,
   humanize,
+  interactionStatusLabels,
   mermaStatusLabels,
   sessionStatusLabels,
 } from './labels';
 
-export type StatusKind = 'merma' | 'application' | 'assignment' | 'session';
+export type StatusKind = 'merma' | 'application' | 'assignment' | 'session' | 'interaction';
 
 export interface StatusMeta {
   label: string;
@@ -65,7 +66,12 @@ const session: StatusMap = {
   no_show: { label: sessionStatusLabels.no_show, tone: 'destructive', icon: UserX },
 };
 
-const maps: Record<StatusKind, StatusMap> = { merma, application, assignment, session };
+const interaction: StatusMap = {
+  pendiente: { label: interactionStatusLabels.pendiente, tone: 'warning', icon: Clock },
+  atendida: { label: interactionStatusLabels.atendida, tone: 'success', icon: CheckCircle2 },
+};
+
+const maps: Record<StatusKind, StatusMap> = { merma, application, assignment, session, interaction };
 
 /** Mapeo único estado → { etiqueta, color, ícono }. Valores desconocidos: gris + texto legible. */
 export function statusMeta(kind: StatusKind, value: string | null | undefined): StatusMeta {

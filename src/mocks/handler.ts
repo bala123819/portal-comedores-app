@@ -619,6 +619,65 @@ on('GET', '/unified-products/search', (_, o) => {
   );
 });
 
+// ─── Interacciones con el banco (formas de docs/bda/08) ─────────────────
+const INTERACTION_TYPES = ['suceso', 'solicitud', 'consulta', 'reclamo'];
+const INTERACTION_LABELS: Record<string, string> = { suceso: 'Suceso', solicitud: 'Solicitud', consulta: 'Consulta', reclamo: 'Reclamo' };
+on('GET', '/org/interactions', (_, o) => {
+  const q = o.query ?? {};
+  let items = db.interactions;
+  if (q.type) items = items.filter((i) => i.interaction_type === q.type);
+  if (q.status) items = items.filter((i) => i.status === q.status);
+  return paginate(items, { ...q, per_page: q.per_page ?? 20 });
+});
+on('GET', '/org/interactions/summary', () => {
+  const by_type = Object.fromEntries(
+    INTERACTION_TYPES.map((t) => {
+      const of = db.interactions.filter((i) => i.interaction_type === t);
+      return [t, { total: of.length, pendientes: of.filter((i) => i.status === 'pendiente').length }];
+    }),
+  );
+  const months = new Map<string, number>();
+  db.interactions.forEach((i) => {
+    const m = String(i.created_at).slice(0, 7);
+    months.set(m, (months.get(m) ?? 0) + 1);
+  });
+  return ok({
+    total: db.interactions.length,
+    pendientes: db.interactions.filter((i) => i.status === 'pendiente').length,
+    by_type,
+    by_month: [...months].sort(([a], [b]) => a.localeCompare(b)).map(([month, total]) => ({ month, total })),
+  });
+});
+on('GET', '/org/interactions/:id', (p) => {
+  const i = db.interactions.find((x) => x.id === p.id);
+  return i ? ok(i) : fail(404, 'Interacción no encontrada');
+});
+on('POST', '/org/interactions', (_, o) => {
+  const b = body(o);
+  const errors: Record<string, string[]> = {};
+  if (!INTERACTION_TYPES.includes(String(b.interaction_type)))
+    errors.interaction_type = ['El tipo debe ser suceso, solicitud, consulta o reclamo.'];
+  const title = typeof b.title === 'string' ? b.title.trim() : '';
+  if (!title) errors.title = ['El título es obligatorio.'];
+  else if (title.length > 255) errors.title = ['El título no puede tener más de 255 caracteres.'];
+  if (typeof b.notes === 'string' && b.notes.length > 5000)
+    errors.notes = ['El detalle no puede tener más de 5000 caracteres.'];
+  if (Object.keys(errors).length) return fail(422, Object.values(errors)[0][0], errors);
+  const created = {
+    id: (globalThis.crypto?.randomUUID?.() ?? `5d7a2f4c-${Date.now().toString(16).slice(-4)}-4000-8000-${String(Date.now()).slice(-12)}`),
+    interaction_type: String(b.interaction_type),
+    type_label: INTERACTION_LABELS[String(b.interaction_type)],
+    title,
+    notes: typeof b.notes === 'string' && b.notes ? b.notes : null,
+    status: 'pendiente',
+    attended_at: null,
+    created_by: { id: 'e2e1ba9d-852a-4cc7-89e5-3ca84e1c5598', name: `${db.me.first_name} ${db.me.last_name ?? ''}`.trim() },
+    created_at: now(),
+  };
+  db.interactions.unshift(created);
+  return json(201, { success: true, message: 'Interacción enviada al banco', data: created });
+});
+
 // ─── Notificaciones (formas de docs/bda/03: paginación anidada) ──────────
 const unreadCount = () => db.notifications.filter((n) => !n.is_read).length;
 on('GET', '/notifications', (_, o) => {

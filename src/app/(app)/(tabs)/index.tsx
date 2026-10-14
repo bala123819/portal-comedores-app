@@ -4,6 +4,7 @@ import {
   ChefHat,
   MapPin,
   MessageSquare,
+  MessagesSquare,
   Package,
   Scale,
   Sparkles,
@@ -33,6 +34,7 @@ import { useAssignments } from '@/features/asignaciones/hooks';
 import { useSession } from '@/features/auth/store';
 import { displayName } from '@/features/auth/types';
 import { useDemographics } from '@/features/familias/hooks';
+import { useInteractionsSummary } from '@/features/interacciones/hooks';
 import { useAvailableMermas } from '@/features/mermas/hooks';
 import { useUnreadCount } from '@/features/notificaciones/hooks';
 import { useOrgProfile, useOrgStats } from '@/features/org/hooks';
@@ -106,6 +108,7 @@ export default function HomeScreen() {
   const stats = useOrgStats();
   const demographics = useDemographics();
   const unread = useUnreadCount();
+  const interactions = useInteractionsSummary();
   const org = profile.data;
   const impacto = stats.data?.impacto;
 
@@ -115,6 +118,7 @@ export default function HomeScreen() {
     void stats.refetch();
     void demographics.refetch();
     void unread.refetch();
+    void interactions.refetch();
   };
 
   return (
@@ -199,6 +203,16 @@ export default function HomeScreen() {
       <SectionHeader title="Accesos rápidos" />
       <View className="gap-2">
         <ListItem icon={ChefHat} title="¿Qué cocino hoy?" subtitle="Recetas para la cantidad de personas que asisten" onPress={() => router.push('/sugerir-recetas')} />
+        <ListItem
+          icon={MessagesSquare}
+          title="Escribirle al Banco"
+          subtitle={
+            interactions.data?.pendientes
+              ? `${interactions.data.pendientes} ${interactions.data.pendientes === 1 ? 'mensaje pendiente' : 'mensajes pendientes'} de respuesta`
+              : 'Contá un suceso, pedí algo, consultá o reclamá'
+          }
+          onPress={() => router.push('/banco')}
+        />
         <ListItem icon={Sparkles} title="Asistente" subtitle="Preguntá sobre recetas o nutrición" onPress={() => router.push('/asistente')} />
         <ListItem icon={MessageSquare} title="Ayuda" subtitle="Contacto y preguntas frecuentes" onPress={() => router.push('/ayuda')} />
       </View>

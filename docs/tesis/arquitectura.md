@@ -45,7 +45,7 @@ Ver también `docs/decisiones.md`.
 |---|---|---|
 | Pantallas | `src/app/` | Rutas: `(auth)` login, `(app)/(tabs)` pestañas, `(app)/*` pantallas apiladas, `dev/` herramientas |
 | Componentes | `src/components/ui/`, `src/components/<dominio>/` | Librería propia (4 estados: carga, vacío, error, datos) y componentes de dominio |
-| Módulos | `src/features/<modulo>/` | Hooks de React Query, tipos y lógica por módulo (auth, org, familias, notificaciones…) |
+| Módulos | `src/features/<modulo>/` | Hooks de React Query, tipos y lógica por módulo (auth, org, familias, notificaciones, interacciones…) |
 | Servicios | `src/services/` | Cliente HTTP, endpoints, errores, idempotencia, storage, red, push, descargas, agentes |
 | Utilidades | `src/lib/` | Etiquetas (enums → texto), estados, formatos, recetas, WhatsApp, **módulos activos** |
 | Simulación | `src/mocks/` | API falsa con las formas reales |
@@ -86,7 +86,13 @@ Ver también `docs/decisiones.md`.
 - Las acciones que propone un agente sólo **navegan** a la pantalla correspondiente; el usuario confirma.
 - WhatsApp: `wa.me/<número>` con mensaje prearmado según desde dónde se abre.
 
-### 4.7 PWA
+### 4.7 Comunicación con el Banco (`src/features/interacciones/`)
+- La organización deja un suceso, una solicitud, una consulta o un reclamo (`POST /org/interactions`, con `Idempotency-Key`); al Banco le llega un aviso.
+- La lista (`/banco`) filtra por estado y tipo en el servidor (`status`, `type`) y muestra los contadores de `/org/interactions/summary`, que también alimenta el acceso del Inicio.
+- Crear un mensaje invalida todas las consultas `['interactions', …]` (lista, resumen y detalle).
+- Sólo alta y lectura (D-13).
+
+### 4.8 PWA
 - `public/manifest.json`, íconos y `public/sw.js`: app shell sin conexión y avisos Web Push. La API no se cachea en el service worker (lo hace React Query).
 - En web sólo funciona desde `localhost:3000`/`3001` por CORS del backend.
 

@@ -85,3 +85,17 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 - **Síntoma:** la pantalla "Editar familia" avisaba que vaciar un campo no lo cambiaba, siguiendo el post 5 de la API organizaciones ("un `null` en un campo que no tocaron se toma como no enviado").
 - **Causa:** al probar contra el servidor, `PUT /org/families/{id}` con `phone: null` (o `""`) borró el teléfono.
 - **Solución:** se quitó el aviso y los mocks se comportan como el servidor. Antes de mostrar una regla del backend en la interfaz, se verifica contra el servidor con el usuario de prueba. Registrado en `docs/api-gaps.md` G-15 para avisar al Banco.
+
+### P-15 · Endpoints de interacciones fuera del OpenAPI
+- **Síntoma:** `BodyOf<'/api/org/interactions', 'post'>` no existe: el spec del repo sólo tiene `/organizations/{id}/interactions` (otro rol).
+- **Causa:** desde el 07/10/2026 la documentación vigente es la serie publicada por el Banco en GoDubi, más nueva que el OpenAPI.
+- **Solución:** tipos a mano a partir de las respuestas reales del post 8/14, copiado en `docs/bda/08-interacciones.md` para que quede la fuente en el repo.
+
+### P-16 · `watch()` de react-hook-form y el React Compiler
+- **Síntoma:** `expo lint` avisaba "Compilation Skipped: Use of incompatible library" en el formulario de mensajes al Banco.
+- **Causa:** `watch()` devuelve valores que el React Compiler no puede memoizar sin riesgo de UI vieja.
+- **Solución:** `useWatch({ control, name })`, que sí es compatible.
+
+### P-17 · Sin credenciales para probar contra la API real
+- **Síntoma:** el login de prueba respondió 422: `CHECK_API_EMAIL` y `CHECK_API_PASSWORD` están vacías en el `.env` de esta máquina.
+- **Solución (parcial):** se desarrolló contra las respuestas reales documentadas por el Banco y se agregaron mocks con la misma forma; se probó en web con Chrome headless (por CDP, sin instalar nada) en modo simulado. Queda pendiente repetir la prueba con el usuario real.

@@ -154,3 +154,11 @@ Se probó contra `https://cloud.mermab.com/api` con el usuario de prueba, usando
 **Sin verificar:**
 - el valor de `status` de una familia suspendida por el banco: en el listado sólo hay `activa` e `inactiva`, y la app supone `suspendida` (docs/bda);
 - el 409 por entregas registradas: la familia de prueba no tenía entregas.
+
+### G-16 · Interacciones con el banco: preguntas abiertas (2026-10-14)
+Implementado según `docs/bda/08-interacciones.md`. Para cerrar el circuito falta confirmar con el Banco:
+- **Respuesta del Banco:** al pasar a `atendida` sólo llega `attended_at`. ¿Puede sumarse un texto de respuesta (`response` / `attended_notes`) para mostrarle a la organización qué se resolvió?
+- **Aviso a la organización:** ¿se genera una notificación cuando el Banco atiende la interacción? Si viene con `data.interaction_id`, la app puede abrir el detalle desde la bandeja.
+- **Editar o cancelar** una interacción pendiente (hoy no existe; la app no lo ofrece).
+- **Adjuntos** (foto de la mercadería dañada en un reclamo o suceso).
+- Los endpoints no figuran en el OpenAPI (ver P-15).

@@ -223,6 +223,26 @@ export const socialDataLabels: Record<string, string> = {
   otro: 'Otro',
 };
 
+export const interactionTypeLabels: Record<string, string> = {
+  suceso: 'Suceso',
+  solicitud: 'Solicitud',
+  consulta: 'Consulta',
+  reclamo: 'Reclamo',
+};
+
+/** Para qué sirve cada tipo (con un ejemplo), en palabras de la organización */
+export const interactionTypeHints: Record<string, string> = {
+  suceso: 'Contale al Banco algo que pasó. Ej.: “Se cortó la luz en el comedor”.',
+  solicitud: 'Pedí algo que no está en el catálogo. Ej.: “Necesitamos leche”.',
+  consulta: 'Hacé una pregunta sobre entregas, cupo o trámites.',
+  reclamo: 'Avisá de un problema con una entrega o con la atención.',
+};
+
+export const interactionStatusLabels: Record<string, string> = {
+  pendiente: 'Pendiente',
+  atendida: 'Atendida',
+};
+
 export const notificationTypeLabels: Record<string, string> = {
   merma_nueva: 'Nuevos alimentos',
 };

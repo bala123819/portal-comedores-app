@@ -11,18 +11,20 @@ import { features } from '@/lib/features';
 import { familyStatusLabels, housingLabels, label } from '@/lib/labels';
 import { colors } from '@/theme/tokens';
 
-/** Familias de la organización: sólo lectura con la API real (el alta no existe hoy en el backend). */
+/** Familias de la organización. Alta y edición con el módulo `familiasAlta`. */
 export default function FamiliasScreen() {
   const [text, setText] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<FamilyStatus | undefined>(undefined);
+  /** El listado muestra sólo las familias de la organización; `all` suma las que carga el banco por programas */
+  const [withBank, setWithBank] = useState(false);
   // Debounce de la búsqueda: no disparar un pedido por tecla (límite de 60/min).
   useEffect(() => {
     const t = setTimeout(() => setSearch(text), 500);
     return () => clearTimeout(t);
   }, [text]);
 
-  const query = useFamilies({ search, status });
+  const query = useFamilies({ search, status, source: withBank ? 'all' : undefined });
   const demographics = useDemographics();
 
   return (
@@ -45,6 +47,7 @@ export default function FamiliasScreen() {
                 {(['activa', 'inactiva', 'suspendida'] as const).map((s) => (
                   <Chip key={s} label={label(familyStatusLabels, s) + 's'} selected={status === s} onPress={() => setStatus(s)} />
                 ))}
+                <Chip label="Incluir las del Banco" selected={withBank} onPress={() => setWithBank(!withBank)} />
               </ScrollView>
             </View>
           }
@@ -76,7 +79,9 @@ export default function FamiliasScreen() {
           emptyMessage={
             search || status
               ? 'Probá con otra búsqueda.'
-              : 'Las familias las carga el Banco de Alimentos. Si falta alguna, avisales.'
+              : features.familiasAlta
+                ? 'Registrá la primera familia con el botón de arriba.'
+                : 'Las familias las carga el Banco de Alimentos. Si falta alguna, avisales.'
           }
           emptyAction={search || status ? { label: 'Ver todas', onPress: () => { setText(''); setStatus(undefined); } } : undefined}
         />

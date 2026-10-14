@@ -137,3 +137,10 @@ Todas bajo el usuario de la organización (Bearer), con el envoltorio `{success,
 - `GET /org/courses?category=` · `GET /org/courses/{id}` (`title, category, description, duration, format: video|pdf|presencial, url?, schedule?`) · `POST /org/courses/{id}/enroll`
 
 Si alguno no entra en la planificación del Banco, la alternativa del equipo es un backend propio liviano sólo para esos módulos (ver `docs/tesis/plan-de-accion.md`, decisión A).
+
+### G-15 · Dudas de la escritura de familias (2026-10-14)
+Surgen al implementar el alta y la edición sobre `/org/families*` (posts 5–7 de la API organizaciones en GoDubi). Sin probar todavía contra el servidor.
+1. **Borrar un dato.** "Un `null` en un campo que no tocaron se toma como no enviado". Entonces, ¿cómo se borra un teléfono, un email o una nota cargados por error? La app avisa que un campo vacío no cambia nada.
+2. **Cambiar el tipo de familia.** El ejemplo de `PUT /org/families/{id}` no muestra `family_type_id`. La app lo manda si cambia; falta confirmar que se acepta.
+3. **Referente del hogar.** Si se marca a otra persona como `jefe_hogar` / `is_head_of_household`, ¿el backend desmarca al anterior o quedan dos?
+4. **Miembro `inactivo`.** ¿Sigue apareciendo en `members` de la familia y en la búsqueda por DNI? ¿Su DNI sigue bloqueado para otra familia?

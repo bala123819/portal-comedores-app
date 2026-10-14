@@ -259,7 +259,8 @@ on('GET', '/org/families', (_, o) => {
   const q = o.query ?? {};
   if (q.source && !['manual', 'program_enrollment', 'all'].includes(String(q.source)))
     return fail(422, 'The selected source is invalid.', { source: ['The selected source is invalid.'] });
-  let items = db.families;
+  // Sin source, el portal muestra sólo las familias de la organización (manual)
+  let items = q.source === 'all' ? db.families : db.families.filter((f) => (q.source ?? 'manual') === (f.source ?? 'manual'));
   if (q.status) items = items.filter((f) => f.status === q.status);
   if (q.search) {
     const t = String(q.search).toLowerCase();

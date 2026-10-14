@@ -14,7 +14,7 @@ import type {
 const formConfigKey = ['family-form-config'] as const;
 
 /** Cambiar miembros (embarazo, lactancia, nacimiento, baja) recalcula el cupo de la organización. */
-const afterChange = [qk.familiesAll, qk.orgProfile, qk.orgStats];
+const afterChange = [qk.familiesAll, qk.orgProfile, qk.orgStats, ['family-member-search']];
 
 export function useFamilies(filter: FamiliesFilter = {}) {
   return useInfiniteQuery({
@@ -58,6 +58,18 @@ export function useFamilyFormConfig() {
     queryKey: formConfigKey,
     queryFn: familiasApi.formConfig,
     staleTime: 24 * 60 * 60 * 1000,
+  });
+}
+
+/** ¿La persona ya está en alguna familia de la organización? (antes de cargarla de nuevo) */
+export function useMemberSearch(documentNumber: string) {
+  const digits = documentNumber.replace(/\D/g, '');
+  return useQuery({
+    enabled: features.familiasAlta && digits.length >= 7,
+    queryKey: ['family-member-search', digits],
+    queryFn: () => familiasApi.searchMember(digits),
+    staleTime: 30 * 1000,
+    retry: false,
   });
 }
 

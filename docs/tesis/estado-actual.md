@@ -8,6 +8,7 @@
 | Login, sesión, logout | `/auth/login`, `/auth/me`, `/auth/refresh`, `/auth/logout` | Pendiente |
 | Inicio | `/org/profile`, `/org/stats`, `/org/families/demographics`, `/notifications/unread-count` | Pendiente |
 | Familias (lectura) | `/org/families`, `/org/families/{id}`, `/org/families/demographics` | Pendiente |
+| Familias: alta, edición, baja y miembros (desde 2026-10-14) | `/org/families*`, `/org/family-types`, `form-config`, búsqueda por DNI | Pendiente (`npm run smoke -- --familias`) |
 | Mi organización | `/org/profile`, `PUT /org/address` | Pendiente |
 | Nutrición | cuota mensual del perfil + demografía | Pendiente |
 | Avisos | `/notifications*` | Pendiente |
@@ -21,7 +22,7 @@ Probado en web con datos simulados que tienen la forma real de la API.
 - Ayuda: preguntas frecuentes.
 
 ## Hecho pero apagado (el backend no lo ofrece hoy)
-Mermas disponibles, pedidos y retiros; alta y edición de familias; contactos y autorizaciones de retiro;
+Mermas disponibles, pedidos y retiros; contactos y autorizaciones de retiro;
 documentación y ficha social; jornadas y talleres; datos nutricionales de productos. Se ven en modo simulado.
 
 ## Pendiente
@@ -33,7 +34,7 @@ documentación y ficha social; jornadas y talleres; datos nutricionales de produ
 
 ### Backend (Banco de Alimentos) — ver `docs/api-gaps.md` G-12 y G-13
 - Habilitar mermas y retiros para el rol de organización.
-- Alta/edición de familias, contactos, documentos, jornadas.
+- Contactos, documentos, jornadas (la escritura de familias se habilitó el 2026-10-07).
 - Push nativo y clave VAPID; recuperar contraseña.
 - Corregir los 500 que deberían ser 404/422/429.
 

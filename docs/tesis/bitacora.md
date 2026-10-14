@@ -312,3 +312,36 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 **Pendientes.** Crear el worker en GoDubi; cargar el conocimiento; correr los casos de prueba; validar las pautas con una nutricionista del Banco; contrato v2 y gateway.
 
 **Archivos principales.** `docs/agentes/nutricion/*`, `scripts/exportar-conocimiento-agente.ts`, `docs/decisiones.md`.
+
+---
+
+## 4b2d1c0 · commit final
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819
+- **Etapa:** Agentes de IA
+
+**Qué se hizo.** `.gitignore` excluye `.mcp.json`, la configuración del MCP de GoDubi que lleva el token personal.
+
+**Verificación.** No aplica (configuración).
+
+---
+
+## 23fa3f4 · feat(familias): migrar el alta a /org/families y sumar la capa de edición
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** CRUD de familias (rama `feature-tomas-familias`)
+
+**Objetivo.** Primer paso del módulo de Familias, que queda a cargo de Tomás mientras las compañeras toman Pedidos e Interacciones. El 7/10 el Banco habilitó la escritura de familias y miembros en `/org/families*`; la app usaba las rutas viejas de `/organizations/{id}`.
+
+**Qué se hizo.**
+- `src/services/api/endpoints/familias.ts`: todos los endpoints de familias y miembros (listado, detalle, tipos, `form-config`, alta, edición, baja, miembros y búsqueda por DNI). Los ids que no son UUID se cortan antes como 404 (el servidor da 500).
+- Hooks de alta, edición y baja de familias y miembros. Invalidan también el perfil y las estadísticas, porque embarazo, lactancia, fecha de nacimiento y bajas recalculan el cupo.
+- Formulario de alta: usa `POST /org/families` y `form-config` (campos habilitados, obligatorios y opciones de cada lista). Suma email, situación laboral y nivel educativo, y muestra el 422 de DNI repetido en el campo de la persona.
+- Mocks de `/org/families*` con las reglas documentadas: DNI repetido, 409 por entregas registradas, familias suspendidas o cargadas por el banco.
+- Se quitaron las rutas viejas de `org.ts` y `organizations.ts`.
+
+**Decisiones.** D-12.
+
+**Verificación.** `tsc --noEmit` y `expo lint` sin errores. No se probó contra el servidor: falta correr el smoke test con el usuario de prueba.
+
+**Pendientes.** Editar y dar de baja familias desde el detalle; alta, edición y baja de miembros; búsqueda por DNI; prender `familiasAlta` después de verificar contra el servidor.
+
+**Archivos principales.** `src/services/api/endpoints/familias.ts`, `src/features/familias/*`, `src/app/(app)/familia/nueva.tsx`, `src/mocks/handler.ts`.

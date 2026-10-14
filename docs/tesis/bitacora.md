@@ -345,3 +345,45 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 **Pendientes.** Editar y dar de baja familias desde el detalle; alta, edición y baja de miembros; búsqueda por DNI; prender `familiasAlta` después de verificar contra el servidor.
 
 **Archivos principales.** `src/services/api/endpoints/familias.ts`, `src/features/familias/*`, `src/app/(app)/familia/nueva.tsx`, `src/mocks/handler.ts`.
+
+---
+
+## e90ab0d · feat(familias): edición, baja y miembros desde la app
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** CRUD de familias (rama `feature-tomas-familias`)
+
+**Objetivo.** Completar el módulo de Familias con todo lo que documenta la API organizaciones (posts 5–7 en GoDubi): editar y dar de baja familias, y administrar sus integrantes.
+
+**Qué se hizo.**
+- **Detalle de la familia:**
+  - botón para editar;
+  - pasar a inactiva o reactivar;
+  - dar de baja. Si la API responde 409 porque la familia tiene entregas registradas, se ofrece pasarla a inactiva.
+  - Las familias suspendidas por el banco o cargadas por un programa se muestran en solo lectura, con el motivo.
+- **Editar familia** (`/familia/[id]/editar`): manda sólo los campos que cambian, como pide la API.
+- **Integrantes** (`/familia/[id]/miembro/nuevo` y `/familia/[id]/miembro/[memberId]`):
+  - agregar, editar, pasar a inactivo, reactivar y quitar;
+  - campos extra: contacto, descripción de la discapacidad, otras condiciones y notas.
+  - Al cargar el DNI se consulta `GET /org/families/members/search` y se avisa si la persona ya está en otra familia, con un enlace a esa familia.
+- **Código compartido:** `FamilyFields` y `MemberFields` (componentes) y `features/familias/form.ts` (esquemas, form-config, campos cambiados y mensajes por `error_code`). El alta de familia pasa a usarlos.
+- **Listado:** filtro "Incluir las del Banco" (`source=all`).
+- **Mocks:** una familia suspendida y una de programa para probar los bloqueos; tipos de familia iguales a los reales; filtro por `source`.
+- **Smoke test:** `npm run smoke -- --familias` prueba la escritura de punta a punta y siempre borra la familia de prueba al final.
+- **Documentación:** `docs/api-gaps.md` G-15 con dudas para el Banco (cómo borrar un dato si `null` se ignora, cambio de tipo, referente del hogar, miembros inactivos) y `docs/mapa-pantallas.md` actualizado.
+
+**Decisiones.** D-12 (sigue vigente).
+
+**Problemas.** El reemplazo de texto por shell rompió los template strings de JSX y los finales de línea CRLF hicieron fallar otro reemplazo. Se resolvió con un script de parches que respeta CRLF. No se registra como P-xx porque no afecta la app.
+
+**Verificación.**
+- `tsc --noEmit` y `expo lint` sin errores; el script del smoke test también compila.
+- El bundle web compila con las rutas nuevas (`npm run web`).
+- No se probó contra el servidor: falta `npm run smoke -- --familias` con el usuario de prueba.
+
+**Pendientes.**
+- Correr el smoke test de escritura.
+- Prender `familiasAlta` (`EXPO_PUBLIC_ENABLE_MODULES=familiasAlta`).
+- Probar en el celular.
+- Responder G-15 con el Banco.
+
+**Archivos principales.** `src/app/(app)/familia/**`, `src/components/familias/*`, `src/features/familias/*`, `src/mocks/*`, `scripts/smoke-test.ts`.

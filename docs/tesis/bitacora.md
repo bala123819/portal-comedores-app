@@ -387,3 +387,15 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 - Responder G-15 con el Banco.
 
 **Archivos principales.** `src/app/(app)/familia/**`, `src/components/familias/*`, `src/features/familias/*`, `src/mocks/*`, `scripts/smoke-test.ts`.
+
+---
+
+## a05df72 · feat(familias): prender el alta y la edición con la API real
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** CRUD de familias (rama `feature-tomas-familias`)
+
+**Qué se hizo.** Con `npm run web` contra la API real no se veía nada nuevo, porque el interruptor `familiasAlta` sólo se prendía en modo mocks o con `EXPO_PUBLIC_ENABLE_MODULES`. Como el Banco habilitó la escritura de familias el 7/10, en `src/lib/features.ts` se suma la lista `enabledInBackend`: los módulos que el backend ya ofrece quedan prendidos por defecto para todo el equipo. `estado-actual.md` actualizado.
+
+**Decisiones.** Amplía D-08 (acoplarse al backend): un módulo se prende en el código cuando el Banco confirma que lo habilitó.
+
+**Verificación.** `tsc --noEmit` y `expo lint` sin errores. Falta probar el flujo en la app contra el servidor.

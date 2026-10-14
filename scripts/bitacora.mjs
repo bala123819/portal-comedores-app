@@ -3,7 +3,8 @@
  * npm run bitacora -- --write — además agrega al final un esqueleto de entrada por cada uno
  * (hash, fecha, autoría, archivos tocados) para completar a mano con la plantilla.
  *
- * Se ignoran los commits cuyo asunto empieza con "docs(bitacora)": son los que sólo completan
+ * Se ignoran los commits de merge (unir ramas a main no agrega trabajo nuevo: cada commit de la rama
+ * ya tiene su entrada) y los commits cuyo asunto empieza con "docs(bitacora)": son los que sólo completan
  * la bitácora del commit anterior (se documentan dentro de esa entrada).
  */
 import { execSync } from 'node:child_process';
@@ -18,7 +19,7 @@ const write = process.argv.includes('--write');
 const git = (cmd) => execSync(`git ${cmd}`, { cwd: root, encoding: 'utf8' }).trim();
 
 const bitacora = readFileSync(file, 'utf8');
-const commits = git('log --reverse --format=%h%x09%ad%x09%an%x09%s --date=format:"%Y-%m-%d %H:%M"')
+const commits = git('log --reverse --no-merges --format=%h%x09%ad%x09%an%x09%s --date=format:"%Y-%m-%d %H:%M"')
   .split('\n')
   .filter(Boolean)
   .map((line) => {

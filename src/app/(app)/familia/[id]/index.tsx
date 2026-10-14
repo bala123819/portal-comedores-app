@@ -208,8 +208,8 @@ export default function FamiliaScreen() {
         title={confirmStatus === 'activa' ? '¿Reactivar la familia?' : '¿Pasar la familia a inactiva?'}
         message={
           confirmStatus === 'activa'
-            ? 'Vuelve a contar para el cupo de la organización.'
-            : 'Deja de contar para el cupo, pero se conserva su historial. La podés reactivar cuando quieras.'
+            ? 'Vuelve a contar en el resumen de la organización (personas y beneficiarios).'
+            : 'Sigue en el listado como inactiva y deja de contar en el resumen de la organización (personas y beneficiarios). La podés reactivar cuando quieras.'
         }
         confirmLabel={confirmStatus === 'activa' ? 'Reactivar' : 'Pasar a inactiva'}
         loading={update.isPending}
@@ -229,7 +229,7 @@ export default function FamiliaScreen() {
       <ConfirmDialog
         visible={blocked !== null}
         title="No se puede borrar"
-        message={`${blocked ?? ''} Podés pasarla a inactiva: deja de contar para el cupo y se conserva su historial.`}
+        message={`${blocked ?? ''} Podés pasarla a inactiva: sigue en el listado y deja de contar en el resumen de la organización.`}
         confirmLabel="Pasar a inactiva"
         loading={update.isPending}
         onConfirm={() => onStatus('inactiva')}

@@ -78,9 +78,6 @@ export default function EditarFamiliaScreen() {
       ) : (
         <Card className="gap-3">
           <FamilyFields control={control as unknown as Control<FieldValues>} cfg={cfg} types={types.data} typesLoading={types.isPending} />
-          <Text variant="caption">
-            Si borrás un dato y guardás, el banco lo toma como “sin cambios”: para corregirlo, escribí el dato nuevo.
-          </Text>
         </Card>
       )}
       {showError ? (

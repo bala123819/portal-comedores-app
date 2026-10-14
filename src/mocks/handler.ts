@@ -349,9 +349,13 @@ const refreshHead = (f: Family) => {
     ? { id: h.id, full_name: h.full_name ?? `${h.first_name} ${h.last_name}`, document_number: h.document_number }
     : null;
 };
-/** Un null en un campo que no tocaron se toma como "no enviado" */
+/** Sólo se cambian los campos enviados. Un `null` o `''` borra el dato (así responde el servidor, G-15). */
 const assignSent = (target: object, b: Record<string, unknown>) => {
-  for (const [k, v] of Object.entries(b)) if (v !== null && v !== undefined) (target as Record<string, unknown>)[k] = v;
+  for (const [k, v] of Object.entries(b)) if (v !== undefined) (target as Record<string, unknown>)[k] = v === '' ? null : v;
+};
+/** Un solo referente por familia: al marcar uno nuevo, el servidor desmarca al anterior (G-15). */
+const setHead = (f: Family, headId: string) => {
+  for (const x of f.members ?? []) x.is_head_of_household = x.id === headId;
 };
 
 on('GET', '/org/family-types', () => ok(db.familyTypes));
@@ -479,6 +483,7 @@ on('POST', '/org/families/:id/members', (p, o) => {
   if (Object.keys(errors).length) return fail(422, Object.values(errors)[0][0], errors);
   const m = newMember(f.id, b);
   f.members = [...(f.members ?? []), m];
+  if (m.is_head_of_household) setHead(f, m.id);
   refreshHead(f);
   return json(201, { success: true, message: 'Miembro agregado exitosamente', data: m });
 });
@@ -493,6 +498,7 @@ on('PUT', '/org/families/:id/members/:member', (p, o) => {
   const taken = b.document_number ? dniTaken(b.document_number, m.id) : null;
   if (taken) return fail(422, dniMessage(taken), { document_number: [dniMessage(taken)] });
   assignSent(m, b);
+  if (b.is_head_of_household === true) setHead(f, m.id);
   m.full_name = `${m.first_name} ${m.last_name}`;
   m.has_special_conditions = !!(
     m.is_pregnant || m.is_nursing_mother || m.is_diabetic || m.is_celiac || m.is_lactose_intolerant || m.has_disability

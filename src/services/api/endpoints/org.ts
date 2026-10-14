@@ -1,10 +1,8 @@
 import type { Assignment } from '@/features/asignaciones/types';
-import type { Demographics, FamiliesFilter, Family } from '@/features/familias/types';
 import type { AvailableMermasFilters, Merma } from '@/features/mermas/types';
 import type { OrgProfileResponse, OrgStats, UpdateAddressResponse } from '@/features/org/types';
 import type { Application } from '@/features/postulaciones/types';
-import { api, isUuid } from '../client';
-import { ApiError } from '../errors';
+import { api } from '../client';
 import type { BodyOf } from '../types';
 
 export type CreateApplicationBody = BodyOf<'/api/org/applications', 'post'>;
@@ -54,21 +52,4 @@ export const orgApi = {
     api.post<Assignment>(`/org/assignments/${id(assignmentId)}/complete`, body, key),
   cancelAssignment: (assignmentId: string, body: CancelAssignmentBody, key: string) =>
     api.post<Assignment>(`/org/assignments/${id(assignmentId)}/cancel`, body, key),
-
-  families: (page: number, perPage: number, f: FamiliesFilter = {}) =>
-    api.getPage<Family>('/org/families', {
-      page,
-      per_page: perPage,
-      search: f.search?.trim() || undefined,
-      status: f.status,
-      source: f.source,
-    }),
-  demographics: () => api.get<Demographics>('/org/families/demographics'),
-  family: (familyId: string) => {
-    // Un id no UUID da 500 en el servidor: se corta antes como "no encontrado".
-    if (!isUuid(familyId)) {
-      return Promise.reject(new ApiError({ kind: 'not_found', status: 404 }));
-    }
-    return api.get<Family>(`/org/families/${id(familyId)}`);
-  },
 };

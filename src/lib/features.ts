@@ -36,8 +36,14 @@ const forced = new Set(
 
 const mocksShowEverything = env.useMocks && process.env.EXPO_PUBLIC_MODULES_SCOPE !== 'real';
 
+/**
+ * Módulos que el Banco ya habilitó para el rol de organización, prendidos también con la API real.
+ * - familiasAlta: alta, edición y baja de familias y miembros, desplegado el 2026-10-07 (aviso en GoDubi).
+ */
+const enabledInBackend = new Set<Module>(['familiasAlta']);
+
 export function isEnabled(module: Module): boolean {
-  return mocksShowEverything || forced.has(module);
+  return mocksShowEverything || enabledInBackend.has(module) || forced.has(module);
 }
 
 export const features = {

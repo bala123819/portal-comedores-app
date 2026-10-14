@@ -312,3 +312,135 @@ El referente del Banco, Santiago Helguera, es también el dueño de GoDubi y ofr
 **Pendientes.** Crear el worker en GoDubi; cargar el conocimiento; correr los casos de prueba; validar las pautas con una nutricionista del Banco; contrato v2 y gateway.
 
 **Archivos principales.** `docs/agentes/nutricion/*`, `scripts/exportar-conocimiento-agente.ts`, `docs/decisiones.md`.
+
+---
+
+## 4b2d1c0 · commit final
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819
+- **Etapa:** Agentes de IA
+
+**Qué se hizo.** `.gitignore` excluye `.mcp.json`, la configuración del MCP de GoDubi que lleva el token personal.
+
+**Verificación.** No aplica (configuración).
+
+---
+
+## 23fa3f4 · feat(familias): migrar el alta a /org/families y sumar la capa de edición
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** CRUD de familias (rama `feature-tomas-familias`)
+
+**Objetivo.** Primer paso del módulo de Familias, que queda a cargo de Tomás mientras las compañeras toman Pedidos e Interacciones. El 7/10 el Banco habilitó la escritura de familias y miembros en `/org/families*`; la app usaba las rutas viejas de `/organizations/{id}`.
+
+**Qué se hizo.**
+- `src/services/api/endpoints/familias.ts`: todos los endpoints de familias y miembros (listado, detalle, tipos, `form-config`, alta, edición, baja, miembros y búsqueda por DNI). Los ids que no son UUID se cortan antes como 404 (el servidor da 500).
+- Hooks de alta, edición y baja de familias y miembros. Invalidan también el perfil y las estadísticas, porque embarazo, lactancia, fecha de nacimiento y bajas recalculan el cupo.
+- Formulario de alta: usa `POST /org/families` y `form-config` (campos habilitados, obligatorios y opciones de cada lista). Suma email, situación laboral y nivel educativo, y muestra el 422 de DNI repetido en el campo de la persona.
+- Mocks de `/org/families*` con las reglas documentadas: DNI repetido, 409 por entregas registradas, familias suspendidas o cargadas por el banco.
+- Se quitaron las rutas viejas de `org.ts` y `organizations.ts`.
+
+**Decisiones.** D-12.
+
+**Verificación.** `tsc --noEmit` y `expo lint` sin errores. No se probó contra el servidor: falta correr el smoke test con el usuario de prueba.
+
+**Pendientes.** Editar y dar de baja familias desde el detalle; alta, edición y baja de miembros; búsqueda por DNI; prender `familiasAlta` después de verificar contra el servidor.
+
+**Archivos principales.** `src/services/api/endpoints/familias.ts`, `src/features/familias/*`, `src/app/(app)/familia/nueva.tsx`, `src/mocks/handler.ts`.
+
+---
+
+## e90ab0d · feat(familias): edición, baja y miembros desde la app
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** CRUD de familias (rama `feature-tomas-familias`)
+
+**Objetivo.** Completar el módulo de Familias con todo lo que documenta la API organizaciones (posts 5–7 en GoDubi): editar y dar de baja familias, y administrar sus integrantes.
+
+**Qué se hizo.**
+- **Detalle de la familia:**
+  - botón para editar;
+  - pasar a inactiva o reactivar;
+  - dar de baja. Si la API responde 409 porque la familia tiene entregas registradas, se ofrece pasarla a inactiva.
+  - Las familias suspendidas por el banco o cargadas por un programa se muestran en solo lectura, con el motivo.
+- **Editar familia** (`/familia/[id]/editar`): manda sólo los campos que cambian, como pide la API.
+- **Integrantes** (`/familia/[id]/miembro/nuevo` y `/familia/[id]/miembro/[memberId]`):
+  - agregar, editar, pasar a inactivo, reactivar y quitar;
+  - campos extra: contacto, descripción de la discapacidad, otras condiciones y notas.
+  - Al cargar el DNI se consulta `GET /org/families/members/search` y se avisa si la persona ya está en otra familia, con un enlace a esa familia.
+- **Código compartido:** `FamilyFields` y `MemberFields` (componentes) y `features/familias/form.ts` (esquemas, form-config, campos cambiados y mensajes por `error_code`). El alta de familia pasa a usarlos.
+- **Listado:** filtro "Incluir las del Banco" (`source=all`).
+- **Mocks:** una familia suspendida y una de programa para probar los bloqueos; tipos de familia iguales a los reales; filtro por `source`.
+- **Smoke test:** `npm run smoke -- --familias` prueba la escritura de punta a punta y siempre borra la familia de prueba al final.
+- **Documentación:** `docs/api-gaps.md` G-15 con dudas para el Banco (cómo borrar un dato si `null` se ignora, cambio de tipo, referente del hogar, miembros inactivos) y `docs/mapa-pantallas.md` actualizado.
+
+**Decisiones.** D-12 (sigue vigente).
+
+**Problemas.** El reemplazo de texto por shell rompió los template strings de JSX y los finales de línea CRLF hicieron fallar otro reemplazo. Se resolvió con un script de parches que respeta CRLF. No se registra como P-xx porque no afecta la app.
+
+**Verificación.**
+- `tsc --noEmit` y `expo lint` sin errores; el script del smoke test también compila.
+- El bundle web compila con las rutas nuevas (`npm run web`).
+- No se probó contra el servidor: falta `npm run smoke -- --familias` con el usuario de prueba.
+
+**Pendientes.**
+- Correr el smoke test de escritura.
+- Prender `familiasAlta` (`EXPO_PUBLIC_ENABLE_MODULES=familiasAlta`).
+- Probar en el celular.
+- Responder G-15 con el Banco.
+
+**Archivos principales.** `src/app/(app)/familia/**`, `src/components/familias/*`, `src/features/familias/*`, `src/mocks/*`, `scripts/smoke-test.ts`.
+
+---
+
+## a05df72 · feat(familias): prender el alta y la edición con la API real
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** CRUD de familias (rama `feature-tomas-familias`)
+
+**Qué se hizo.** Con `npm run web` contra la API real no se veía nada nuevo, porque el interruptor `familiasAlta` sólo se prendía en modo mocks o con `EXPO_PUBLIC_ENABLE_MODULES`. Como el Banco habilitó la escritura de familias el 7/10, en `src/lib/features.ts` se suma la lista `enabledInBackend`: los módulos que el backend ya ofrece quedan prendidos por defecto para todo el equipo. `estado-actual.md` actualizado.
+
+**Decisiones.** Amplía D-08 (acoplarse al backend): un módulo se prende en el código cuando el Banco confirma que lo habilitó.
+
+**Verificación.** `tsc --noEmit` y `expo lint` sin errores. Falta probar el flujo en la app contra el servidor.
+
+---
+
+## a43f9a0 · fix(familias): ajustar la app a lo verificado contra el servidor
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** CRUD de familias (rama `feature-tomas-familias`)
+
+**Objetivo.** Probar el módulo de Familias contra el servidor real y separar lo verificado de lo supuesto. Tomás pidió revisar qué partes salían de la documentación y cuáles eran supuestos.
+
+**Qué se hizo.**
+- `npm run smoke -- --familias` contra `https://cloud.mermab.com/api` con el usuario de prueba: **33 PASS, 0 FAIL** (12 de escritura de familias). La familia de prueba se borró.
+- Script temporal, borrado después de usarlo, con los mismos helpers de la app (`familyBody`, `memberBody`, `changedFields`). Verificó los supuestos:
+  - el alta acepta todos los campos que manda la app;
+  - el `PUT` acepta `family_type_id`;
+  - `null` o `""` borra un dato;
+  - un nuevo referente del hogar desmarca al anterior;
+  - un miembro inactivo sigue en la familia y en la búsqueda por DNI;
+  - una familia inactiva deja de contar en `demographics`;
+  - el `DELETE` borra la familia con sus miembros.
+- Se quitó el aviso incorrecto de "Editar familia" y se ajustaron los textos de inactivar y reactivar para que digan sólo lo comprobado.
+- Los mocks reproducen el borrado con `null` y el referente único.
+- `docs/api-gaps.md` G-15 reescrito con los resultados.
+
+**Problemas.** P-14 (la documentación de la API contradice al servidor en el borrado con `null`).
+
+**Verificación.**
+- Smoke test y script de supuestos contra el servidor, con los resultados de arriba.
+- `tsc --noEmit` y `expo lint` sin errores.
+- El bundle web compila con los cambios.
+- Las pantallas no se probaron con clics: no hay un navegador automatizado en esta sesión.
+
+**Pendientes.**
+- Probar las pantallas a mano en web y en el celular.
+- Avisar al Banco lo del `null`.
+- Confirmar el `status` de una familia suspendida y el 409 por entregas.
+
+---
+
+## 3466ed8 · chore(bitacora): ignorar los commits de merge
+- **Fecha:** 2026-10-14 · **Autoría:** bala123819 + asistencia de IA (Claude Code)
+- **Etapa:** Trabajo en equipo
+
+**Qué se hizo.** `npm run bitacora` ignora los commits de merge (`git log --no-merges`). El equipo trabaja en tres ramas, una por módulo (Familias, Pedidos de mercadería, Interacciones), que se unen a `main` con un merge commit. Ese commit no agrega trabajo propio: cada commit de la rama ya tiene su entrada. Se usa merge, no *squash* ni *rebase*, para que los hashes de la bitácora sigan existiendo en `main`.
+
+**Verificación.** `npm run bitacora` sin faltantes.

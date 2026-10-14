@@ -329,6 +329,39 @@ export function createMockDb() {
       ],
       head_of_household: { id: 'd4e5f6a7-0000-4000-8000-000000000001', full_name: 'Jorge Paz', document_number: null },
     },
+    // Suspendida por el banco: se ve pero no se edita (409 FAMILY_SUSPENDED_BY_BANK)
+    {
+      id: 'e7f8a9b0-0000-4000-8000-000000000004',
+      organization_id: ORG_ID,
+      source: 'manual',
+      code: 'FAM-2026-0032',
+      name: 'Familia Suárez',
+      registration_date: day(-200),
+      total_members: 1,
+      status: 'suspendida',
+      housing_situation: 'tomado',
+      family_type: { id: 'ft-4', code: 'persona_sola', name: 'Persona sola', color: '#607D8B' },
+      members: [
+        member({ id: 'e7f8a9b0-0000-4000-8000-000000000041', first_name: 'Raúl', last_name: 'Suárez', document_number: '25333444', birth_date: '1975-05-05', age: 51, age_group: 'adults_18_64', gender: 'masculino', relationship: 'jefe_hogar', is_head_of_household: true }),
+      ],
+      head_of_household: { id: 'e7f8a9b0-0000-4000-8000-000000000041', full_name: 'Raúl Suárez', document_number: '25333444' },
+    },
+    // Cargada por el banco por un programa: sólo aparece con ?source=all (409 FAMILY_MANAGED_BY_BANK)
+    {
+      id: 'f1a2b3c4-0000-4000-8000-000000000005',
+      organization_id: ORG_ID,
+      source: 'program_enrollment',
+      code: 'FAM-2026-0033',
+      name: 'Familia Méndez (programa)',
+      registration_date: day(-60),
+      total_members: 1,
+      status: 'activa',
+      family_type: { id: 'ft-4', code: 'persona_sola', name: 'Persona sola', color: '#607D8B' },
+      members: [
+        member({ id: 'f1a2b3c4-0000-4000-8000-000000000051', first_name: 'Elena', last_name: 'Méndez', document_number: '28777888', birth_date: '1980-11-11', age: 45, age_group: 'adults_18_64', gender: 'femenino', relationship: 'jefe_hogar', is_head_of_household: true }),
+      ],
+      head_of_household: { id: 'f1a2b3c4-0000-4000-8000-000000000051', full_name: 'Elena Méndez', document_number: '28777888' },
+    },
   ];
 
   const requirements: DocumentRequirement[] = [
@@ -367,9 +400,10 @@ export function createMockDb() {
     sessions,
     trainings,
     familyTypes: [
-      { id: 'ft-1', code: 'nuclear', name: 'Nuclear' },
-      { id: 'ft-2', code: 'monoparental', name: 'Monoparental' },
-      { id: 'ft-3', code: 'persona_sola', name: 'Persona sola' },
+      { id: 'ft-1', code: 'familia_funcional', name: 'Composición Familiar', color: '#4CAF50' },
+      { id: 'ft-2', code: 'madre_sola_con_hijos', name: 'Madre sola con hijos', description: 'Hogar monoparental liderado por madre', color: '#E91E63' },
+      { id: 'ft-3', code: 'adultos_mayores', name: 'Adultos mayores (65+)', color: '#795548' },
+      { id: 'ft-4', code: 'persona_sola', name: 'Persona sola', color: '#607D8B' },
     ],
   };
 }

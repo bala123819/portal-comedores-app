@@ -30,7 +30,13 @@ Principio: una acción principal por pantalla, 4 pestañas + "Más". Términos d
   /recetas/sugerir                      Agente de recetas: "¿Qué tenés y para cuántos?"
   /notificaciones                       Bandeja
   /mas/nutricion                        Grupos, resumen de lo recibido, cuota (si existe)
-  /mas/familias, /mas/familias/[id]     Familias + resumen demográfico
+  /familias                             Listado con búsqueda, estado e "Incluir las del Banco"
+  /familia/resumen                      Resumen demográfico
+  /familia/nueva                        Alta de familia con sus miembros (form-config)
+  /familia/[id]                         Detalle, integrantes, inactivar/reactivar, dar de baja
+  /familia/[id]/editar                  Editar datos de la familia (sólo lo que cambia)
+  /familia/[id]/miembro/nuevo           Agregar persona (aviso de DNI ya registrado)
+  /familia/[id]/miembro/[memberId]      Editar persona, inactivar/reactivar, quitar
   /mas/jornadas                         Jornadas de recolección y talleres (si hay permiso)
   /mas/documentacion                    Requerimientos, documentos, ficha social, carta
   /mas/perfil                           Perfil de usuario, contraseña, organización, cerrar sesión

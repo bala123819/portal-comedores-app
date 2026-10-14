@@ -137,3 +137,20 @@ Todas bajo el usuario de la organización (Bearer), con el envoltorio `{success,
 - `GET /org/courses?category=` · `GET /org/courses/{id}` (`title, category, description, duration, format: video|pdf|presencial, url?, schedule?`) · `POST /org/courses/{id}/enroll`
 
 Si alguno no entra en la planificación del Banco, la alternativa del equipo es un backend propio liviano sólo para esos módulos (ver `docs/tesis/plan-de-accion.md`, decisión A).
+
+### G-15 · Escritura de familias: comportamiento verificado contra el servidor (2026-10-14)
+Se probó contra `https://cloud.mermab.com/api` con el usuario de prueba, usando los mismos helpers con los que la app arma los requests. La familia de prueba se borró al terminar. Además, `npm run smoke -- --familias` da 33 PASS y 0 FAIL.
+
+| Duda | Resultado |
+|---|---|
+| ¿El alta acepta `email`, `housing_situation` y `special_needs_notes` (no están en el ejemplo)? | **Sí**, se guardan. También todos los campos del miembro que manda la app. |
+| ¿`PUT /org/families/{id}` acepta `family_type_id`? | **Sí**, cambia el tipo. |
+| ¿Cómo se borra un dato? | **Con `null` o `""` se borra.** Esto **contradice** el post 5 ("un `null` se toma como no enviado"). La app manda sólo los campos que cambian, así que vaciar un campo lo borra. **Avisar al Banco** para que corrija la documentación o el comportamiento. |
+| ¿Dos referentes del hogar? | **No**: al marcar un nuevo `jefe_hogar`, el backend desmarca al anterior y actualiza `head_of_household`. |
+| Miembro `inactivo` | Sigue en `members` con `status: inactivo` y la búsqueda por DNI lo encuentra (`found: true`). |
+| Familia `inactiva` | Sigue en el listado (`?status=inactiva`) y deja de contar en `demographics`: total de familias, personas y `weighted_beneficiaries`. |
+| `DELETE` de una familia con miembros | Borra la familia con sus miembros: el DNI queda libre (`found: false`). |
+
+**Sin verificar:**
+- el valor de `status` de una familia suspendida por el banco: en el listado sólo hay `activa` e `inactiva`, y la app supone `suspendida` (docs/bda);
+- el 409 por entregas registradas: la familia de prueba no tenía entregas.

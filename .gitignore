@@ -47,3 +47,6 @@ example
 
 # muestras reales de la API (aunque estén enmascaradas, no se versionan)
 docs/api/samples/
+
+# config MCP con token de GoDubi (no se versiona)
+.mcp.json

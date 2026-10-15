@@ -485,3 +485,40 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Si el Banco avisa cuando atiende, abrir el detalle desde la bandeja de notificaciones.
 
 **Archivos principales.** `src/app/(app)/banco/*`, `src/features/interacciones/*`, `src/components/interacciones/InteractionCard.tsx`, `src/services/api/endpoints/org.ts`, `src/mocks/*`, `docs/bda/08-interacciones.md`, `docs/decisiones.md`, `docs/api-gaps.md`.
+
+---
+
+## 9e15ec1 · cambios "mercaderia"
+- **Fecha:** 2026-10-14 21:04 · **Autoría:** Julieta Leiro (+ asistencia de IA: Claude Code)
+- **Etapa:** Acople a la API real — módulos CRUD (rama `mercaderias`, integrada a `main` en el merge 72317cd)
+
+**Objetivo.** Implementar los pedidos de mercadería de la organización según los posts 9/14 y 10/14 de la serie "API organizaciones" publicada por el Banco en GoDubi: catálogo, cupo del mes, hacer un pedido, seguirlo, cancelarlo y descargar el remito. Detalle completo en `docs/tesis/modulo-pedidos-mercaderia.md`.
+
+**Qué se hizo.**
+- Pestaña **Mercadería** (`/mercaderia`): cupo del mes, botón "Hacer un pedido" (se deshabilita con 3 pedidos esperando respuesta) y lista con filtros En curso / Entregados / Todos.
+- Pedido en dos pasos: `/pedido/nuevo` (catálogo con búsqueda, categorías y cantidades) y `/pedido/confirmar` (cantidades editables, cupo con el pedido, día de retiro, franja, motivo, urgencia; diálogo con los `warnings` de stock o cupo).
+- Detalle `/pedido/[id]`: Stepper de estados, cantidades pedidas/aprobadas/entregadas, remito en PDF y cancelación con motivo obligatorio.
+- Sección en el Inicio, entrada en Más y apertura del pedido desde el aviso `pedido_actualizado`.
+- Capa de datos: tipos, `orgApi` (catálogo, cupo, pedidos, alta con `warnings`, cancelar, remito), hooks de React Query y carrito en zustand. El cliente lee `error_code`.
+- Módulo `pedidos` activo con la API real (verificado con GET contra el servidor). Mocks con las reglas del Banco.
+- Copia de la especificación en `docs/bda/09-10-pedidos-mercaderia.md`.
+
+**Decisiones.** D-14 (módulo activo con la API real, nombre "Mercadería") y D-15 (flujo en dos pasos, fecha con chips, reglas en el cliente). Al integrar con `main` se renumeraron (en la rama eran D-12/D-13, que `main` ya usaba) y el módulo se sumó a `enabledInBackend` junto con `familiasAlta`.
+
+**Problemas y soluciones.**
+- El alta devuelve `warnings` y `quota` fuera de `data`: `createDistribution` usa `request` directo para no perderlos.
+- `watch()` de react-hook-form chocaba con el React Compiler (lint): se usa `useWatch` (como en P-16).
+- La prueba en el navegador mostró tres detalles visuales (carrito vacío detrás del diálogo de avisos, "Cancelado: Cancelado por la organización", etiquetas pegadas en el Stepper): corregidos antes del commit.
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias (también después del merge con `main`).
+- GET contra la API real: catálogo, cupo, listado, detalle y remito PDF responden con las formas documentadas.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true EXPO_PUBLIC_MODULES_SCOPE=real`), Playwright + Chrome en 390×844: 37/37 pasos (crear, editar cantidades, sacar productos, avisos de stock y cupo, límite de 3, cancelar, remito, rechazado, aviso → pedido, errores). Sin errores de consola. Repetido sobre el código integrado con `main`, más un chequeo de Familias, Banco y Más.
+- **No probado contra la API real:** el alta y la cancelación (crean pedidos en el tenant del Banco).
+
+**Pendientes.**
+- Probar alta y cancelación con el usuario real (nota `[PRUEBA TESIS]`) y recorrer las pantallas en un celular.
+- "Lo recibido" y el panel nutricional (post 11).
+- Observaciones para el Banco en `docs/api-gaps.md` G-17.
+
+**Archivos principales.** `docs/api-gaps.md`, `docs/bda/09-10-pedidos-mercaderia.md`, `docs/bda/README.md`, `docs/decisiones.md`, `docs/tesis/README.md`, `docs/tesis/modulo-pedidos-mercaderia.md`, `src/app/(app)/(tabs)/_layout.tsx`, `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/app/(app)/(tabs)/mercaderia.tsx`, `src/app/(app)/_layout.tsx`, `src/app/(app)/notificaciones.tsx`, `src/app/(app)/pedido/[id].tsx`, `src/app/(app)/pedido/confirmar.tsx`, `src/app/(app)/pedido/nuevo.tsx`, `src/components/pedidos/CatalogItem.tsx`, `src/components/pedidos/DistributionCard.tsx`, `src/components/pedidos/QuotaCard.tsx`, `src/features/notificaciones/types.ts`, `src/features/pedidos/cart.ts`, `src/features/pedidos/hooks.ts`, `src/features/pedidos/types.ts`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/lib/labels.ts`

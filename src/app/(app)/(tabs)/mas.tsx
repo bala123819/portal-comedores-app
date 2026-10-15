@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   LogOut,
   Salad,
+  ShoppingCart,
   Sparkles,
   Stethoscope,
   UserRound,
@@ -56,6 +57,9 @@ export default function MasScreen() {
 
       <SectionHeader title="Alimentación" />
       <View className="gap-2">
+        {features.pedidos && features.mermas ? (
+          <ListItem icon={ShoppingCart} title="Pedidos de mercadería" subtitle="Catálogo del Banco, cupo y pedidos" onPress={() => router.push('/mercaderia')} />
+        ) : null}
         <ListItem icon={Salad} title="Nutrición" subtitle="Cuota mensual y alimentación" onPress={() => router.push('/nutricion')} />
         <ListItem icon={Sparkles} title="Asistente" subtitle="Recetas, nutrición y dudas" onPress={() => router.push('/asistente')} />
       </View>

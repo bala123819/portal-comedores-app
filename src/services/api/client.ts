@@ -142,7 +142,9 @@ export async function request<T>(
     }
 
     const text = await res.text();
-    let json: (Partial<Envelope<T>> & { code?: string; error?: string; retry_after?: number }) | null =
+    let json:
+      | (Partial<Envelope<T>> & { code?: string; error_code?: string; error?: string; retry_after?: number })
+      | null =
       null;
     if (text) {
       try {
@@ -165,7 +167,8 @@ export async function request<T>(
       continue;
     }
 
-    const code = json?.code ?? json?.error;
+    // La guía nueva (posts 1/14) manda `error_code` en las reglas de negocio: se ramifica por él.
+    const code = json?.error_code ?? json?.code ?? json?.error;
     if (res.status === 400 && (code === 'IDEMPOTENCY_KEY_REQUIRED' || /idempotency/i.test(text))) {
       console.error(`[api] BUG: ${method} ${path} requiere Idempotency-Key`);
     }

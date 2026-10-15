@@ -25,7 +25,15 @@ export type Module =
   /** Jornadas de recolección y talleres */
   | 'programas'
   /** Endpoints de nutrición y productos (/nutrition, /nutritional-groups, /unified-products) */
-  | 'nutricionApi';
+  | 'nutricionApi'
+  /** Pedidos de mercadería: catálogo, cupo, pedidos, cancelar y remito (/org/catalog, /org/distributions…) */
+  | 'pedidos';
+
+/**
+ * Módulos que ya responden en el servidor real (verificado con GET contra la API el 2026-10-14,
+ * ver D-12): se activan también con la API real, sin necesidad de forzarlos.
+ */
+const LIVE_IN_BACKEND = new Set<Module>(['pedidos']);
 
 const forced = new Set(
   (process.env.EXPO_PUBLIC_ENABLE_MODULES ?? '')
@@ -37,7 +45,7 @@ const forced = new Set(
 const mocksShowEverything = env.useMocks && process.env.EXPO_PUBLIC_MODULES_SCOPE !== 'real';
 
 export function isEnabled(module: Module): boolean {
-  return mocksShowEverything || forced.has(module);
+  return mocksShowEverything || forced.has(module) || LIVE_IN_BACKEND.has(module);
 }
 
 export const features = {
@@ -47,4 +55,5 @@ export const features = {
   documentacion: isEnabled('documentacion'),
   programas: isEnabled('programas'),
   nutricionApi: isEnabled('nutricionApi'),
+  pedidos: isEnabled('pedidos'),
 };

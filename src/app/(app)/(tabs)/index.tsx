@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import {
   Bell,
@@ -6,6 +7,7 @@ import {
   MessageSquare,
   Package,
   Scale,
+  ShoppingCart,
   Sparkles,
   Truck,
   Users,
@@ -14,6 +16,8 @@ import { View } from 'react-native';
 import { DemographicsSummary } from '@/components/familias/DemographicsSummary';
 import { MermaCard } from '@/components/mermas/MermaCard';
 import { NotificationBell } from '@/components/notificaciones/NotificationBell';
+import { DistributionCard } from '@/components/pedidos/DistributionCard';
+import { QuotaCard } from '@/components/pedidos/QuotaCard';
 import { AssignmentCard } from '@/components/retiros/AssignmentCard';
 import {
   Badge,
@@ -36,6 +40,7 @@ import { useDemographics } from '@/features/familias/hooks';
 import { useAvailableMermas } from '@/features/mermas/hooks';
 import { useUnreadCount } from '@/features/notificaciones/hooks';
 import { useOrgProfile, useOrgStats } from '@/features/org/hooks';
+import { useDistributions, useQuota } from '@/features/pedidos/hooks';
 import { features } from '@/lib/features';
 import { formatNumber, parseDate } from '@/lib/format';
 import { label, organizationStatusLabels } from '@/lib/labels';
@@ -100,12 +105,50 @@ function MermasSection() {
   );
 }
 
+/** Pedidos de mercadería: cupo del mes y pedidos en curso (módulo `pedidos`) */
+function PedidosSection() {
+  const quota = useQuota();
+  const open = useDistributions('abiertos');
+  const items = flattenPages(open.data);
+  const ready = items.filter((d) => d.status === 'lista_para_retiro');
+  const next = ready[0] ?? items[0];
+
+  return (
+    <>
+      <SectionHeader
+        title="Pedidos de mercadería"
+        action={<Button title="Ver pedidos" variant="ghost" size="sm" onPress={() => router.push('/mercaderia')} />}
+      />
+      {ready.length ? (
+        <Card tone="accent" onPress={() => router.push('/mercaderia')} className="gap-1">
+          <Text variant="label">
+            {ready.length === 1 ? 'Tenés 1 pedido listo para retirar' : `Tenés ${ready.length} pedidos listos para retirar`}
+          </Text>
+          <Text className="text-sm">Ya pueden ir a buscarlo. Descargá el remito desde el pedido.</Text>
+        </Card>
+      ) : null}
+      {quota.data ? <QuotaCard quota={quota.data} compact /> : quota.isPending ? <Skeleton className="h-24 w-full rounded-xl" /> : null}
+      {open.isPending ? (
+        <SkeletonList count={1} />
+      ) : next ? (
+        <DistributionCard distribution={next} onPress={() => router.push({ pathname: '/pedido/[id]', params: { id: next.id } })} />
+      ) : (
+        <Card className="gap-3">
+          <Text tone="muted">No tenés pedidos en curso.</Text>
+          <Button title="Hacer un pedido" icon={ShoppingCart} variant="secondary" onPress={() => router.push('/pedido/nuevo')} />
+        </Card>
+      )}
+    </>
+  );
+}
+
 export default function HomeScreen() {
   const me = useSession((s) => s.me);
   const profile = useOrgProfile();
   const stats = useOrgStats();
   const demographics = useDemographics();
   const unread = useUnreadCount();
+  const qc = useQueryClient();
   const org = profile.data;
   const impacto = stats.data?.impacto;
 
@@ -115,6 +158,7 @@ export default function HomeScreen() {
     void stats.refetch();
     void demographics.refetch();
     void unread.refetch();
+    if (features.pedidos) void qc.invalidateQueries({ queryKey: ['orders'] });
   };
 
   return (
@@ -183,6 +227,8 @@ export default function HomeScreen() {
           ) : null}
         </View>
       )}
+
+      {features.pedidos ? <PedidosSection /> : null}
 
       {features.mermas ? <MermasSection /> : null}
 

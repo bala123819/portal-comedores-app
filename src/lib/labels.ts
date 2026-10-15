@@ -46,6 +46,31 @@ export const assignmentStatusLabels: Record<string, string> = {
   no_show: 'No se retiró',
 };
 
+/** Pedidos de mercadería (`/org/distributions`). Coinciden con `status_label` de la API. */
+export const distributionStatusLabels: Record<string, string> = {
+  pendiente: 'Pendiente de revisión',
+  en_revision: 'En revisión',
+  aprobada: 'Aprobado',
+  programada: 'Programado',
+  en_preparacion: 'En preparación',
+  lista_para_retiro: 'Listo para retirar',
+  distribuida: 'Entregado',
+  rechazada: 'Rechazado',
+  cancelada: 'Cancelado',
+  anulada: 'Anulado',
+};
+
+export const availabilityLabels: Record<string, string> = {
+  disponible: 'Disponible',
+  poco_stock: 'Quedan pocas',
+};
+
+/** Franjas que ofrece la app. La API acepta texto libre (también llegan "09:00-12:00"). */
+export const timeSlotLabels: Record<string, string> = {
+  mañana: 'Mañana',
+  tarde: 'Tarde',
+};
+
 export const organizationStatusLabels: Record<string, string> = {
   pendiente: 'Pendiente de aprobación',
   verificada: 'Verificada',
@@ -225,6 +250,7 @@ export const socialDataLabels: Record<string, string> = {
 
 export const notificationTypeLabels: Record<string, string> = {
   merma_nueva: 'Nuevos alimentos',
+  pedido_actualizado: 'Pedido de mercadería',
 };
 
 /**

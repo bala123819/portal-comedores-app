@@ -84,7 +84,9 @@ export default function NotificacionesScreen() {
     const t = notificationTarget(n);
     // Sólo se navega a pantallas de módulos activos (las de mermas están apagadas con la API real)
     if (t?.kind === 'family') router.push({ pathname: '/familia/[id]', params: { id: t.id } });
-    else if (!features.mermas) return;
+    else if (t?.kind === 'distribution') {
+      if (features.pedidos) router.push({ pathname: '/pedido/[id]', params: { id: t.id } });
+    } else if (!features.mermas) return;
     else if (t?.kind === 'merma') router.push({ pathname: '/merma/[id]', params: { id: t.id } });
     else if (t?.kind === 'assignment') router.push({ pathname: '/retiro/[id]', params: { id: t.id } });
     else if (t?.kind === 'application') router.push({ pathname: '/postulacion/[id]', params: { id: t.id } });

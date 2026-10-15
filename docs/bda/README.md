@@ -10,5 +10,6 @@ Material que mandó el equipo del Banco (6 posts, probados contra el servidor el
 | [03-familias-avisos.md](03-familias-avisos.md) | Ejemplos reales: familias, demografía, avisos |
 | [04-05-cliente-y-uso.md](04-05-cliente-y-uso.md) | Resumen del `apiClient.ts` que mandaron y reglas de uso (no se copió: se incorporaron sus reglas a `src/services/api/client.ts`) |
 | [06-como-probar.md](06-como-probar.md) | smoke test, Postman, Scribe; el script está en `scripts/smoke-test.sh` |
+| [09-10-pedidos-mercaderia.md](09-10-pedidos-mercaderia.md) | Serie nueva (2026-10-07, posts 9 y 10 de 14): catálogo, cupo, pedidos de mercadería, cancelar y remito |
 
 La clave del usuario de prueba **no** está en el repo: va en `.env` (`CHECK_API_PASSWORD`), que git ignora.

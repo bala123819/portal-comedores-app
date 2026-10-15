@@ -3,6 +3,7 @@
  * estado solo por acción, Idempotency-Key obligatoria en POST).
  */
 import { apiConfig, type HttpMethod, type RequestOptions } from '@/services/api/client';
+import { formatNumber } from '@/lib/format';
 import { createMockDb, ORG_ID } from './data';
 
 let db = createMockDb();
@@ -398,6 +399,134 @@ on('GET', '/unified-products/search', (_, o) => {
         nutriments: { 'energy-kcal_100g': 52, proteins_100g: 0.3, carbohydrates_100g: 14, fat_100g: 0.2 },
       })),
   );
+});
+
+// ─── Pedidos de mercadería (reglas de docs/bda/09-10-pedidos-mercaderia.md) ─────
+const WAITING = ['pendiente', 'en_revision'];
+const OPEN = ['pendiente', 'en_revision', 'aprobada', 'programada', 'en_preparacion', 'lista_para_retiro'];
+const businessError = (status: number, message: string, error_code: string) =>
+  json(status, { success: false, message, error_code });
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+on('GET', '/org/catalog', (_, o) => {
+  let items = db.catalog;
+  const q = String(o.query?.search ?? '').toLowerCase();
+  if (q) items = items.filter((p) => p.name.toLowerCase().includes(q));
+  if (o.query?.food_category_id) items = items.filter((p) => p.category?.id === o.query?.food_category_id);
+  return paginate(items, o.query);
+});
+on('GET', '/org/quota', () => ok(db.quota));
+on('GET', '/org/distributions', (_, o) => {
+  let items = db.distributions;
+  const s = o.query?.status;
+  if (s === 'abiertos') items = items.filter((d) => OPEN.includes(String(d.status)));
+  else if (s) items = items.filter((d) => d.status === s);
+  // El listado no trae `items` (sólo el detalle)
+  return paginate(items.map(({ items: _items, ...d }) => d), { per_page: 20, ...o.query });
+});
+on('GET', '/org/distributions/:id', (p) => {
+  const d = db.distributions.find((x) => x.id === p.id);
+  return d ? ok(d) : fail(404, 'Pedido no encontrado');
+});
+on('POST', '/org/distributions', (_, o) => {
+  const b = body(o) as { requested_distribution_date?: string; time_slot?: string | null; notes?: string | null; is_urgent?: boolean; urgency_reason?: string | null; items?: { product_id: string; quantity_requested: number }[] };
+  const errors: Record<string, string[]> = {};
+  const today = new Date().toISOString().slice(0, 10);
+  if (!b.requested_distribution_date) errors.requested_distribution_date = ['La fecha de retiro es obligatoria.'];
+  else if (b.requested_distribution_date < today) errors.requested_distribution_date = ['La fecha de retiro no puede ser anterior a hoy.'];
+  const items = b.items ?? [];
+  if (!items.length) errors.items = ['Agregá al menos un producto.'];
+  if (items.length > 30) errors.items = ['Un pedido puede tener hasta 30 productos.'];
+  const seen = new Set<string>();
+  items.forEach((it, i) => {
+    if (!db.catalog.some((p) => p.product_id === it.product_id)) errors[`items.${i}.product_id`] = ['El producto no existe o no está disponible.'];
+    if (seen.has(it.product_id)) errors[`items.${i}.product_id`] = ['El producto está repetido en el pedido.'];
+    seen.add(it.product_id);
+    if (!(it.quantity_requested > 0)) errors[`items.${i}.quantity_requested`] = ['La cantidad tiene que ser mayor a cero.'];
+  });
+  const keys = Object.keys(errors);
+  if (keys.length) {
+    const first = errors[keys[0]][0];
+    return fail(422, keys.length > 1 ? `${first} (and ${keys.length - 1} more errors)` : first, errors);
+  }
+  if (db.distributions.filter((d) => WAITING.includes(String(d.status))).length >= 3) {
+    return businessError(422, 'Ya tenés 3 pedidos esperando respuesta del banco. Esperá a que los revisen o cancelá alguno.', 'TOO_MANY_OPEN_REQUESTS');
+  }
+
+  const warnings: { code: string; field: string | null; message: string }[] = [];
+  const lines = items.map((it, i) => {
+    const p = db.catalog.find((x) => x.product_id === it.product_id)!;
+    // En los mocks, "poco stock" = más de 20 unidades no alcanzan
+    if (p.availability === 'poco_stock' && it.quantity_requested > 20) {
+      warnings.push({ code: 'STOCK_INSUFFICIENT', field: `items.${i}.quantity_requested`, message: `Puede que no haya todo lo que pediste de "${p.name}": el banco lo ajusta al aprobar.` });
+    }
+    return {
+      id: `d1b00000-${Date.now().toString(16).slice(-4)}-4000-8000-${String(Date.now() + i).slice(-12)}`,
+      product: { id: p.product_id, name: p.name, brand: p.brand ?? null },
+      unit: p.unit,
+      weight_per_unit_kg: p.weight_per_unit_kg,
+      quantity_requested: it.quantity_requested,
+      quantity_approved: null,
+      quantity_delivered: null,
+      kg_requested: round2(it.quantity_requested * (p.weight_per_unit_kg ?? 0)),
+    };
+  });
+  const totalKg = round2(lines.reduce((acc, l) => acc + l.kg_requested, 0));
+  db.quota.requested_in_progress_kg = round2(db.quota.requested_in_progress_kg + totalKg);
+  db.quota.remaining_kg = round2(db.quota.monthly_quota_kg - db.quota.delivered_kg - db.quota.requested_in_progress_kg);
+  if (db.quota.remaining_kg < 0) {
+    warnings.push({ code: 'QUOTA_EXCEEDED', field: null, message: `Con este pedido se pasan del cupo del mes (${db.quota.monthly_quota_kg} kg) por ${formatNumber(-db.quota.remaining_kg)} kg.` });
+  }
+  const n = 50 + db.distributions.length;
+  const d = {
+    id: `d1a00000-${Date.now().toString(16).slice(-4)}-4000-8000-${String(Date.now()).slice(-12)}`,
+    number: `DIST-2026-${String(n).padStart(5, '0')}`,
+    status: 'pendiente',
+    status_label: 'Pendiente de revisión',
+    request_date: today,
+    requested_distribution_date: b.requested_distribution_date!,
+    scheduled_distribution_date: null,
+    actual_distribution_date: null,
+    time_slot: b.time_slot ?? null,
+    pickup_type: 'pickup',
+    total_items: lines.length,
+    total_kg: totalKg,
+    is_urgent: !!b.is_urgent,
+    urgency_reason: b.urgency_reason ?? null,
+    notes: b.notes ?? null,
+    rejection_reason: null,
+    received_by_name: null,
+    receipt_number: null,
+    can_cancel: true,
+    receipt_available: false,
+    requested_by_organization: true,
+    created_at: now(),
+    updated_at: now(),
+    items: lines,
+  };
+  db.distributions.unshift(d);
+  return json(201, { success: true, message: 'Pedido enviado al banco', data: d, warnings, quota: db.quota });
+});
+on('POST', '/org/distributions/:id/cancel', (p, o) => {
+  const d = db.distributions.find((x) => x.id === p.id);
+  if (!d) return fail(404, 'Pedido no encontrado');
+  const reason = String(body(o).reason ?? '').trim();
+  if (!reason) return fail(422, 'Contanos por qué lo cancelás.', { reason: ['El motivo es obligatorio.'] });
+  if (!WAITING.includes(String(d.status))) {
+    return businessError(409, `El pedido ya está ${String(d.status_label ?? d.status).toLowerCase()}: pedile al banco que lo cancele.`, 'DISTRIBUTION_NOT_CANCELLABLE');
+  }
+  db.quota.requested_in_progress_kg = round2(Math.max(0, db.quota.requested_in_progress_kg - (d.total_kg ?? 0)));
+  db.quota.remaining_kg = round2(db.quota.monthly_quota_kg - db.quota.delivered_kg - db.quota.requested_in_progress_kg);
+  Object.assign(d, { status: 'cancelada', status_label: 'Cancelado', rejection_reason: `Cancelado por la organización: ${reason}`, can_cancel: false, updated_at: now() });
+  return json(200, { success: true, message: 'Pedido cancelado', data: d });
+});
+on('GET', '/org/distributions/:id/receipt', (p) => {
+  const d = db.distributions.find((x) => x.id === p.id);
+  if (!d) return fail(404, 'Pedido no encontrado');
+  if (!d.receipt_available) return fail(422, 'El remito está disponible desde que el pedido está listo para retirar.');
+  // PDF mínimo de una página (sólo web: en nativo la descarga va directo al servidor)
+  const pdf = '%PDF-1.1\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 144]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF';
+  return new Response(pdf, { status: 200, headers: { 'Content-Type': 'application/pdf' } });
 });
 
 // ─── Notificaciones (formas de docs/bda/03: paginación anidada) ──────────

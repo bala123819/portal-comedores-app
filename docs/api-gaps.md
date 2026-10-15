@@ -137,3 +137,10 @@ Todas bajo el usuario de la organización (Bearer), con el envoltorio `{success,
 - `GET /org/courses?category=` · `GET /org/courses/{id}` (`title, category, description, duration, format: video|pdf|presencial, url?, schedule?`) · `POST /org/courses/{id}/enroll`
 
 Si alguno no entra en la planificación del Banco, la alternativa del equipo es un backend propio liviano sólo para esos módulos (ver `docs/tesis/plan-de-accion.md`, decisión A).
+
+### G-15 · Pedidos de mercadería: observaciones (2026-10-14)
+Verificado con GET contra el servidor real. Nada bloquea; para conversar con el Banco:
+- `time_slot` es texto libre (conviven `"mañana"` y `"09:00-12:00"`). La app manda `mañana` / `tarde`; convendría una lista cerrada.
+- `category` y `nutritional_group` vienen `null` en algunos productos del catálogo de prueba: no hay forma de agrupar todo el catálogo.
+- No hay endpoint de categorías para este rol: los filtros se arman con lo que trae el catálogo.
+- El remito es un PDF por pedido. Sigue abierta la pregunta del Banco sobre el "PDF de las donaciones" de un período (post "Todo lo que la app puede hacer", punto 8).

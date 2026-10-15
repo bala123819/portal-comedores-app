@@ -41,3 +41,17 @@ Fase 1 (recetas y nutrición general): la app no manda el token del usuario, só
 
 ### D-11 · Diseño del agente de Nutrición y Cocina (2026-10-05)
 Un solo worker en GoDubi para recetas y nutrición. **Sin entrenar un modelo:** modelo general + persona (system prompt con reglas de seguridad alimentaria) + knowledge base (recetario, pautas, Guías Alimentarias para la Población Argentina, y los materiales del Banco cuando lleguen) + contexto de la organización en cada consulta. La demografía (edades y condiciones, sólo cantidades) la manda la app desde la sesión del usuario: el agente no accede a la API del Banco. El agente responde JSON con recetas del recetario (`recetaId`) o sugeridas (base 10 porciones); la app escala las cantidades. Permisos mínimos (`read_order_context`, `read_files`, `knowledge_search`). Guía: `docs/agentes/nutricion/`.
+
+### D-12 · Módulo `pedidos` activo con la API real (2026-10-14)
+Los pedidos de mercadería (`/org/catalog`, `/org/quota`, `/org/distributions*`) figuraban como "se habilitan con la próxima actualización" (post 1/14). El 2026-10-14 se verificó con GET contra el servidor real que responden con las formas documentadas (catálogo de 7 productos, cupo, listado, detalle y remito PDF). Por eso `src/lib/features.ts` suma la lista `LIVE_IN_BACKEND`: los módulos verificados se activan también con la API real, sin `EXPO_PUBLIC_ENABLE_MODULES`. El alta y la cancelación **no** se probaron contra el servidor real (crean datos en el tenant del Banco); sí contra los mocks, que reproducen las reglas del post 9.
+- **Navegación:** con la API real, pestaña **Mercadería** (Inicio · Mercadería · Familias · Recetas · Más). Con mermas activas (mocks) la pestaña se oculta para no pasar de 5 y se entra desde "Más" y el Inicio.
+- **Nombre:** en la interfaz es "Mercadería" / "pedido de mercadería", para no confundirlo con los "pedidos" de mermas (postulaciones) de "Mis retiros".
+
+### D-13 · Flujo del pedido de mercadería en dos pasos (2026-10-14)
+1) `/pedido/nuevo`: catálogo con búsqueda y filtro por categoría, cantidad por producto. 2) `/pedido/confirmar`: revisar cantidades, ver cómo queda el cupo, día de retiro, franja, motivo y urgencia. El borrador vive en un store de zustand en memoria (`src/features/pedidos/cart.ts`): no se persiste (es un pedido a medio armar, no un dato del servidor).
+- **Fecha de retiro con chips** (hoy + 13 días) en vez de un selector de fecha: no suma dependencias nativas y cumple la regla "desde hoy". El banco fija el día definitivo (`scheduled_distribution_date`).
+- **Franja**: "Sin preferencia" / "Mañana" / "Tarde". La API acepta texto libre.
+- **Reglas del Banco en el cliente** (además de las del servidor): hasta 30 productos sin repetir (el carrito es un mapa por `product_id`), cantidad > 0, y el botón "Hacer un pedido" se deshabilita con 3 pedidos esperando respuesta (`pendiente`/`en_revision`) para no llegar al 422 `TOO_MANY_OPEN_REQUESTS`.
+- **`warnings`** (stock o cupo superados): el pedido entra igual; se muestran en un diálogo antes de ir al detalle.
+- **Categorías**: se arman con lo que trae el catálogo (no hay listado de categorías para este rol) y se filtra en el cliente.
+- **Errores por `error_code`**: el cliente ahora lee `error_code` (formato de la serie nueva) además de `code`/`error`.

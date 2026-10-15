@@ -29,8 +29,10 @@ export function isUnread(n: AppNotification): boolean {
 /** Entidad relacionada (si el aviso trae ids en `data`), para navegar desde el aviso */
 export function notificationTarget(
   n: AppNotification,
-): { kind: 'merma' | 'assignment' | 'application' | 'family'; id: string } | null {
+): { kind: 'merma' | 'assignment' | 'application' | 'family' | 'distribution'; id: string } | null {
   const d = n.data ?? {};
+  // `pedido_actualizado`: el banco aprobó, rechazó, dejó listo o canceló un pedido de mercadería
+  if (typeof d.distribution_id === 'string') return { kind: 'distribution', id: d.distribution_id };
   if (typeof d.assignment_id === 'string') return { kind: 'assignment', id: d.assignment_id };
   if (typeof d.application_id === 'string') return { kind: 'application', id: d.application_id };
   if (typeof d.merma_id === 'string') return { kind: 'merma', id: d.merma_id };

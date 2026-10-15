@@ -9,6 +9,7 @@ import type { Merma } from '@/features/mermas/types';
 import type { AppNotification } from '@/features/notificaciones/types';
 import type { NutritionalGroup } from '@/features/nutricion/types';
 import type { DocumentRequirement, Organization } from '@/features/org/types';
+import type { CatalogProduct, Distribution, Quota } from '@/features/pedidos/types';
 import type { Application } from '@/features/postulaciones/types';
 import type { CollectionSession, Program, Training } from '@/features/programas/types';
 
@@ -256,6 +257,7 @@ export function createMockDb() {
   const pickers: Record<string, Picker[]> = { 'asg-001': [] };
 
   const notifications: AppNotification[] = [
+    { id: 'a2dd8761-0000-4000-8000-000000000004', type: 'pedido_actualizado', title: 'Tu pedido está listo para retirar', body: 'El pedido DIST-2026-00052 ya se puede ir a buscar.', data: { distribution_id: 'd1a00000-0000-4000-8000-000000000052', distribution_number: 'DIST-2026-00052', status: 'lista_para_retiro' }, action_url: '/pedidos/d1a00000-0000-4000-8000-000000000052', is_read: false, read_at: null, created_at: at(0, '09:30') },
     { id: 'a2dd8761-0000-4000-8000-000000000001', type: 'merma_nueva', title: 'Nuevos alimentos disponibles', body: 'Lácteos próximos a vencer — retiro hoy de 14 a 18 h.', data: { merma_id: 'merma-002' }, action_url: '/notifications', is_read: false, read_at: null, created_at: at(0, '08:05') },
     { id: 'a2dd8761-0000-4000-8000-000000000002', type: 'sistema', title: 'Actualizamos las familias', body: 'La cuota mensual se recalculó con las familias cargadas.', data: {}, action_url: '/notifications', is_read: false, read_at: null, created_at: at(-1, '15:00') },
     { id: 'a2dd8761-0000-4000-8000-000000000003', type: 'sistema', title: 'Notificación de Prueba', body: '¡Las notificaciones están funcionando correctamente!', data: { test: true }, action_url: '/notifications', is_read: true, read_at: at(-6, '11:00'), created_at: at(-6, '10:20') },
@@ -402,6 +404,41 @@ export function createMockDb() {
     { id: '4c6f1e3b-7d2a-4a8f-8b3c-2e5d6f7a8b9c', interaction_type: 'reclamo', type_label: 'Reclamo', title: 'La entrega llegó incompleta', notes: 'Faltaron 2 cajas de fideos del pedido del jueves.', status: 'atendida', attended_at: isoAt(-12, '10:00'), created_by: coordinadora, created_at: isoAt(-13, '17:30') },
   ];
 
+  // ─── Pedidos de mercadería (formas reales de /org/catalog, /org/quota y /org/distributions) ───
+  const catalog: CatalogProduct[] = [
+    { product_id: 'a41386ad-9e1d-475a-a0b4-cbabd9b1f86c', name: 'Aceite de girasol 900 ml', brand: null, unit: 'unidades', weight_per_unit_kg: 0.83, availability: 'disponible', availability_label: 'Disponible', image_url: null, category: { id: 'cat-aceites', name: 'Aceites vegetales' }, nutritional_group: null },
+    { product_id: 'f73b833f-3d8a-4b81-967f-8212e143eb39', name: 'Arroz largo fino 1 kg', brand: null, unit: 'paquetes', weight_per_unit_kg: 1, availability: 'disponible', availability_label: 'Disponible', image_url: null, category: { id: 'cat-cereales', name: 'Cereales' }, nutritional_group: null },
+    { product_id: '991db891-2fe6-43fe-8bb5-c962af964d85', name: 'Atún en lata 170 g', brand: null, unit: 'unidades', weight_per_unit_kg: 0.17, availability: 'poco_stock', availability_label: 'Poco stock', image_url: null, category: null, nutritional_group: { code: 'proteinas', name: 'Proteinas animales' } },
+    { product_id: 'd90191e8-85c5-4641-9579-4cfb3151ae96', name: 'Fideos guiseros 500 g', brand: null, unit: 'paquetes', weight_per_unit_kg: 0.5, availability: 'disponible', availability_label: 'Disponible', image_url: null, category: { id: 'cat-cereales', name: 'Cereales' }, nutritional_group: null },
+    { product_id: '3ddd6582-7399-4d59-8591-ebec1ac540ae', name: 'Leche entera 1 L', brand: null, unit: 'litros', weight_per_unit_kg: 1.03, availability: 'disponible', availability_label: 'Disponible', image_url: null, category: { id: 'cat-lacteos', name: 'Lácteos' }, nutritional_group: { code: 'lacteos', name: 'Lacteos' } },
+    { product_id: 'b09fc9f9-1a07-47ec-866e-56dfb59711b3', name: 'Lentejas 400 g', brand: null, unit: 'paquetes', weight_per_unit_kg: 0.4, availability: 'disponible', availability_label: 'Disponible', image_url: null, category: { id: 'cat-legumbres', name: 'Legumbres' }, nutritional_group: null },
+    { product_id: '7c064262-17eb-4bfa-a612-b291bc1b3872', name: 'Puré de tomate 520 g', brand: null, unit: 'unidades', weight_per_unit_kg: 0.52, availability: 'poco_stock', availability_label: 'Poco stock', image_url: null, category: { id: 'cat-frutas-verduras', name: 'Frutas y verduras' }, nutritional_group: null },
+  ];
+
+  const quota: Quota = { month: day(0).slice(0, 7), monthly_quota_kg: 198, delivered_kg: 24.4, requested_in_progress_kg: 10.18, remaining_kg: 163.42, enforced: false };
+
+  const item = (n: number, productIndex: number, requested: number, approved: number | null, delivered: number | null) => {
+    const p = catalog[productIndex];
+    return {
+      id: `d1b00000-0000-4000-8000-0000000000${String(n).padStart(2, '0')}`,
+      product: { id: p.product_id, name: p.name, brand: null },
+      unit: p.unit,
+      weight_per_unit_kg: p.weight_per_unit_kg,
+      quantity_requested: requested,
+      quantity_approved: approved,
+      quantity_delivered: delivered,
+      kg_requested: Math.round(requested * (p.weight_per_unit_kg ?? 0) * 100) / 100,
+    };
+  };
+  const base = { pickup_type: 'pickup', is_urgent: false, urgency_reason: null, rejection_reason: null, received_by_name: null, receipt_number: null, requested_by_organization: true };
+
+  const distributions: Distribution[] = [
+    { ...base, id: 'd1a00000-0000-4000-8000-000000000053', number: 'DIST-2026-00053', status: 'pendiente', status_label: 'Pendiente de revisión', request_date: day(0), requested_distribution_date: day(2), scheduled_distribution_date: null, actual_distribution_date: null, time_slot: 'mañana', total_items: 2, total_kg: 10.18, notes: 'Pedido semanal', can_cancel: true, receipt_available: false, created_at: at(0, '10:15'), updated_at: at(0, '10:15'), items: [item(1, 1, 4, null, null), item(2, 4, 6, null, null)] },
+    { ...base, id: 'd1a00000-0000-4000-8000-000000000052', number: 'DIST-2026-00052', status: 'lista_para_retiro', status_label: 'Listo para retirar', request_date: day(-3), requested_distribution_date: day(1), scheduled_distribution_date: day(1), actual_distribution_date: null, time_slot: 'tarde', total_items: 2, total_kg: 7.2, notes: 'Se sumaron familias nuevas', receipt_number: 'REC-DIST-2026-00052', can_cancel: false, receipt_available: true, created_at: at(-3, '11:00'), updated_at: at(0, '09:30'), items: [item(3, 3, 8, 6, null), item(4, 5, 8, 8, null)] },
+    { ...base, id: 'd1a00000-0000-4000-8000-000000000047', number: 'DIST-2026-00047', status: 'distribuida', status_label: 'Entregado', request_date: day(-10), requested_distribution_date: day(-8), scheduled_distribution_date: day(-8), actual_distribution_date: day(-8), time_slot: null, total_items: 3, total_kg: 24.4, notes: 'Entrega de ejemplo', received_by_name: 'Marta Gómez', receipt_number: 'REC-DIST-2026-00047', can_cancel: false, receipt_available: true, created_at: at(-10, '14:03'), updated_at: at(-8, '12:00'), items: [item(5, 4, 12, 12, 12), item(6, 1, 10, 10, 10), item(7, 2, 12, 12, 12)] },
+    { ...base, id: 'd1a00000-0000-4000-8000-000000000045', number: 'DIST-2026-00045', status: 'rechazada', status_label: 'Rechazado', request_date: day(-15), requested_distribution_date: day(-13), scheduled_distribution_date: null, actual_distribution_date: null, time_slot: null, total_items: 1, total_kg: 41.5, notes: null, rejection_reason: 'No tenemos stock de aceite este mes', can_cancel: false, receipt_available: false, created_at: at(-15, '09:00'), updated_at: at(-14, '10:00'), items: [item(8, 0, 50, null, null)] },
+  ];
+
   return {
     me,
     organization,
@@ -418,6 +455,9 @@ export function createMockDb() {
     programs,
     sessions,
     trainings,
+    catalog,
+    quota,
+    distributions,
     familyTypes: [
       { id: 'ft-1', code: 'familia_funcional', name: 'Composición Familiar', color: '#4CAF50' },
       { id: 'ft-2', code: 'madre_sola_con_hijos', name: 'Madre sola con hijos', description: 'Hogar monoparental liderado por madre', color: '#E91E63' },

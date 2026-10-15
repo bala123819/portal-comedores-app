@@ -7,8 +7,18 @@ import type {
 } from '@/features/interacciones/types';
 import type { AvailableMermasFilters, Merma } from '@/features/mermas/types';
 import type { OrgProfileResponse, OrgStats, UpdateAddressResponse } from '@/features/org/types';
+import type {
+  CatalogFilter,
+  CatalogProduct,
+  CreateDistributionBody,
+  CreateDistributionResult,
+  Distribution,
+  DistributionsFilter,
+  DistributionWarning,
+  Quota,
+} from '@/features/pedidos/types';
 import type { Application } from '@/features/postulaciones/types';
-import { api, isUuid } from '../client';
+import { api, isUuid, request } from '../client';
 import { ApiError } from '../errors';
 import type { BodyOf } from '../types';
 
@@ -77,4 +87,36 @@ export const orgApi = {
   },
   createInteraction: (body: CreateInteractionBody, key: string) =>
     api.post<Interaction>('/org/interactions', body, key),
+
+  // ─── Pedidos de mercadería (docs/bda/09-10-pedidos-mercaderia.md) ──────────
+  catalog: (page: number, perPage: number, f: CatalogFilter = {}) =>
+    api.getPage<CatalogProduct>('/org/catalog', {
+      page,
+      per_page: perPage,
+      search: f.search?.trim() || undefined,
+      food_category_id: f.food_category_id,
+    }),
+  quota: () => api.get<Quota>('/org/quota'),
+  distributions: (page: number, perPage: number, status?: DistributionsFilter) =>
+    api.getPage<Distribution>('/org/distributions', { page, per_page: perPage, status }),
+  distribution: (distributionId: string) => {
+    if (!isUuid(distributionId)) {
+      return Promise.reject(new ApiError({ kind: 'not_found', status: 404 }));
+    }
+    return api.get<Distribution>(`/org/distributions/${id(distributionId)}`);
+  },
+  /** `warnings` (stock o cupo superados) y `quota` vienen fuera de `data`: se usa `request` directo. */
+  createDistribution: async (body: CreateDistributionBody, key: string): Promise<CreateDistributionResult> => {
+    const res = (await request<Distribution>('POST', '/org/distributions', { body, idempotencyKey: key })) as {
+      data: Distribution;
+      warnings?: DistributionWarning[];
+      quota?: Quota;
+    };
+    return { distribution: res.data, warnings: res.warnings ?? [], quota: res.quota };
+  },
+  /** `reason` es obligatorio. Sólo mientras el banco no lo aprobó (si no, 409). */
+  cancelDistribution: (distributionId: string, reason: string, key: string) =>
+    api.post<Distribution>(`/org/distributions/${id(distributionId)}/cancel`, { reason }, key),
+  /** Remito en PDF, desde `lista_para_retiro` (`receipt_available`). Se descarga con el Bearer. */
+  receiptPath: (distributionId: string) => `/org/distributions/${id(distributionId)}/receipt`,
 };

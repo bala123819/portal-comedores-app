@@ -54,3 +54,16 @@ Se implementa el canal de la organización con el Banco según el post 8/14 publ
 - **Seguimiento** con el `Stepper` de la app en tres pasos (Enviado → Esperando al Banco → Atendido), porque la API sólo tiene `pendiente`/`atendida` con `attended_at`.
 - **Formulario** con los límites del backend (asunto ≤ 255, detalle ≤ 5000), errores 422 en el campo y `Idempotency-Key` por intención (reintentar no duplica el mensaje).
 - La solicitud se presenta como el camino para "insumos u otras necesidades que no estén en el catálogo", tal como lo define el Banco en el mapa de la API (post 6509).
+### D-14 · Módulo `pedidos` activo con la API real (2026-10-14)
+Los pedidos de mercadería (`/org/catalog`, `/org/quota`, `/org/distributions*`) figuraban como "se habilitan con la próxima actualización" (post 1/14). El 2026-10-14 se verificó con GET contra el servidor real que responden con las formas documentadas (catálogo de 7 productos, cupo, listado, detalle y remito PDF). Por eso se suma `pedidos` a `enabledInBackend` en `src/lib/features.ts` (la misma lista que prende `familiasAlta`, D-12): se activa también con la API real, sin `EXPO_PUBLIC_ENABLE_MODULES`. El alta y la cancelación **no** se probaron contra el servidor real (crean datos en el tenant del Banco); sí contra los mocks, que reproducen las reglas del post 9.
+- **Navegación:** con la API real, pestaña **Mercadería** (Inicio · Mercadería · Familias · Recetas · Más). Con mermas activas (mocks) la pestaña se oculta para no pasar de 5 y se entra desde "Más" y el Inicio.
+- **Nombre:** en la interfaz es "Mercadería" / "pedido de mercadería", para no confundirlo con los "pedidos" de mermas (postulaciones) de "Mis retiros".
+
+### D-15 · Flujo del pedido de mercadería en dos pasos (2026-10-14)
+1) `/pedido/nuevo`: catálogo con búsqueda y filtro por categoría, cantidad por producto. 2) `/pedido/confirmar`: revisar cantidades, ver cómo queda el cupo, día de retiro, franja, motivo y urgencia. El borrador vive en un store de zustand en memoria (`src/features/pedidos/cart.ts`): no se persiste (es un pedido a medio armar, no un dato del servidor).
+- **Fecha de retiro con chips** (hoy + 13 días) en vez de un selector de fecha: no suma dependencias nativas y cumple la regla "desde hoy". El banco fija el día definitivo (`scheduled_distribution_date`).
+- **Franja**: "Sin preferencia" / "Mañana" / "Tarde". La API acepta texto libre.
+- **Reglas del Banco en el cliente** (además de las del servidor): hasta 30 productos sin repetir (el carrito es un mapa por `product_id`), cantidad > 0, y el botón "Hacer un pedido" se deshabilita con 3 pedidos esperando respuesta (`pendiente`/`en_revision`) para no llegar al 422 `TOO_MANY_OPEN_REQUESTS`.
+- **`warnings`** (stock o cupo superados): el pedido entra igual; se muestran en un diálogo antes de ir al detalle.
+- **Categorías**: se arman con lo que trae el catálogo (no hay listado de categorías para este rol) y se filtra en el cliente.
+- **Errores por `error_code`**: el cliente ahora lee `error_code` (formato de la serie nueva) además de `code`/`error`.

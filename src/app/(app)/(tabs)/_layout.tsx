@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { ChefHat, House, Menu, ShoppingBasket, Truck, Users } from 'lucide-react-native';
+import { ChefHat, House, Menu, ShoppingBasket, ShoppingCart, Truck, Users } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { features } from '@/lib/features';
 import { colors } from '@/theme/tokens';
@@ -42,6 +42,15 @@ export default function TabsLayout() {
         options={{
           href: features.mermas ? undefined : null,
           title: 'Mis retiros', tabBarIcon: ({ color }) => <Truck size={24} color={color} /> }}
+      />
+      {/* Pedidos de mercadería. Con mermas activas pasa al menú "Más" (y al Inicio) para no superar 5 pestañas */}
+      <Tabs.Screen
+        name="mercaderia"
+        options={{
+          href: features.pedidos && !features.mermas ? undefined : null,
+          title: 'Mercadería',
+          tabBarIcon: ({ color }) => <ShoppingCart size={24} color={color} />,
+        }}
       />
       {/* Con mermas activas, Familias pasa al menú "Más" para no superar 5 pestañas */}
       <Tabs.Screen

@@ -18,6 +18,11 @@ export default function AppLayout() {
         <Stack.Screen name="retiro/[id]/quien-retira" />
         <Stack.Screen name="retiro/[id]/completar" />
       </Stack.Protected>
+      <Stack.Protected guard={features.pedidos}>
+        <Stack.Screen name="pedido/nuevo" />
+        <Stack.Screen name="pedido/confirmar" />
+        <Stack.Screen name="pedido/[id]" />
+      </Stack.Protected>
       <Stack.Protected guard={features.familiasAlta}>
         <Stack.Screen name="familia/nueva" />
         <Stack.Screen name="familia/[id]/editar" />

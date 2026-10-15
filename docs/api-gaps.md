@@ -162,3 +162,10 @@ Implementado según `docs/bda/08-interacciones.md`. Para cerrar el circuito falt
 - **Editar o cancelar** una interacción pendiente (hoy no existe; la app no lo ofrece).
 - **Adjuntos** (foto de la mercadería dañada en un reclamo o suceso).
 - Los endpoints no figuran en el OpenAPI (ver P-15).
+
+### G-17 · Pedidos de mercadería: observaciones (2026-10-14)
+Verificado con GET contra el servidor real. Nada bloquea; para conversar con el Banco:
+- `time_slot` es texto libre (conviven `"mañana"` y `"09:00-12:00"`). La app manda `mañana` / `tarde`; convendría una lista cerrada.
+- `category` y `nutritional_group` vienen `null` en algunos productos del catálogo de prueba: no hay forma de agrupar todo el catálogo.
+- No hay endpoint de categorías para este rol: los filtros se arman con lo que trae el catálogo.
+- El remito es un PDF por pedido. Sigue abierta la pregunta del Banco sobre el "PDF de las donaciones" de un período (post "Todo lo que la app puede hacer", punto 8).

@@ -1,5 +1,6 @@
 import type { InteractionsFilter } from './interacciones/types';
 import type { AvailableMermasFilters } from './mermas/types';
+import type { CatalogFilter, DistributionsFilter } from './pedidos/types';
 
 export const qk = {
   health: ['health'] as const,
@@ -43,4 +44,9 @@ export const qk = {
   programs: ['programs', 'list'] as const,
   trainings: (programId: string) => ['programs', 'trainings', programId] as const,
   sessions: ['programs', 'sessions'] as const,
+  catalog: (f: CatalogFilter = {}) => ['orders', 'catalog', f] as const,
+  quota: ['orders', 'quota'] as const,
+  distributions: (status?: DistributionsFilter) => ['orders', 'list', status ?? 'all'] as const,
+  distributionsAll: ['orders', 'list'] as const,
+  distribution: (id: string) => ['orders', 'detail', id] as const,
 };

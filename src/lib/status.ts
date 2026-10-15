@@ -5,7 +5,10 @@ import {
   CheckCircle2,
   Circle,
   Clock,
+  Eye,
   PackageCheck,
+  PackageOpen,
+  Store,
   ThumbsUp,
   Truck,
   UserX,
@@ -16,13 +19,20 @@ import type { Tone } from '@/theme/tokens';
 import {
   applicationStatusLabels,
   assignmentStatusLabels,
+  distributionStatusLabels,
   humanize,
   interactionStatusLabels,
   mermaStatusLabels,
   sessionStatusLabels,
 } from './labels';
 
-export type StatusKind = 'merma' | 'application' | 'assignment' | 'session' | 'interaction';
+export type StatusKind =
+  | 'merma'
+  | 'application'
+  | 'assignment'
+  | 'session'
+  | 'interaction'
+  | 'distribution';
 
 export interface StatusMeta {
   label: string;
@@ -71,7 +81,28 @@ const interaction: StatusMap = {
   atendida: { label: interactionStatusLabels.atendida, tone: 'success', icon: CheckCircle2 },
 };
 
-const maps: Record<StatusKind, StatusMap> = { merma, application, assignment, session, interaction };
+const d = distributionStatusLabels;
+const distribution: StatusMap = {
+  pendiente: { label: d.pendiente, tone: 'warning', icon: Clock },
+  en_revision: { label: d.en_revision, tone: 'warning', icon: Eye },
+  aprobada: { label: d.aprobada, tone: 'primary', icon: ThumbsUp },
+  programada: { label: d.programada, tone: 'info', icon: CalendarCheck },
+  en_preparacion: { label: d.en_preparacion, tone: 'info', icon: PackageOpen },
+  lista_para_retiro: { label: d.lista_para_retiro, tone: 'success', icon: Store },
+  distribuida: { label: d.distribuida, tone: 'success', icon: PackageCheck },
+  rechazada: { label: d.rechazada, tone: 'destructive', icon: XCircle },
+  cancelada: { label: d.cancelada, tone: 'muted', icon: Ban },
+  anulada: { label: d.anulada, tone: 'muted', icon: Ban },
+};
+
+const maps: Record<StatusKind, StatusMap> = {
+  merma,
+  application,
+  assignment,
+  session,
+  interaction,
+  distribution,
+};
 
 /** Mapeo único estado → { etiqueta, color, ícono }. Valores desconocidos: gris + texto legible. */
 export function statusMeta(kind: StatusKind, value: string | null | undefined): StatusMeta {
@@ -117,6 +148,37 @@ export const assignmentActionLabels: Record<AssignmentAction, string> = {
   complete: 'Ya lo retiramos',
   cancel: 'No podemos ir',
 };
+
+// ─── Pedidos de mercadería (vista de la organización) ──────────────────────
+
+/** Pasos visibles del Stepper. `programada` y `en_preparacion` se muestran como "Armando". */
+export const distributionSteps = [
+  { key: 'pendiente', label: 'Enviado' },
+  { key: 'aprobada', label: 'Aprobado' },
+  { key: 'en_preparacion', label: 'Armando' },
+  { key: 'lista_para_retiro', label: 'Para retirar' },
+  { key: 'distribuida', label: 'Entregado' },
+];
+
+const distributionStepIndex: Record<string, number> = {
+  pendiente: 0,
+  en_revision: 0,
+  aprobada: 1,
+  programada: 2,
+  en_preparacion: 2,
+  lista_para_retiro: 3,
+  distribuida: 4,
+};
+
+/** Índice del paso actual, o `null` si el pedido terminó fuera del flujo (rechazado, cancelado…). */
+export function distributionStepOf(status: string): number | null {
+  return distributionStepIndex[status] ?? null;
+}
+
+/** ¿El pedido sigue en curso? (lo mismo que `status=abiertos` de la API) */
+export function isOpenDistribution(status: string): boolean {
+  return status in distributionStepIndex && status !== 'distribuida';
+}
 
 /** ¿La asignación sigue "abierta" (para el dashboard y agrupaciones)? */
 export function isOpenAssignment(status: string): boolean {

@@ -99,3 +99,14 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 ### P-17 · Sin credenciales para probar contra la API real
 - **Síntoma:** el login de prueba respondió 422: `CHECK_API_EMAIL` y `CHECK_API_PASSWORD` están vacías en el `.env` de esta máquina.
 - **Solución (parcial):** se desarrolló contra las respuestas reales documentadas por el Banco y se agregaron mocks con la misma forma; se probó en web con Chrome headless (por CDP, sin instalar nada) en modo simulado. Queda pendiente repetir la prueba con el usuario real.
+
+### P-18 · El 422 del servidor no se veía en el formulario de contactos
+- **Síntoma:** al dar de alta un contacto con DNI repetido, el servidor respondía 422 en `dni` pero el campo no mostraba el error (sí se veían los errores de validación local).
+- **Causa:** `setError` de react-hook-form muta el mismo objeto `formState.errors`; el formulario pasaba `errors` por props a `ContactFields` y el React Compiler memoizaba el componente porque la referencia no cambiaba.
+- **Solución:** cada campo lee su error de `fieldState` del `Controller` (como `MemberFields`), que sí se suscribe a los cambios. Detectado con la prueba en el navegador.
+- **Lección extra:** `expo start` con `CI=1` no recarga los cambios: las pruebas en el navegador tienen que correr sobre un servidor sin `CI`.
+
+### P-19 · "Mi organización" se caía con la API real (`n.toFixed is not a function`)
+- **Síntoma:** al abrir Más › Datos de la organización con el usuario real, la pantalla mostraba "Uncaught Error: n.toFixed is not a function" (en modo simulado andaba).
+- **Causa:** `/org/profile` manda `vehicle_capacity_kg` como string (`"300.00"`) y `formatNumber` esperaba un número. Venía desde el acople a la API real (0d00782); los mocks lo mandaban como número.
+- **Solución:** `formatNumber` acepta `number | string` y convierte (como `toCoord` con las coordenadas). Detectado al entrar a Contactos con la API real.

@@ -67,3 +67,14 @@ Los pedidos de mercadería (`/org/catalog`, `/org/quota`, `/org/distributions*`)
 - **`warnings`** (stock o cupo superados): el pedido entra igual; se muestran en un diálogo antes de ir al detalle.
 - **Categorías**: se arman con lo que trae el catálogo (no hay listado de categorías para este rol) y se filtra en el cliente.
 - **Errores por `error_code`**: el cliente ahora lee `error_code` (formato de la serie nueva) además de `code`/`error`.
+
+### D-16 · Contactos sobre `/org/contacts` y módulo `contactos` activo (2026-10-20)
+El padrón de la organización se migró de `/organizations/{id}/contacts*` (rol del Banco, en `pickup.ts`) a `/org/contacts` (post 4/14): la organización la resuelve el backend por el usuario, igual que familias (D-12). Se quitaron de la app la autorización y la revocación de retiros (`/pickup-authorizations`): **autorizar es del Banco**; la app sólo muestra `pickup_authorized` y `authorizations` (ámbito y vigencia). `pickup.ts` queda sólo con "quién retira" una merma (módulo `mermas`, apagado). El 2026-10-20 se verificó contra el servidor con el usuario de prueba (lista, alta, 422 por DNI repetido, edición, 409 `CONTACT_IDENTITY_LOCKED`, 404 `CONTACT_NOT_FOUND`, baja) y se suma `contactos` a `enabledInBackend`.
+- **Pantallas propias** (`/contactos`, `/contactos/nuevo`, `/contactos/[id]`) en lugar de hojas dentro de "Mi organización", que queda con un acceso y el resumen ("N personas · M autorizadas a retirar"). No hay `GET /org/contacts/{id}`: la ficha sale de la lista cacheada.
+- **Identidad bloqueada en el cliente:** si `pickup_authorized`, nombre y DNI se muestran fijos (candado); igual se maneja el 409 por si el Banco la autorizó mientras se editaba (se vuelven a lo guardado y se recarga).
+- **Edición parcial:** el `PUT` manda sólo los campos que cambiaron (`changedFields`, como en miembros).
+- **Contacto principal:** un switch; el backend desmarca al anterior y la app recarga la lista.
+- **Errores por `error_code`:** `CONTACT_NOT_FOUND` vuelve a la lista actualizada; `CONTACT_DECLARED_FOR_PICKUP` se muestra en la ficha (no se puede probar con la API real hasta que haya mermas).
+
+### D-17 · "Pedir autorización al Banco" reutiliza `/banco/nueva` (2026-10-20)
+Siguiendo el post 4/14 ("cárguenla con su DNI y pídanlo con una interacción de tipo `solicitud`"), la ficha del contacto sin autorización vigente tiene el botón **Pedir autorización al Banco**, que abre `/banco/nueva` con `tipo=solicitud`, `titulo` ("Autorizar a <nombre> a retirar alimentos") y `notas` (nombre, DNI y cargo) ya completos y editables. No se envía sola: la persona revisa y toca "Enviar al Banco". Sin DNI el botón no aparece (se pide cargarlo primero). `/banco/nueva` acepta ahora `titulo` y `notas` como parámetros, recortados a los límites del backend.

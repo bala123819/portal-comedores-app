@@ -2,7 +2,8 @@
  * Datos simulados para EXPO_PUBLIC_USE_MOCKS=true. Solo campos que existen en el OpenAPI.
  * Nombres y datos ficticios.
  */
-import type { Assignment, OrganizationContact, Picker } from '@/features/asignaciones/types';
+import type { Assignment, Picker } from '@/features/asignaciones/types';
+import type { OrganizationContact } from '@/features/contactos/types';
 import type { Family, FamilyMember } from '@/features/familias/types';
 import type { Interaction } from '@/features/interacciones/types';
 import type { Merma } from '@/features/mermas/types';
@@ -249,9 +250,10 @@ export function createMockDb() {
   ];
 
   const contacts: OrganizationContact[] = [
-    { id: 'c-1', name: 'Marta Gómez', position: 'Referente', phone: '221 555-0101', dni: '22111222', is_primary: true },
-    { id: 'c-2', name: 'Carlos Pérez', position: 'Voluntario', phone: '221 555-0102', dni: '28123456', is_primary: false },
-    { id: 'c-3', name: 'Lucía Fernández', position: 'Cocinera', phone: null, dni: null, is_primary: false },
+    // Formas de /org/contacts (docs/bda/04-contactos.md). Ids UUID como en la API real.
+    { id: 'c0a1c000-0000-4000-8000-000000000001', name: 'Marta Gómez', position: 'Referente', phone: '221 555-0101', email: 'marta@girasoles.test', dni: '22111222', is_primary: true, pickup_authorized: false, authorizations: [] },
+    { id: 'c0a1c000-0000-4000-8000-000000000002', name: 'Carlos Pérez', position: 'Voluntario', phone: '221 555-0102', email: null, dni: '28123456', is_primary: false, pickup_authorized: true, authorizations: [{ scope_type: 'all', valid_from: null, valid_until: null }] },
+    { id: 'c0a1c000-0000-4000-8000-000000000003', name: 'Lucía Fernández', position: 'Cocinera', phone: null, email: null, dni: null, is_primary: false, pickup_authorized: false, authorizations: [] },
   ];
 
   const pickers: Record<string, Picker[]> = { 'asg-001': [] };

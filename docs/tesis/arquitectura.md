@@ -72,7 +72,7 @@ Ver también `docs/decisiones.md`.
 - Banner "Sin conexión" y reintentos al reconectar o al volver a la app.
 
 ### 4.4 Módulos según el backend (`src/lib/features.ts`)
-- Cada módulo (mermas, alta de familias, contactos, documentación, programas, nutrición) se prende o apaga.
+- Cada módulo (mermas, alta de familias, contactos, documentación, programas, nutrición, pedidos) se prende o apaga. Con la API real están activos `familiasAlta`, `pedidos` y `contactos` (`enabledInBackend`).
 - Con la API real sólo se usa lo que el Banco ofrece hoy; los módulos apagados **no hacen pedidos** y sus rutas quedan bloqueadas.
 - Se activan sin tocar código (`EXPO_PUBLIC_ENABLE_MODULES`). En modo simulado se ve todo, como prototipo.
 

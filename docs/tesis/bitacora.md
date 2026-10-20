@@ -522,3 +522,38 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Observaciones para el Banco en `docs/api-gaps.md` G-17.
 
 **Archivos principales.** `docs/api-gaps.md`, `docs/bda/09-10-pedidos-mercaderia.md`, `docs/bda/README.md`, `docs/decisiones.md`, `docs/tesis/README.md`, `docs/tesis/modulo-pedidos-mercaderia.md`, `src/app/(app)/(tabs)/_layout.tsx`, `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/app/(app)/(tabs)/mercaderia.tsx`, `src/app/(app)/_layout.tsx`, `src/app/(app)/notificaciones.tsx`, `src/app/(app)/pedido/[id].tsx`, `src/app/(app)/pedido/confirmar.tsx`, `src/app/(app)/pedido/nuevo.tsx`, `src/components/pedidos/CatalogItem.tsx`, `src/components/pedidos/DistributionCard.tsx`, `src/components/pedidos/QuotaCard.tsx`, `src/features/notificaciones/types.ts`, `src/features/pedidos/cart.ts`, `src/features/pedidos/hooks.ts`, `src/features/pedidos/types.ts`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/lib/labels.ts`
+
+---
+
+## (pendiente de commit) · feat(contactos): CRUD de /org/contacts y pedir autorización al Banco
+- **Fecha:** 2026-10-20 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Acople a la API real — módulos CRUD (rama `Contacto`)
+
+**Objetivo.** Implementar los contactos de la organización según el post 4/14 de la serie "API organizaciones" (GoDubi, orden 1149): lista, alta, edición y baja con cargo, teléfono, email, DNI y contacto principal; mostrar quién está autorizado por el Banco a retirar (con vigencia); manejar los errores del backend; y pedir la autorización al Banco con una interacción `solicitud`. Migrar los contactos de `pickup.ts` a `/org/contacts` y prender el módulo `contactos`.
+
+**Qué se hizo.**
+- Datos: `src/features/contactos/` (tipos escritos a mano a partir del post 4/14, hooks de React Query, formulario con zod, mensajes por `error_code`), `orgApi.contacts / createContact / updateContact / deleteContact`, query key `qk.contacts`.
+- Migración: se sacaron de `pickup.ts` y `features/asignaciones` el padrón y las autorizaciones (`/organizations/{id}/contacts*`, `/pickup-authorizations`); queda sólo "quién retira" una merma.
+- Pantallas: `/contactos` (autorizadas a retirar primero, badge "Principal", estado de la autorización), `/contactos/nuevo` y `/contactos/[id]` (edición parcial, nombre y DNI con candado si el Banco la autorizó, autorizaciones con ámbito y vigencia, baja con confirmación). "Mi organización" queda con un acceso y el resumen.
+- **Pedir autorización al Banco:** abre `/banco/nueva` con tipo `solicitud`, asunto y detalle (nombre y DNI) ya completos; `/banco/nueva` acepta `titulo` y `notas`.
+- Errores: DNI repetido (422 en el campo), `CONTACT_IDENTITY_LOCKED` (409: vuelve nombre y DNI a lo guardado), `CONTACT_NOT_FOUND` (vuelve a la lista actualizada), `CONTACT_DECLARED_FOR_PICKUP` (mensaje en la ficha).
+- Módulo `contactos` en `enabledInBackend`; rutas protegidas con `Stack.Protected`. Mocks de `/org/contacts` con las mismas reglas y errores.
+- Copia de la especificación en `docs/bda/04-contactos.md`.
+
+**Decisiones.** D-16 (migración a `/org/contacts`, módulo activo, pantallas propias, identidad bloqueada) y D-17 (pedir autorización reutilizando `/banco/nueva`).
+
+**Problemas y soluciones.** P-18 (el 422 no se veía por `errors` pasado por props y el React Compiler; `expo start` con `CI=1` no recarga). P-19 (Mi organización se caía con la API real porque `vehicle_capacity_kg` llega como string: se corrigió `formatNumber`).
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- API real, usuario de prueba de la organización (2026-10-20): `GET` 200 con la forma documentada; alta de un contacto `[PRUEBA TESIS]` (201), DNI repetido (422 en `dni`), edición (200), 409 `CONTACT_IDENTITY_LOCKED` sobre el contacto autorizado (sin cambiarlo), 404 `CONTACT_NOT_FOUND`, baja (200) y segunda baja (404). El padrón quedó como estaba.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true EXPO_PUBLIC_MODULES_SCOPE=real`), Playwright + Chrome en 390×844: 11/11 pasos (acceso desde Mi organización, lista, validación de email, DNI repetido en el campo, alta, autorizado con nombre y DNI fijos, cargar DNI y pedir autorización con el formulario completo y enviado, cambiar el principal, baja, URL inexistente). Sin errores de consola.
+- Web contra la API real en `localhost:3000` con el usuario de prueba: login, Más › Datos de la organización › Contactos, lista con los 2 contactos reales (autorizado y principal). Sin errores.
+- **No probado:** `CONTACT_DECLARED_FOR_PICKUP` contra la API real (requiere una merma asignada); recorrido en un celular.
+
+**Pendientes.**
+- Probar en celular (Expo Go).
+- Preguntas al Banco en `docs/api-gaps.md` G-18 (aviso cuando autoriza).
+- Completar el hash de esta entrada al commitear.
+
+**Archivos principales.** `src/app/(app)/contactos/*`, `src/components/contactos/*`, `src/features/contactos/*`, `src/app/(app)/organizacion.tsx`, `src/app/(app)/banco/nueva.tsx`, `src/app/(app)/_layout.tsx`, `src/lib/format.ts`, `src/services/api/endpoints/org.ts`, `src/services/api/endpoints/pickup.ts`, `src/features/asignaciones/*`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/mocks/*`, `docs/bda/04-contactos.md`, `docs/decisiones.md`, `docs/api-gaps.md`, `docs/tesis/*`.

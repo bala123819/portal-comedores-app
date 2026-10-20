@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import {
   Building2,
@@ -11,16 +12,13 @@ import {
   Pencil,
   Phone,
   Scale,
-  ShieldCheck,
-  ShieldOff,
   Snowflake,
   Truck,
-  UserPlus,
   Users,
   Utensils,
 } from 'lucide-react-native';
 import { useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { View } from 'react-native';
 import { z } from 'zod';
 import {
@@ -32,32 +30,24 @@ import {
   Header,
   InfoRow,
   Input,
+  ListItem,
   Screen,
   SectionHeader,
   SkeletonList,
-  SwitchRow,
   Text,
   toast,
 } from '@/components/ui';
-import {
-  useAuthorizations,
-  useAuthorizePickup,
-  useContacts,
-  useCreateContact,
-  useRevokeAuthorization,
-} from '@/features/asignaciones/hooks';
-import type { OrganizationContact } from '@/features/asignaciones/types';
+import { useContacts } from '@/features/contactos/hooks';
 import { useOrgProfile, useUpdateAddress } from '@/features/org/hooks';
 import type { Organization } from '@/features/org/types';
 import { features } from '@/lib/features';
-import { formatDate, formatNumber, formatTimeRange } from '@/lib/format';
+import { formatNumber, formatTimeRange } from '@/lib/format';
 import {
   label,
   organizationStatusLabels,
   organizationTypeLabels,
   pickupDayLabels,
   pickupPreferenceLabels,
-  pickupScopeLabels,
 } from '@/lib/labels';
 import { humanMessage } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
@@ -177,100 +167,12 @@ function AddressSheet({ org, visible, onClose }: { org: Organization; visible: b
   );
 }
 
-function ContactSheet({ orgId, contact, onClose }: { orgId: string; contact: OrganizationContact; onClose: () => void }) {
-  const auths = useAuthorizations(orgId, contact.id);
-  const authorize = useAuthorizePickup(orgId, contact.id);
-  const revoke = useRevokeAuthorization(orgId, contact.id);
-  const active = (auths.data ?? []).filter((a) => !a.revoked_at);
-  return (
-    <BottomSheet visible onClose={onClose} title={contact.name}>
-      <Text variant="caption">{[contact.position, contact.dni ? `DNI ${contact.dni}` : null, contact.phone].filter(Boolean).join(' · ')}</Text>
-      <Text variant="label">Autorizaciones para retirar</Text>
-      {auths.isPending ? (
-        <SkeletonList count={1} />
-      ) : auths.isError ? (
-        <ErrorState error={auths.error} onRetry={() => auths.refetch()} />
-      ) : active.length ? (
-        active.map((a) => (
-          <Card key={a.id} className="gap-2">
-            <Text variant="label">{label(pickupScopeLabels, a.scope_type)}</Text>
-            {a.valid_until ? <Text variant="caption">Hasta el {formatDate(a.valid_until)}</Text> : null}
-            <Button title="Quitar autorización" icon={ShieldOff} variant="ghost" size="sm" className="self-start" loading={revoke.isPending} onPress={() => revoke.mutate(a.id)} />
-          </Card>
-        ))
-      ) : (
-        <Text tone="muted">No tiene autorización para retirar.</Text>
-      )}
-      {!active.length && !auths.isError ? (
-        contact.dni ? (
-          <Button
-            title="Autorizar para cualquier retiro"
-            icon={ShieldCheck}
-            loading={authorize.isPending}
-            onPress={() => authorize.mutate({ scope_type: 'all', created_via: 'web' })}
-          />
-        ) : (
-          <Text variant="caption">Para autorizarla a retirar hace falta cargar su DNI (pedíselo al Banco).</Text>
-        )
-      ) : null}
-    </BottomSheet>
-  );
-}
-
-/** Campos de `POST /organizations/{id}/contacts` */
-const contactSchema = z.object({
-  name: z.string().trim().min(2, 'Escribí nombre y apellido'),
-  position: z.string().trim().optional(),
-  phone: z.string().trim().optional(),
-  dni: z.string().trim().refine((v) => v === '' || /^\d{7,8}$/.test(v), 'El DNI tiene 7 u 8 números').optional(),
-  pickup_authorized: z.boolean(),
-});
-type ContactValues = z.infer<typeof contactSchema>;
-
-function NewContactSheet({ orgId, visible, onClose }: { orgId: string; visible: boolean; onClose: () => void }) {
-  const create = useCreateContact(orgId, onClose);
-  const { control, handleSubmit, setError, formState: { errors } } = useForm<ContactValues>({
-    resolver: zodResolver(contactSchema),
-    defaultValues: { name: '', position: '', phone: '', dni: '', pickup_authorized: true },
-  });
-  const pickupAuthorized = useWatch({ control, name: 'pickup_authorized' });
-  const save = handleSubmit((v) => {
-    if (v.pickup_authorized && !v.dni) {
-      setError('dni', { message: 'Para autorizar a retirar hace falta el DNI' });
-      return;
-    }
-    create.mutate(
-      {
-        name: v.name,
-        position: v.position || null,
-        phone: v.phone || null,
-        dni: v.dni || null,
-        pickup_authorized: v.pickup_authorized,
-        ...(v.pickup_authorized ? { pickup_scope_type: 'all' } : {}),
-      },
-      { onError: (e) => applyFieldErrors(e, setError) },
-    );
-  });
-  return (
-    <BottomSheet visible={visible} onClose={onClose} title="Agregar contacto" footer={<Button title="Guardar contacto" onPress={save} loading={create.isPending} fullWidth />}>
-      <Controller control={control} name="name" render={({ field }) => <Input label="Nombre y apellido" value={field.value} onChangeText={field.onChange} error={errors.name?.message} />} />
-      <Controller control={control} name="position" render={({ field }) => <Input label="Rol (opcional)" placeholder="Ej: voluntaria" value={field.value} onChangeText={field.onChange} />} />
-      <Controller control={control} name="phone" render={({ field }) => <Input label="Teléfono (opcional)" value={field.value} onChangeText={field.onChange} keyboardType="phone-pad" />} />
-      <Controller control={control} name="dni" render={({ field }) => <Input label="DNI" value={field.value} onChangeText={(t) => field.onChange(t.replace(/\D/g, ''))} keyboardType="number-pad" maxLength={8} error={errors.dni?.message} hint={pickupAuthorized ? 'Obligatorio para retirar' : undefined} />} />
-      <Controller control={control} name="pickup_authorized" render={({ field }) => <SwitchRow label="Puede retirar alimentos" value={field.value} onChange={field.onChange} />} />
-      {create.isError && !(create.error as { fieldErrors?: unknown }).fieldErrors ? <Text tone="destructive">{humanMessage(create.error)}</Text> : null}
-    </BottomSheet>
-  );
-}
-
 export default function OrganizacionScreen() {
   const profile = useOrgProfile();
   const org = profile.data;
-  // Contactos y autorizaciones: el backend no los ofrece hoy (docs/bda 1/6 §6) → no se llaman.
-  const contacts = useContacts(features.contactos ? (org?.id ?? null) : null);
+  // Contactos: `/org/contacts` (docs/bda/04-contactos.md). Con el módulo apagado no se llaman.
+  const contacts = useContacts(features.contactos);
   const [editAddress, setEditAddress] = useState(false);
-  const [newContact, setNewContact] = useState(false);
-  const [selected, setSelected] = useState<OrganizationContact | null>(null);
 
   if (!org) {
     return (
@@ -330,26 +232,16 @@ export default function OrganizacionScreen() {
       {features.contactos ? (
         <>
           <SectionHeader title="Contactos y quién puede retirar" />
-          {contacts.isPending ? (
-            <SkeletonList count={2} />
-          ) : contacts.isError ? (
-            <ErrorState error={contacts.error} onRetry={() => contacts.refetch()} />
-          ) : (
-            <View className="gap-2">
-              {(contacts.data ?? []).map((c) => (
-                <Card key={c.id} onPress={() => setSelected(c)} className="gap-1">
-                  <View className="flex-row items-center gap-2">
-                    <Text variant="label" className="flex-1">{c.name}</Text>
-                    {c.is_primary ? <Badge label="Referente principal" tone="accent" size="sm" /> : null}
-                  </View>
-                  <Text variant="caption">{[c.position, c.dni ? `DNI ${c.dni}` : 'Sin DNI', c.phone].filter(Boolean).join(' · ')}</Text>
-                </Card>
-              ))}
-              <Button title="Agregar contacto" icon={UserPlus} variant="outline" onPress={() => setNewContact(true)} />
-            </View>
-          )}
-          <NewContactSheet orgId={org.id} visible={newContact} onClose={() => setNewContact(false)} />
-          {selected ? <ContactSheet orgId={org.id} contact={selected} onClose={() => setSelected(null)} /> : null}
+          <ListItem
+            icon={Users}
+            title="Contactos de la organización"
+            subtitle={
+              contacts.data
+                ? `${contacts.data.length} ${contacts.data.length === 1 ? 'persona' : 'personas'} · ${contacts.data.filter((c) => c.pickup_authorized).length} autorizadas a retirar`
+                : 'Quiénes son y quién puede retirar alimentos'
+            }
+            onPress={() => router.push('/contactos')}
+          />
         </>
       ) : null}
 

@@ -19,9 +19,7 @@ export const qk = {
   assignment: (id: string) => ['assignments', 'detail', id] as const,
   pickers: (assignmentId: string) => ['assignments', 'pickers', assignmentId] as const,
   eligibleContacts: (assignmentId: string) => ['assignments', 'eligible', assignmentId] as const,
-  contacts: (orgId: string) => ['org', 'contacts', orgId] as const,
-  authorizations: (orgId: string, contactId: string) =>
-    ['org', 'authorizations', orgId, contactId] as const,
+  contacts: ['org', 'contacts'] as const,
   notifications: ['notifications', 'list'] as const,
   notificationsAll: ['notifications'] as const,
   unreadCount: ['notifications', 'unread'] as const,

@@ -638,3 +638,33 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Pendientes.** Respuesta del Banco sobre `reconciliation_pending`. Validar los umbrales de cobertura con el área social. Probar en un celular.
 
 **Archivos principales.** `scripts/smoke-test.ts`, `src/features/recibido/types.ts`, `docs/api-gaps.md`, `docs/decisiones.md`
+
+---
+
+## bbc55ee · docs: renumerar las decisiones del pilar 1 para integrar con main
+- **Fecha:** 2026-10-20 20:16 · **Autoría:** bala123819 (Tomás Balardini) + asistencia de IA (Claude Code)
+- **Etapa:** Trabajo en equipo — integración de la rama `recibido-nutricion` a `main` (merge 5c0c403)
+
+**Objetivo.** Integrar el Pilar 1 a `main` sin repetir números. La rama `Contacto` ya estaba en `main` y había usado D-16, D-17, P-18, P-19 y G-18, los mismos números que había usado esta rama.
+
+**Qué se hizo.**
+- En la rama, antes de mergear:
+  - D-16, D-17 y D-18 pasaron a D-18, D-19 y D-20;
+  - P-18 y P-19 pasaron a P-20 y P-21;
+  - G-18 pasó a G-19.
+- Los cambios alcanzan a decisiones, problemas, api-gaps, estado actual, el documento del módulo, las entradas 6cfd9ce y 61d675b de esta bitácora y dos comentarios de código (`features.ts`, `recibido/types.ts`). En la rama esos números eran todos de este pilar, así que el reemplazo fue seguro.
+- El documento del módulo suma la verificación contra la API real y saca ese punto de los pendientes.
+- **Merge 5c0c403** (`recibido-nutricion` → `main`, con merge commit):
+  - Conflictos en `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/api-gaps.md` y esta bitácora: las dos ramas habían agregado al final. Se conservaron los dos lados, primero lo de Contacto y después lo de este pilar.
+  - En `src/lib/features.ts` quedan prendidos `contactos` y `recibido` con la API real.
+  - `estado-actual.md` marca "Lo recibido" y la cobertura nutricional como verificados con la API real.
+
+**Problemas y soluciones.** Mientras el merge tenía marcas de conflicto, el servidor de desarrollo seguía levantado y Metro mostró errores de compilación. Al resolver los conflictos desaparecieron; no tienen que ver con el código final. La regla de reservar rangos por rama no se respetó en las dos ramas, así que para la próxima conviene anotar en `docs/decisiones.md` el próximo número libre antes de empezar.
+
+**Verificación (sobre el código combinado).**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- Web en modo simulado (`MODULES_SCOPE=real`), Chrome headless por CDP en 390 × 844: 24 de 24, sin errores de consola. Son las 22 verificaciones del Pilar 1 más "Mi organización" y "Contactos", que trajo la rama `Contacto`.
+
+**Pendientes.** Push de `main` al remoto.
+
+**Archivos principales.** `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/api-gaps.md`, `docs/tesis/estado-actual.md`, `docs/tesis/modulo-recibido-nutricion.md`, `docs/tesis/bitacora.md`, `src/lib/features.ts`, `src/features/recibido/types.ts`

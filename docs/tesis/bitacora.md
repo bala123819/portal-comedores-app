@@ -576,3 +576,31 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Integrar la rama a `main` con merge commit.
 
 **Archivos principales.** `docs/bda/11-recibido-nutricion.md`, `docs/tesis/modulo-recibido-nutricion.md`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/api-gaps.md`, `docs/tesis/estado-actual.md`, `src/app/(app)/recibido.tsx`, `src/app/(app)/nutricion.tsx`, `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/mercaderia.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/app/(app)/_layout.tsx`, `src/components/recibido/*`, `src/components/nutricion/CoverageBars.tsx`, `src/components/nutricion/MonthNavigator.tsx`, `src/features/recibido/*`, `src/services/api/endpoints/org.ts`, `src/lib/features.ts`, `src/lib/labels.ts`, `src/mocks/*`
+
+---
+
+## 61d675b · test(smoke): verificar lo recibido y panel nutricional contra la API real
+- **Fecha:** 2026-10-20 19:55 · **Autoría:** bala123819 (Tomás Balardini) + asistencia de IA (Claude Code)
+- **Etapa:** Acople a la API real — verificación (rama `recibido-nutricion`)
+
+**Objetivo.** Confirmar contra el servidor del Banco lo construido en 6cfd9ce, que sólo se había probado con mocks.
+
+**Qué se hizo.**
+- `npm run smoke` suma chequeos de sólo lectura:
+  - `GET /org/received` y la forma de un ítem: `data.items`, `data.summary`, y `meta` afuera de `data`;
+  - el 422 por período inválido;
+  - `GET /org/nutrition?month=`.
+- El servidor real devuelve `summary.reconciliation_pending` (`{count, kg}`), que el post 11 no documenta. Se agregó al tipo como campo opcional; la app no lo muestra y queda como pregunta para el Banco en G-18.
+- Se actualizó D-16: el módulo `recibido` quedó verificado contra el servidor.
+
+**Verificación.**
+- `npm run smoke:samples` contra `https://cloud.mermab.com/api`: 25 PASS, 0 FAIL.
+- Tenant de pruebas, últimos 90 días: 3 entregas y 50,1 kg (1 pedido de 24,4 kg y 2 mermas de 25,7 kg).
+- Octubre: 21,4 % de cobertura (50,1 de 234 kg) y 10 kg sin grupo.
+- **App en modo real** (sin mocks, `localhost:3001`, sesión iniciada por el usuario):
+  - Nutrición muestra exactamente esos valores: cuota de 234 kg, 7 personas, "21 % cubierto", cereales 19 %, lácteos 89 %;
+  - en Lo recibido, al elegir "Último año" la app pidió en vivo `GET /org/received?from=2025-10-21&to=2026-10-20` y mostró las 3 entregas reales (MRM-20261007-0005, MRM-20261007-0001 y DIST-2026-00047, con el remito REC-DIST-2026-00047-110326).
+
+**Pendientes.** Respuesta del Banco sobre `reconciliation_pending`. Validar los umbrales de cobertura con el área social. Probar en un celular.
+
+**Archivos principales.** `scripts/smoke-test.ts`, `src/features/recibido/types.ts`, `docs/api-gaps.md`, `docs/decisiones.md`

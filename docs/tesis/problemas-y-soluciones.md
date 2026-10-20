@@ -110,3 +110,11 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 - **Síntoma:** al abrir Más › Datos de la organización con el usuario real, la pantalla mostraba "Uncaught Error: n.toFixed is not a function" (en modo simulado andaba).
 - **Causa:** `/org/profile` manda `vehicle_capacity_kg` como string (`"300.00"`) y `formatNumber` esperaba un número. Venía desde el acople a la API real (0d00782); los mocks lo mandaban como número.
 - **Solución:** `formatNumber` acepta `number | string` y convierte (como `toCoord` con las coordenadas). Detectado al entrar a Contactos con la API real.
+
+### P-20 · `/org/received` no tiene la forma de las otras listas
+- **Síntoma:** `api.getPage` (y `toPage`) esperan `data` como lista, o `data.data` + `data.meta`. `/org/received` devuelve `data: { summary, items }` con la paginación en `meta`, **afuera** de `data`: con `getPage` la lista quedaba vacía.
+- **Solución:** `orgApi.received` usa `request` directo (como el alta de pedidos, que trae `warnings` fuera de `data`) y devuelve `{ summary, items, meta }`. Es compatible con `InfiniteList`. El resumen se toma de la primera página, porque es del período entero.
+
+### P-21 · El panel del navegador de la app de escritorio no recibía clics
+- **Síntoma:** en la prueba manual, el login simulado no avanzaba: los clics y el texto no llegaban a los campos, y las capturas fallaban porque la página "no terminaba de dibujarse" (la ventana estaba tapada).
+- **Solución:** se probó con Chrome headless manejado por CDP desde un script de Node, sin instalar nada (como en P-17), con un viewport de celular (390 × 844): 22 verificaciones automáticas y capturas de pantalla.

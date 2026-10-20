@@ -556,3 +556,85 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Preguntas al Banco en `docs/api-gaps.md` G-18 (aviso cuando autoriza).
 
 **Archivos principales.** `src/app/(app)/contactos/*`, `src/components/contactos/*`, `src/features/contactos/*`, `src/app/(app)/organizacion.tsx`, `src/app/(app)/banco/nueva.tsx`, `src/app/(app)/_layout.tsx`, `src/lib/format.ts`, `src/services/api/endpoints/org.ts`, `src/services/api/endpoints/pickup.ts`, `src/features/asignaciones/*`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/mocks/*`, `docs/bda/04-contactos.md`, `docs/decisiones.md`, `docs/api-gaps.md`, `docs/tesis/*`.
+
+---
+
+## 6cfd9ce · feat(recibido): lo recibido y panel nutricional (post 11/14)
+- **Fecha:** 2026-10-20 19:47 · **Autoría:** bala123819 (Tomás Balardini) + asistencia de IA (Claude Code, conectado a GoDubi por MCP)
+- **Etapa:** Acople a la API real — módulos CRUD (rama `recibido-nutricion`, Pilar 1 del reparto del equipo)
+
+**Objetivo.** Construir el "panel nutricional" de la propuesta de tesis con lo que el Banco ya tiene en el backend: que la organización vea todo lo que recibió en un período y cuánto cubre eso de lo que necesitan sus familias, por grupo de alimentos. Es el punto 3 del mapa de la API que publicó el Banco en GoDubi y el paso 5 del orden que sugirió. El equipo se repartió lo que falta en tres pilares, uno por rama: 1) lo recibido y panel nutricional, 2) perfil y ficha de la organización, 3) contactos.
+
+**Qué se hizo.**
+- Se releyó la orden 1149 de GoDubi (mapa "Todo lo que la app puede hacer", posts 1 a 14 y resumen de la reunión del 07/10) y se copió el post 11/14 a `docs/bda/11-recibido-nutricion.md`.
+- Datos: tipos con las formas reales (`src/features/recibido/`), `orgApi.received` y `orgApi.nutrition`, hooks de React Query, query keys y períodos/meses.
+- **Lo recibido** (`/recibido`):
+  - chips de período: último mes, 3 meses, 6 meses y último año;
+  - resumen del período (kg, entregas, la última, por origen y por mes);
+  - filtro por origen;
+  - lista paginada con hasta 3 productos por entrega y el número de remito;
+  - un pedido abre su detalle.
+- **Nutrición › Cobertura nutricional**:
+  - selector de mes;
+  - cobertura total y por grupo, con niveles con ícono y texto (Cubierto / En camino / Falta);
+  - kg sin grupo, bultos surtidos y origen;
+  - caso sin necesidad cargada (`needs_available: false`).
+
+  Reemplaza la sección que usaba `/nutrition/summary`. Se quitaron el endpoint, el hook y la ruta simulada viejos.
+- **Inicio:** "Alimentación de este mes", con la cobertura total y los dos grupos que más faltan.
+- **Accesos:** Mercadería ("Ver todo lo recibido"), Más › Alimentación ("Lo recibido") y Nutrición.
+- Módulo `recibido` en `src/lib/features.ts`, activo con la API real, y ruta protegida.
+- **Mocks:** `/org/received` y `/org/nutrition` se arman con los pedidos entregados y los retiros completados del mock, con las validaciones del post (período inválido, hasta un año, `kind`, `month`). Se sumaron dos entregas de meses anteriores.
+- Configuración `web-mocks` en `.claude/launch.json` (puerto 3001, modo simulado con `MODULES_SCOPE=real`).
+- Documento del módulo: `docs/tesis/modulo-recibido-nutricion.md`.
+
+**Decisiones.** D-18 (módulo `recibido` activo con la API real, sin verificar todavía con GET), D-19 (panel nutricional sobre `/org/nutrition` y umbrales de cobertura) y D-20 (pantalla "Lo recibido"). Esta rama usa los rangos D-18 a D-19 y P-20 a P-21, para no chocar con las otras dos al integrar.
+
+**Problemas y soluciones.**
+- P-20: `/org/received` trae la paginación fuera de `data`, así que se usa `request` directo.
+- P-21: el panel del navegador de la app de escritorio no recibía clics, así que la prueba se hizo con Chrome headless por CDP.
+- Detalles visuales encontrados en la prueba y corregidos antes del commit:
+  - "Este Mes (Octubre)" por el `capitalize` de CSS: el mes ahora se escribe en mayúscula sólo al principio, en el código;
+  - el "%" se cortaba en otra línea: ahora va con espacio no separable.
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true EXPO_PUBLIC_MODULES_SCOPE=real`), Chrome headless por CDP en 390 × 844. Pasaron las 22 verificaciones (Inicio, Lo recibido con filtros de período y origen, apertura del pedido, Nutrición con cambio de mes, accesos desde Mercadería, Más y Nutrición), sin errores de consola. Detalle en `docs/tesis/modulo-recibido-nutricion.md` §5.
+- **No probado contra la API real** (D-18).
+
+**Pendientes.**
+- GET contra el servidor con el usuario de prueba para confirmar las formas.
+- Validar los umbrales de cobertura con el área social.
+- Preguntas al Banco en `docs/api-gaps.md` G-19.
+- Probar en un celular.
+- Integrar la rama a `main` con merge commit.
+
+**Archivos principales.** `docs/bda/11-recibido-nutricion.md`, `docs/tesis/modulo-recibido-nutricion.md`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/api-gaps.md`, `docs/tesis/estado-actual.md`, `src/app/(app)/recibido.tsx`, `src/app/(app)/nutricion.tsx`, `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/mercaderia.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/app/(app)/_layout.tsx`, `src/components/recibido/*`, `src/components/nutricion/CoverageBars.tsx`, `src/components/nutricion/MonthNavigator.tsx`, `src/features/recibido/*`, `src/services/api/endpoints/org.ts`, `src/lib/features.ts`, `src/lib/labels.ts`, `src/mocks/*`
+
+---
+
+## 61d675b · test(smoke): verificar lo recibido y panel nutricional contra la API real
+- **Fecha:** 2026-10-20 19:55 · **Autoría:** bala123819 (Tomás Balardini) + asistencia de IA (Claude Code)
+- **Etapa:** Acople a la API real — verificación (rama `recibido-nutricion`)
+
+**Objetivo.** Confirmar contra el servidor del Banco lo construido en 6cfd9ce, que sólo se había probado con mocks.
+
+**Qué se hizo.**
+- `npm run smoke` suma chequeos de sólo lectura:
+  - `GET /org/received` y la forma de un ítem: `data.items`, `data.summary`, y `meta` afuera de `data`;
+  - el 422 por período inválido;
+  - `GET /org/nutrition?month=`.
+- El servidor real devuelve `summary.reconciliation_pending` (`{count, kg}`), que el post 11 no documenta. Se agregó al tipo como campo opcional; la app no lo muestra y queda como pregunta para el Banco en G-19.
+- Se actualizó D-18: el módulo `recibido` quedó verificado contra el servidor.
+
+**Verificación.**
+- `npm run smoke:samples` contra `https://cloud.mermab.com/api`: 25 PASS, 0 FAIL.
+- Tenant de pruebas, últimos 90 días: 3 entregas y 50,1 kg (1 pedido de 24,4 kg y 2 mermas de 25,7 kg).
+- Octubre: 21,4 % de cobertura (50,1 de 234 kg) y 10 kg sin grupo.
+- **App en modo real** (sin mocks, `localhost:3001`, sesión iniciada por el usuario):
+  - Nutrición muestra exactamente esos valores: cuota de 234 kg, 7 personas, "21 % cubierto", cereales 19 %, lácteos 89 %;
+  - en Lo recibido, al elegir "Último año" la app pidió en vivo `GET /org/received?from=2025-10-21&to=2026-10-20` y mostró las 3 entregas reales (MRM-20261007-0005, MRM-20261007-0001 y DIST-2026-00047, con el remito REC-DIST-2026-00047-110326).
+
+**Pendientes.** Respuesta del Banco sobre `reconciliation_pending`. Validar los umbrales de cobertura con el área social. Probar en un celular.
+
+**Archivos principales.** `scripts/smoke-test.ts`, `src/features/recibido/types.ts`, `docs/api-gaps.md`, `docs/decisiones.md`

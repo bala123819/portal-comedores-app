@@ -640,17 +640,6 @@ on('GET', '/nutrition/merma/:id/summary', (p) => {
     groups: Object.entries(byGroup).map(([code, kg]) => ({ code, total_kg: kg })),
   });
 });
-on('GET', '/nutrition/summary', () =>
-  ok({
-    total_kg: 215,
-    groups: [
-      { code: 'frutas_verduras', total_kg: 110 },
-      { code: 'cereales', total_kg: 60 },
-      { code: 'proteinas', total_kg: 30 },
-      { code: 'lacteos', total_kg: 15 },
-    ],
-  }),
-);
 on('GET', '/unified-products/search', (_, o) => {
   const q = String(o.query?.q ?? '').toLowerCase();
   const all = db.mermas.flatMap((m) => m.products ?? []);
@@ -853,6 +842,213 @@ on('GET', '/org/distributions/:id/receipt', (p) => {
   // PDF mínimo de una página (sólo web: en nativo la descarga va directo al servidor)
   const pdf = '%PDF-1.1\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 144]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF';
   return new Response(pdf, { status: 200, headers: { 'Content-Type': 'application/pdf' } });
+});
+
+// ─── Lo recibido y panel nutricional (docs/bda/11-recibido-nutricion.md) ─────
+// Se arman con lo que ya está en los mocks: pedidos entregados y retiros de merma completados.
+interface ReceivedLine {
+  name: string;
+  quantity: number;
+  unit: string;
+  kg: number;
+  group: string | null;
+}
+interface ReceivedEntry {
+  kind: 'distribution' | 'merma';
+  id: string;
+  date: string;
+  number: string;
+  receipt_number: string | null;
+  lines: ReceivedLine[];
+}
+/** Grupo por categoría para los productos del catálogo que no traen `nutritional_group` */
+const GROUP_BY_CATEGORY: Record<string, string> = {
+  'cat-cereales': 'cereales',
+  'cat-lacteos': 'lacteos',
+  'cat-aceites': 'aceites',
+  'cat-frutas-verduras': 'frutas_verduras',
+};
+/** Necesidad de cada grupo como parte del cupo mensual (proporciones del ejemplo del post 11) */
+const GROUP_NEEDS = [
+  { code: 'cereales', name: 'Cereales', color: null, share: 0.3 },
+  { code: 'frutas_verduras', name: 'Frutas verduras', color: null, share: 0.35 },
+  { code: 'lacteos', name: 'Lacteos', color: '#4CAF50', share: 0.12 },
+  { code: 'proteinas', name: 'Proteinas animales', color: '#4CAF50', share: 0.15 },
+  { code: 'aceites', name: 'Aceites', color: null, share: 0.08 },
+];
+const round1 = (n: number) => Math.round(n * 10) / 10;
+const isoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function receivedEntries(): ReceivedEntry[] {
+  const fromOrders: ReceivedEntry[] = db.distributions
+    .filter((d) => d.status === 'distribuida' && d.actual_distribution_date)
+    .map((d) => ({
+      kind: 'distribution',
+      id: d.id,
+      date: d.actual_distribution_date!,
+      number: d.number,
+      receipt_number: d.receipt_number ?? null,
+      lines: (d.items ?? []).map((it) => {
+        const p = db.catalog.find((x) => x.product_id === it.product.id);
+        const quantity = it.quantity_delivered ?? it.quantity_approved ?? it.quantity_requested;
+        return {
+          name: it.product.name,
+          quantity,
+          unit: it.unit,
+          kg: round2(quantity * (it.weight_per_unit_kg ?? 1)),
+          group: p?.nutritional_group?.code ?? (p?.category ? GROUP_BY_CATEGORY[p.category.id] : undefined) ?? null,
+        };
+      }),
+    }));
+  const fromMermas: ReceivedEntry[] = db.assignments
+    .filter((a) => a.status === 'completada' && a.completed_at)
+    .map((a) => {
+      const date = String(a.completed_at).slice(0, 10);
+      return {
+        kind: 'merma',
+        id: a.id,
+        date,
+        number: `MRM-${date.replace(/-/g, '')}-0001`,
+        receipt_number: null,
+        lines: (a.products ?? []).map((ap) => {
+          const mp = db.mermas.flatMap((m) => m.products ?? []).find((x) => x.id === ap.merma_product_id);
+          const quantity = ap.quantity_received ?? ap.quantity_assigned;
+          const unit = ap.unit ?? mp?.unit ?? 'kg';
+          return {
+            name: ap.name ?? mp?.name ?? 'Producto',
+            quantity,
+            unit,
+            kg: round2(unit === 'kg' ? quantity : quantity * (mp?.weight_per_unit_kg ?? 1)),
+            // Sin grupo cargado → cuenta como "sin clasificar", como en el servidor
+            group: (mp?.nutritional_group as string | null | undefined) ?? null,
+          };
+        }),
+      };
+    });
+  return [...fromOrders, ...fromMermas].sort((x, y) => y.date.localeCompare(x.date));
+}
+const entryKg = (e: ReceivedEntry) => round2(e.lines.reduce((acc, l) => acc + l.kg, 0));
+
+on('GET', '/org/received', (_, o) => {
+  const q = o.query ?? {};
+  const today = new Date();
+  const from = q.from ? String(q.from) : isoDay(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 90));
+  const to = q.to ? String(q.to) : isoDay(today);
+  if (!DATE_RE.test(from)) return fail(422, 'La fecha "desde" no es válida.', { from: ['La fecha "desde" no es válida.'] });
+  if (!DATE_RE.test(to)) return fail(422, 'La fecha "hasta" no es válida.', { to: ['La fecha "hasta" no es válida.'] });
+  if (to < from) {
+    const m = 'La fecha "hasta" no puede ser anterior a la fecha "desde".';
+    return fail(422, m, { to: [m] });
+  }
+  if ((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000 > 366) {
+    const m = 'El período puede ser de hasta un año.';
+    return fail(422, m, { from: [m] });
+  }
+  if (q.kind && !['distribution', 'merma'].includes(String(q.kind))) {
+    return fail(422, 'El tipo elegido no es válido.', { kind: ['El tipo elegido no es válido.'] });
+  }
+  const entries = receivedEntries().filter(
+    (e) => e.date >= from && e.date <= to && (!q.kind || e.kind === q.kind),
+  );
+
+  const byKind: Record<string, { count: number; kg: number }> = {};
+  const byMonth: Record<string, { count: number; kg: number }> = {};
+  for (const e of entries) {
+    const kg = entryKg(e);
+    const k = (byKind[e.kind] ??= { count: 0, kg: 0 });
+    k.count++;
+    k.kg = round2(k.kg + kg);
+    const m = (byMonth[e.date.slice(0, 7)] ??= { count: 0, kg: 0 });
+    m.count++;
+    m.kg = round2(m.kg + kg);
+  }
+  const summary = {
+    period: { from, to },
+    total_count: entries.length,
+    total_kg: round2(entries.reduce((acc, e) => acc + entryKg(e), 0)),
+    by_kind: byKind,
+    by_month: Object.entries(byMonth)
+      .sort(([x], [y]) => x.localeCompare(y))
+      .map(([month, v]) => ({ month, ...v })),
+    last_received_date: entries[0]?.date ?? null,
+  };
+
+  const perPage = Number(q.per_page ?? 20);
+  const page = Number(q.page ?? 1);
+  const items = entries.slice((page - 1) * perPage, page * perPage).map((e) => ({
+    key: `${e.kind}:${e.id}`,
+    kind: e.kind,
+    id: e.id,
+    date: e.date,
+    number: e.number,
+    kg: entryKg(e),
+    items_count: e.lines.length,
+    items_preview: e.lines.slice(0, 3).map(({ name, quantity, unit, kg }) => ({ name, quantity, unit, kg })),
+    more_items: Math.max(0, e.lines.length - 3),
+    origin:
+      e.kind === 'merma'
+        ? { tag: 'merma', label: 'Rescate de merma' }
+        : { tag: 'inventario', label: 'Pedido al banco' },
+    receipt_number: e.receipt_number,
+    detail_path: e.kind === 'merma' ? `/api/org/assignments/${e.id}` : `/api/org/distributions/${e.id}`,
+  }));
+  // `data` = { summary, items }; la paginación va en `meta`, afuera de `data` (como en el servidor)
+  return json(200, {
+    success: true,
+    data: { summary, items },
+    meta: {
+      current_page: page,
+      last_page: Math.max(1, Math.ceil(entries.length / perPage)),
+      per_page: perPage,
+      total: entries.length,
+    },
+  });
+});
+
+on('GET', '/org/nutrition', (_, o) => {
+  const month = o.query?.month ? String(o.query.month) : isoDay(new Date()).slice(0, 7);
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    const m = 'El mes tiene que tener el formato AAAA-MM.';
+    return fail(422, m, { month: [m] });
+  }
+  const [y, mo] = month.split('-').map(Number);
+  const from = `${month}-01`;
+  const to = isoDay(new Date(y, mo, 0));
+  const entries = receivedEntries().filter((e) => e.date >= from && e.date <= to);
+  const lines = entries.flatMap((e) => e.lines);
+  const quota = db.organization.monthly_quota_kg ?? 0;
+  const sumKg = (ls: ReceivedLine[]) => round2(ls.reduce((acc, l) => acc + l.kg, 0));
+
+  const groups = GROUP_NEEDS.map((g) => {
+    const received = sumKg(lines.filter((l) => l.group === g.code));
+    const need = round2(quota * g.share);
+    return {
+      code: g.code,
+      name: g.name,
+      color: g.color,
+      received_kg: received,
+      quota_kg: need,
+      coverage_pct: need ? round1((received / need) * 100) : null,
+    };
+  });
+  const totalKg = sumKg(lines);
+  const kindKg = (kind: string) => sumKg(entries.filter((e) => e.kind === kind).flatMap((e) => e.lines));
+  return ok({
+    period: { from, to, months: 1 },
+    beneficiaries: {
+      total_beneficiaries: db.organization.total_beneficiaries ?? null,
+      services_per_day: db.organization.services_per_day ?? null,
+      organization_type: db.organization.organization_type ?? null,
+    },
+    groups,
+    unclassified_kg: sumKg(lines.filter((l) => !l.group)),
+    bulk_kg: 0,
+    totals: { received_kg: totalKg, quota_kg: quota, coverage_pct: quota ? round1((totalKg / quota) * 100) : null },
+    sources: { distributions_kg: kindKg('distribution'), mermas_kg: kindKg('merma') },
+    needs_available: true,
+  });
 });
 
 // ─── Notificaciones (formas de docs/bda/03: paginación anidada) ──────────

@@ -12,15 +12,6 @@ export function useNutritionalGroups() {
   });
 }
 
-export function useNutritionSummary(from: string, to: string) {
-  return useQuery({
-    queryKey: qk.nutritionSummary(from, to),
-    queryFn: () => nutritionApi.summary(from, to),
-    staleTime: 10 * 60_000,
-    retry: false,
-  });
-}
-
 export function useProductSearch(q: string) {
   const term = q.trim();
   return useQuery({

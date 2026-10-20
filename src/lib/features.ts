@@ -27,7 +27,9 @@ export type Module =
   /** Endpoints de nutrición y productos (/nutrition, /nutritional-groups, /unified-products) */
   | 'nutricionApi'
   /** Pedidos de mercadería: catálogo, cupo, pedidos, cancelar y remito (/org/catalog, /org/distributions…) */
-  | 'pedidos';
+  | 'pedidos'
+  /** Lo recibido y panel nutricional (/org/received, /org/nutrition) */
+  | 'recibido';
 
 const forced = new Set(
   (process.env.EXPO_PUBLIC_ENABLE_MODULES ?? '')
@@ -43,8 +45,9 @@ const mocksShowEverything = env.useMocks && process.env.EXPO_PUBLIC_MODULES_SCOP
  * - familiasAlta: alta, edición y baja de familias y miembros, desplegado el 2026-10-07 (aviso en GoDubi).
  * - pedidos: catálogo, cupo, pedidos, cancelar y remito, verificado con GET contra la API el 2026-10-14 (D-14).
  * - contactos: CRUD de `/org/contacts` (post 4/14), verificado con GET contra la API el 2026-10-20 (D-16).
+ * - recibido: lo recibido y panel nutricional (post 11/14), verificado con GET contra la API el 2026-10-20 (D-18).
  */
-const enabledInBackend = new Set<Module>(['familiasAlta', 'pedidos', 'contactos']);
+const enabledInBackend = new Set<Module>(['familiasAlta', 'pedidos', 'contactos', 'recibido']);
 
 export function isEnabled(module: Module): boolean {
   return mocksShowEverything || enabledInBackend.has(module) || forced.has(module);
@@ -58,4 +61,5 @@ export const features = {
   programas: isEnabled('programas'),
   nutricionApi: isEnabled('nutricionApi'),
   pedidos: isEnabled('pedidos'),
+  recibido: isEnabled('recibido'),
 };

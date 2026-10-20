@@ -37,6 +37,9 @@ export default function AppLayout() {
       <Stack.Protected guard={features.programas}>
         <Stack.Screen name="jornadas" />
       </Stack.Protected>
+      <Stack.Protected guard={features.recibido}>
+        <Stack.Screen name="recibido" />
+      </Stack.Protected>
       <Stack.Protected guard={features.documentacion}>
         <Stack.Screen name="documentacion" />
       </Stack.Protected>

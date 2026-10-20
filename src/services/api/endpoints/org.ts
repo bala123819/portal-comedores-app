@@ -19,6 +19,13 @@ import type {
   Quota,
 } from '@/features/pedidos/types';
 import type { Application } from '@/features/postulaciones/types';
+import type {
+  OrgNutrition,
+  ReceivedFilter,
+  ReceivedItem,
+  ReceivedPage,
+  ReceivedSummary,
+} from '@/features/recibido/types';
 import { api, isUuid, request } from '../client';
 import { ApiError } from '../errors';
 import type { BodyOf } from '../types';
@@ -133,4 +140,20 @@ export const orgApi = {
     api.post<Distribution>(`/org/distributions/${id(distributionId)}/cancel`, { reason }, key),
   /** Remito en PDF, desde `lista_para_retiro` (`receipt_available`). Se descarga con el Bearer. */
   receiptPath: (distributionId: string) => `/org/distributions/${id(distributionId)}/receipt`,
+
+  // ─── Lo recibido y panel nutricional (docs/bda/11-recibido-nutricion.md) ────
+  /** `data` trae `{ summary, items }` y la paginación viene en `meta`, afuera de `data`. */
+  received: async (page: number, perPage: number, f: ReceivedFilter = {}): Promise<ReceivedPage> => {
+    const res = await request<{ summary: ReceivedSummary; items: ReceivedItem[] }>('GET', '/org/received', {
+      query: { page, per_page: perPage, from: f.from, to: f.to, kind: f.kind },
+    });
+    const items = res.data?.items ?? [];
+    return {
+      summary: res.data.summary,
+      items,
+      meta: res.meta ?? { current_page: page, last_page: page, per_page: perPage, total: items.length },
+    };
+  },
+  /** Para este rol se usa `/org/nutrition`, no `/nutrition/summary` (mapa de la API del Banco, punto 3). */
+  nutrition: (month?: string) => api.get<OrgNutrition>('/org/nutrition', { month }),
 };

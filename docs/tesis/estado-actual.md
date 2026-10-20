@@ -1,6 +1,6 @@
 # Estado actual del proyecto
 
-**Última actualización:** 2026-10-14 (comunicación con el Banco). Antes: 2026-10-01. Conexión con la API real verificada con `npm run smoke:samples` (formas de respuesta coinciden con la app).
+**Última actualización:** 2026-10-20 (lo recibido y panel nutricional). Antes: 2026-10-14 (comunicación con el Banco), 2026-10-01. Conexión con la API real verificada con `npm run smoke:samples` (formas de respuesta coinciden con la app).
 
 ## Funciona con la API real del Banco
 | Pantalla | Endpoints | Probado contra la API real |
@@ -10,7 +10,8 @@
 | Familias (lectura) | `/org/families`, `/org/families/{id}`, `/org/families/demographics` | Pendiente |
 | Familias: alta, edición, baja y miembros (desde 2026-10-14) | `/org/families*`, `/org/family-types`, `form-config`, búsqueda por DNI | Pendiente (`npm run smoke -- --familias`) |
 | Mi organización | `/org/profile`, `PUT /org/address` | Pendiente |
-| Nutrición | cuota mensual del perfil + demografía | Pendiente |
+| Nutrición: cobertura del mes por grupo de alimentos (desde 2026-10-20), cuota mensual y demografía | `/org/nutrition?month=`, `/org/profile`, `/org/families/demographics` | Cobertura verificada con la API real el 2026-10-20 (`npm run smoke` y la app con el usuario de prueba, D-18) |
+| Lo recibido: pedidos entregados y mermas retiradas por período, con resumen por origen y por mes (desde 2026-10-20) | `/org/received` | Verificado con la API real el 2026-10-20 (`npm run smoke` y la app con el usuario de prueba, D-18) |
 | Avisos | `/notifications*` | Pendiente |
 | Perfil y clave | `PUT /auth/profile`, `PUT /auth/password` | Pendiente |
 | Comunicación con el Banco (sucesos, solicitudes, consultas, reclamos) | `/org/interactions`, `/org/interactions/{id}`, `/org/interactions/summary`, `POST /org/interactions` | Pendiente (sin credenciales en `.env`, P-17); probado en web en modo simulado |

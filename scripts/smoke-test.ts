@@ -138,6 +138,34 @@ async function main() {
   await call('GET', '/org/families/00000000-0000-4000-8000-000000000000');
   expect('GET  /org/families/{uuid inexistente} da 404', 404);
 
+  // Lo recibido y panel nutricional (post 11/14): sólo lecturas, con la forma que espera la app
+  await call('GET', '/org/received?per_page=5');
+  expect(
+    'GET  /org/received',
+    200,
+    (b) => Array.isArray(b.data.items) && b.data.summary.total_kg != null && Array.isArray(b.data.summary.by_month) && b.meta.current_page != null,
+    '.data.items, .data.summary (total_kg, by_month) y .meta afuera de data',
+  );
+  save('org-received');
+  const item = body?.data?.items?.[0];
+  if (item) {
+    expect('GET  /org/received: forma de un ítem', 200, () => item.key && item.kind && item.id && item.kg != null && Array.isArray(item.items_preview) && item.origin?.label, 'key, kind, id, kg, items_preview, origin.label');
+  } else {
+    console.log('SKIP  forma de un ítem de /org/received (no hay nada recibido en los últimos 90 días)');
+  }
+  await call('GET', '/org/received?from=2026-10-10&to=2026-10-01');
+  expect('GET  /org/received con "hasta" < "desde" da 422', 422, (b) => b.errors.to != null, '.errors.to != null');
+  const now = new Date();
+  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  await call('GET', `/org/nutrition?month=${month}`);
+  expect(
+    'GET  /org/nutrition?month=',
+    200,
+    (b) => Array.isArray(b.data.groups) && b.data.totals.received_kg != null && typeof b.data.needs_available === 'boolean' && b.data.unclassified_kg != null,
+    '.data.groups, .data.totals, .data.needs_available y .data.unclassified_kg',
+  );
+  save('org-nutrition');
+
   if (FAMILIAS) await familiasEscritura();
 
   await call('GET', '/notifications/unread-count');

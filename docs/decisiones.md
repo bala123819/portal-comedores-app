@@ -78,3 +78,26 @@ El padrón de la organización se migró de `/organizations/{id}/contacts*` (rol
 
 ### D-17 · "Pedir autorización al Banco" reutiliza `/banco/nueva` (2026-10-20)
 Siguiendo el post 4/14 ("cárguenla con su DNI y pídanlo con una interacción de tipo `solicitud`"), la ficha del contacto sin autorización vigente tiene el botón **Pedir autorización al Banco**, que abre `/banco/nueva` con `tipo=solicitud`, `titulo` ("Autorizar a <nombre> a retirar alimentos") y `notas` (nombre, DNI y cargo) ya completos y editables. No se envía sola: la persona revisa y toca "Enviar al Banco". Sin DNI el botón no aparece (se pide cargarlo primero). `/banco/nueva` acepta ahora `titulo` y `notas` como parámetros, recortados a los límites del backend.
+
+### D-18 · Módulo `recibido` (lo recibido y panel nutricional) activo con la API real (2026-10-20)
+`GET /org/received` y `GET /org/nutrition` están documentados por el Banco con respuestas reales del servidor (post 11/14, copiado en `docs/bda/11-recibido-nutricion.md`). Se suma el módulo `recibido` a `enabledInBackend` en `src/lib/features.ts`, igual que `pedidos` (D-14). Se desarrolló contra mocks con la forma exacta del post y el mismo día se verificó con GET contra el servidor real (`npm run smoke`, 25 PASS): `/org/received` (con su 422 de período inválido) y `/org/nutrition` responden con la forma que espera la app. El servidor agrega `summary.reconciliation_pending`, que el post no documenta (G-19).
+- Rama `recibido-nutricion` (Pilar 1 del reparto del equipo). Al integrar con `main` se renumeró a D-18–D-20, P-20–P-21 y G-19, porque la rama `Contacto` ya había usado D-16, D-17, P-18, P-19 y G-18.
+
+### D-19 · Panel nutricional sobre `/org/nutrition` (2026-10-20)
+El mapa de la API del Banco (punto 3) pide usar `/org/nutrition` para este rol, no `/nutrition/summary`. La sección "Lo que recibieron" de Nutrición, que adivinaba la forma de `/nutrition/summary` (G-01), se reemplazó por **Cobertura nutricional**:
+- **Mes navegable** (flechas): del mes actual hasta 11 meses atrás (el backend acepta hasta un año). No hay selector de fecha: no suma dependencias nativas.
+- **Cobertura total** y **por grupo**: kg recibidos contra la necesidad del grupo (`quota_kg`) y el porcentaje (`coverage_pct`).
+- **Niveles de cobertura (criterio propio, a validar con el área social):** 100 % o más = "Cubierto", de 50 % a 99 % = "En camino", menos de 50 % = "Falta". Cada nivel tiene ícono y texto, nunca sólo color.
+- Si `needs_available` es `false`, se muestran los kg recibidos sin porcentaje y un aviso de que el Banco todavía no cargó la necesidad por grupo.
+- Se muestran también los kg **sin grupo cargado** (`unclassified_kg`), los **bultos surtidos** (`bulk_kg`) y el origen (pedidos / mermas).
+- Los nombres de los grupos se muestran con tildes (`coverageGroupLabels`): la API los manda sin tildes ("Lacteos").
+- El Inicio suma "Alimentación de este mes": la cobertura total y los dos grupos con menos cobertura.
+- Se quitaron `nutritionApi.summary`, `useNutritionSummary` y su ruta simulada, que ya no se usaban. Los grupos de alimentos y la búsqueda de productos (`/nutritional-groups`, `/unified-products`) siguen detrás del módulo `nutricionApi`, apagado con la API real.
+
+### D-20 · Pantalla "Lo recibido" (2026-10-20)
+`/recibido` lista lo que llegó del Banco: pedidos entregados y mermas retiradas.
+- **Períodos con chips** (último mes, 3 meses, 6 meses, último año), siempre terminando hoy. Así nunca se arma un período inválido (el 422 de "hasta anterior a desde") ni de más de un año. Por defecto, 3 meses, como el backend.
+- **Resumen del período entero** (sale de la primera página): kg, cantidad de entregas, la última, por origen y por mes.
+- **Filtro por origen** (pedidos / mermas): sólo aparece si en el período hay de los dos. Si ya se eligió un origen, sigue visible para poder volver a "Todo".
+- Cada entrega muestra hasta 3 productos (`items_preview`) y "y N productos más". Un pedido abre su detalle (`/pedido/[id]`). Una merma abre el retiro sólo si el módulo `mermas` está activo; si no, la tarjeta no se puede tocar.
+- **Accesos:** Mercadería ("Ver todo lo recibido"), Más › Alimentación ("Lo recibido") y Nutrición ("Ver todo lo recibido").

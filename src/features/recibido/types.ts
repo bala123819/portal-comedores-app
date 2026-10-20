@@ -49,7 +49,7 @@ export interface ReceivedSummary {
   last_received_date?: string | null;
   /**
    * No figura en el post 11: lo devuelve el servidor real (2026-10-20). En el tenant de pruebas
-   * coincide con las mermas retiradas. Significado sin confirmar (G-18): la app no lo muestra.
+   * coincide con las mermas retiradas. Significado sin confirmar (G-19): la app no lo muestra.
    */
   reconciliation_pending?: ReceivedKindTotals | null;
 }

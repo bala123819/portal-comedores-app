@@ -554,11 +554,11 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Configuración `web-mocks` en `.claude/launch.json` (puerto 3001, modo simulado con `MODULES_SCOPE=real`).
 - Documento del módulo: `docs/tesis/modulo-recibido-nutricion.md`.
 
-**Decisiones.** D-16 (módulo `recibido` activo con la API real, sin verificar todavía con GET), D-17 (panel nutricional sobre `/org/nutrition` y umbrales de cobertura) y D-18 (pantalla "Lo recibido"). Esta rama usa los rangos D-16 a D-19 y P-18 a P-21, para no chocar con las otras dos al integrar.
+**Decisiones.** D-18 (módulo `recibido` activo con la API real, sin verificar todavía con GET), D-19 (panel nutricional sobre `/org/nutrition` y umbrales de cobertura) y D-20 (pantalla "Lo recibido"). Esta rama usa los rangos D-18 a D-19 y P-20 a P-21, para no chocar con las otras dos al integrar.
 
 **Problemas y soluciones.**
-- P-18: `/org/received` trae la paginación fuera de `data`, así que se usa `request` directo.
-- P-19: el panel del navegador de la app de escritorio no recibía clics, así que la prueba se hizo con Chrome headless por CDP.
+- P-20: `/org/received` trae la paginación fuera de `data`, así que se usa `request` directo.
+- P-21: el panel del navegador de la app de escritorio no recibía clics, así que la prueba se hizo con Chrome headless por CDP.
 - Detalles visuales encontrados en la prueba y corregidos antes del commit:
   - "Este Mes (Octubre)" por el `capitalize` de CSS: el mes ahora se escribe en mayúscula sólo al principio, en el código;
   - el "%" se cortaba en otra línea: ahora va con espacio no separable.
@@ -566,12 +566,12 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Verificación.**
 - `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
 - Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true EXPO_PUBLIC_MODULES_SCOPE=real`), Chrome headless por CDP en 390 × 844. Pasaron las 22 verificaciones (Inicio, Lo recibido con filtros de período y origen, apertura del pedido, Nutrición con cambio de mes, accesos desde Mercadería, Más y Nutrición), sin errores de consola. Detalle en `docs/tesis/modulo-recibido-nutricion.md` §5.
-- **No probado contra la API real** (D-16).
+- **No probado contra la API real** (D-18).
 
 **Pendientes.**
 - GET contra el servidor con el usuario de prueba para confirmar las formas.
 - Validar los umbrales de cobertura con el área social.
-- Preguntas al Banco en `docs/api-gaps.md` G-18.
+- Preguntas al Banco en `docs/api-gaps.md` G-19.
 - Probar en un celular.
 - Integrar la rama a `main` con merge commit.
 
@@ -590,8 +590,8 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
   - `GET /org/received` y la forma de un ítem: `data.items`, `data.summary`, y `meta` afuera de `data`;
   - el 422 por período inválido;
   - `GET /org/nutrition?month=`.
-- El servidor real devuelve `summary.reconciliation_pending` (`{count, kg}`), que el post 11 no documenta. Se agregó al tipo como campo opcional; la app no lo muestra y queda como pregunta para el Banco en G-18.
-- Se actualizó D-16: el módulo `recibido` quedó verificado contra el servidor.
+- El servidor real devuelve `summary.reconciliation_pending` (`{count, kg}`), que el post 11 no documenta. Se agregó al tipo como campo opcional; la app no lo muestra y queda como pregunta para el Banco en G-19.
+- Se actualizó D-18: el módulo `recibido` quedó verificado contra el servidor.
 
 **Verificación.**
 - `npm run smoke:samples` contra `https://cloud.mermab.com/api`: 25 PASS, 0 FAIL.

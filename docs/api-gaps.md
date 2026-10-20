@@ -57,7 +57,7 @@ Formato: **qué falta · qué pantalla lo necesita · propuesta · mientras tant
 - `Idempotency-Key` y `Retry-After` no están declarados en ninguna operación del spec (solo en `llms.txt`).
 - **Mientras tanto:** los labels contemplan todos los valores vistos, con fallback.
 
-### G-08 · Cuota nutricional de la organización (resuelto 2026-10-20: `/org/nutrition`, ver G-18)
+### G-08 · Cuota nutricional de la organización (resuelto 2026-10-20: `/org/nutrition`, ver G-19)
 - **Qué falta:** existe `PUT /organizations/{id}/quota` (admin) pero no un GET explícito de la cuota ni de su consumo para la organización.
 - **Pantallas:** Información nutricional.
 - **Propuesta:** incluir la cuota en `GET /org/profile` o `GET /org/stats`, o un `GET /org/nutrition` con cuota vs. recibido en el período.
@@ -103,7 +103,7 @@ Formato: **qué falta · qué pantalla lo necesita · propuesta · mientras tant
 | Contactos y autorizaciones de retiro | Mi organización › Contactos | `contactos` |
 | Documentos, ficha social, carta compromiso | Documentación | `documentacion` |
 | Jornadas y talleres con vista de organización | Jornadas y talleres | `programas` |
-| ~~Lectura de grupos nutricionales / resumen nutricional para este rol~~ Resuelto con `/org/nutrition` (G-18) | Nutrición › Cobertura nutricional | `recibido` |
+| ~~Lectura de grupos nutricionales / resumen nutricional para este rol~~ Resuelto con `/org/nutrition` (G-19) | Nutrición › Cobertura nutricional | `recibido` |
 | Push nativo (FCM/APNs/Expo) y clave VAPID pública para Web Push | Avisos en el dispositivo | — |
 | Recuperar contraseña (los mails no salen del servidor) | Login | — |
 | Editar teléfono y mail de la organización | Mi organización | — |
@@ -170,7 +170,7 @@ Verificado con GET contra el servidor real. Nada bloquea; para conversar con el 
 - No hay endpoint de categorías para este rol: los filtros se arman con lo que trae el catálogo.
 - El remito es un PDF por pedido. Sigue abierta la pregunta del Banco sobre el "PDF de las donaciones" de un período (post "Todo lo que la app puede hacer", punto 8).
 
-### G-18 · Lo recibido y panel nutricional: observaciones (2026-10-20)
+### G-19 · Lo recibido y panel nutricional: observaciones (2026-10-20)
 Implementado según el post 11/14 (`docs/bda/11-recibido-nutricion.md`). Con esto quedan **resueltos** G-08 (cuota y consumo nutricional de la organización) y la fila "Lectura de grupos nutricionales / resumen nutricional para este rol" de G-13: para este rol se usa `/org/nutrition`. **Verificado con GET contra el servidor el 2026-10-20** (`npm run smoke`): `/org/received`, el 422 de período inválido y `/org/nutrition` responden con la forma del post. Para conversar con el Banco:
 - **`summary.reconciliation_pending`** (`{count, kg}`): lo devuelve el servidor y no figura en el post 11. En el tenant de pruebas coincide con las 2 mermas retiradas (25,7 kg). ¿Qué significa? ¿Mermas cuyas cantidades recibidas todavía no se conciliaron? ¿Hay que mostrárselo a la organización? Mientras tanto, la app no lo muestra.
 - **Nombres de los grupos sin tildes** ("Lacteos", "Proteinas animales", "Frutas verduras"). La app los corrige con su propia tabla por `code`; convendría que el backend los mande bien escritos.

@@ -44,7 +44,7 @@ const mocksShowEverything = env.useMocks && process.env.EXPO_PUBLIC_MODULES_SCOP
  * Módulos que el Banco ya habilitó para el rol de organización, prendidos también con la API real.
  * - familiasAlta: alta, edición y baja de familias y miembros, desplegado el 2026-10-07 (aviso en GoDubi).
  * - pedidos: catálogo, cupo, pedidos, cancelar y remito, verificado con GET contra la API el 2026-10-14 (D-14).
- * - recibido: lo recibido y panel nutricional, documentados con respuestas reales en el post 11/14 (D-16).
+ * - recibido: lo recibido y panel nutricional, documentados con respuestas reales en el post 11/14 (D-18).
  */
 const enabledInBackend = new Set<Module>(['familiasAlta', 'pedidos', 'recibido']);
 

@@ -5,7 +5,7 @@ Registro de lo que se hizo para el **Pilar 1** del reparto del equipo: que la or
 - **Fecha:** 2026-10-20 · **Rama:** `recibido-nutricion`
 - **Autoría:** Tomás Balardini, con asistencia de IA (Claude Code)
 - **Fuente de verdad:** post 11/14 de la guía del Banco en GoDubi (orden #1149), copiado en [`docs/bda/11-recibido-nutricion.md`](../bda/11-recibido-nutricion.md)
-- **Decisiones:** D-16, D-17 y D-18 en [`docs/decisiones.md`](../decisiones.md) · **Problemas:** P-18 y P-19 · **Observaciones del backend:** G-18 en [`docs/api-gaps.md`](../api-gaps.md)
+- **Decisiones:** D-18, D-19 y D-20 en [`docs/decisiones.md`](../decisiones.md) · **Problemas:** P-20 y P-21 · **Observaciones del backend:** G-19 en [`docs/api-gaps.md`](../api-gaps.md)
 
 ---
 
@@ -61,7 +61,7 @@ Registro de lo que se hizo para el **Pilar 1** del reparto del equipo: que la or
 
 ## 4. Reglas del backend que respeta la app
 - El período es de hasta un año y "hasta" no puede ser anterior a "desde" (422): con los chips nunca se arma un período inválido.
-- La paginación de `/org/received` viene en `meta`, fuera de `data`, y `data` trae `{ summary, items }` (P-18).
+- La paginación de `/org/received` viene en `meta`, fuera de `data`, y `data` trae `{ summary, items }` (P-20).
 - El `summary` es del período entero: se toma de la primera página.
 - `coverage_pct` puede venir `null` (sin necesidad cargada): se muestra sólo lo recibido.
 - Para este rol se usa `/org/nutrition`, no `/nutrition/summary`.
@@ -74,10 +74,14 @@ Registro de lo que se hizo para el **Pilar 1** del reparto del equipo: que la or
   - Nutrición: grupos con nombre y nivel, mes anterior, sigue la cuota mensual, ya no aparece la sección vieja ("Lo que recibieron").
   - Accesos desde Mercadería, Más y Nutrición.
   - Cero errores de consola.
-- **No probado contra la API real** (son sólo lecturas, ver D-16).
+- **Contra la API real (2026-10-20):**
+  - `npm run smoke` (25 PASS) suma `/org/received`, su 422 por período inválido y `/org/nutrition`: responden con la forma que espera la app.
+  - Con la app en modo real y la sesión del usuario de prueba, Nutrición mostró los valores del servidor (cuota de 234 kg, 7 personas, 21 % cubierto).
+  - En Lo recibido, "Último año" pidió en vivo `/org/received?from=2025-10-21&to=2026-10-20` y mostró las 3 entregas del tenant de pruebas.
+  - El servidor agrega `summary.reconciliation_pending`, que el post no documenta (G-19).
 
 ## 6. Pendientes
-- Probar con GET contra el servidor con el usuario de prueba (`/org/received?from=…`, `/org/nutrition?month=…`) y comparar las formas.
-- Validar los umbrales de cobertura (100 % y 50 %) con el área social (G-18).
-- Preguntas al Banco en G-18: nombres de grupos sin tildes, kg sin grupo, "PDF de las donaciones".
+- Respuesta del Banco sobre `reconciliation_pending` (G-19).
+- Validar los umbrales de cobertura (100 % y 50 %) con el área social (G-19).
+- Preguntas al Banco en G-19: nombres de grupos sin tildes, kg sin grupo, "PDF de las donaciones".
 - Probar las pantallas en un celular.

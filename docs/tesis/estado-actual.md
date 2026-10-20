@@ -10,8 +10,8 @@
 | Familias (lectura) | `/org/families`, `/org/families/{id}`, `/org/families/demographics` | Pendiente |
 | Familias: alta, edición, baja y miembros (desde 2026-10-14) | `/org/families*`, `/org/family-types`, `form-config`, búsqueda por DNI | Pendiente (`npm run smoke -- --familias`) |
 | Mi organización | `/org/profile`, `PUT /org/address` | Pendiente |
-| Nutrición: cobertura del mes por grupo de alimentos (desde 2026-10-20), cuota mensual y demografía | `/org/nutrition?month=`, `/org/profile`, `/org/families/demographics` | Pendiente; la cobertura, probada en web en modo simulado (D-17) |
-| Lo recibido: pedidos entregados y mermas retiradas por período, con resumen por origen y por mes (desde 2026-10-20) | `/org/received` | Pendiente; probado en web en modo simulado (D-18) |
+| Nutrición: cobertura del mes por grupo de alimentos (desde 2026-10-20), cuota mensual y demografía | `/org/nutrition?month=`, `/org/profile`, `/org/families/demographics` | Pendiente; la cobertura, probada en web en modo simulado (D-19) |
+| Lo recibido: pedidos entregados y mermas retiradas por período, con resumen por origen y por mes (desde 2026-10-20) | `/org/received` | Pendiente; probado en web en modo simulado (D-20) |
 | Avisos | `/notifications*` | Pendiente |
 | Perfil y clave | `PUT /auth/profile`, `PUT /auth/password` | Pendiente |
 | Comunicación con el Banco (sucesos, solicitudes, consultas, reclamos) | `/org/interactions`, `/org/interactions/{id}`, `/org/interactions/summary`, `POST /org/interactions` | Pendiente (sin credenciales en `.env`, P-17); probado en web en modo simulado |

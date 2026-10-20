@@ -68,11 +68,11 @@ Los pedidos de mercadería (`/org/catalog`, `/org/quota`, `/org/distributions*`)
 - **Categorías**: se arman con lo que trae el catálogo (no hay listado de categorías para este rol) y se filtra en el cliente.
 - **Errores por `error_code`**: el cliente ahora lee `error_code` (formato de la serie nueva) además de `code`/`error`.
 
-### D-16 · Módulo `recibido` (lo recibido y panel nutricional) activo con la API real (2026-10-20)
-`GET /org/received` y `GET /org/nutrition` están documentados por el Banco con respuestas reales del servidor (post 11/14, copiado en `docs/bda/11-recibido-nutricion.md`). Se suma el módulo `recibido` a `enabledInBackend` en `src/lib/features.ts`, igual que `pedidos` (D-14). Se desarrolló contra mocks con la forma exacta del post y el mismo día se verificó con GET contra el servidor real (`npm run smoke`, 25 PASS): `/org/received` (con su 422 de período inválido) y `/org/nutrition` responden con la forma que espera la app. El servidor agrega `summary.reconciliation_pending`, que el post no documenta (G-18).
-- Rama `recibido-nutricion` (Pilar 1 del reparto del equipo). Rangos de numeración reservados para esta rama: D-16 a D-19 y P-18 a P-21.
+### D-18 · Módulo `recibido` (lo recibido y panel nutricional) activo con la API real (2026-10-20)
+`GET /org/received` y `GET /org/nutrition` están documentados por el Banco con respuestas reales del servidor (post 11/14, copiado en `docs/bda/11-recibido-nutricion.md`). Se suma el módulo `recibido` a `enabledInBackend` en `src/lib/features.ts`, igual que `pedidos` (D-14). Se desarrolló contra mocks con la forma exacta del post y el mismo día se verificó con GET contra el servidor real (`npm run smoke`, 25 PASS): `/org/received` (con su 422 de período inválido) y `/org/nutrition` responden con la forma que espera la app. El servidor agrega `summary.reconciliation_pending`, que el post no documenta (G-19).
+- Rama `recibido-nutricion` (Pilar 1 del reparto del equipo). Al integrar con `main` se renumeró a D-18–D-20, P-20–P-21 y G-19, porque la rama `Contacto` ya había usado D-16, D-17, P-18, P-19 y G-18.
 
-### D-17 · Panel nutricional sobre `/org/nutrition` (2026-10-20)
+### D-19 · Panel nutricional sobre `/org/nutrition` (2026-10-20)
 El mapa de la API del Banco (punto 3) pide usar `/org/nutrition` para este rol, no `/nutrition/summary`. La sección "Lo que recibieron" de Nutrición, que adivinaba la forma de `/nutrition/summary` (G-01), se reemplazó por **Cobertura nutricional**:
 - **Mes navegable** (flechas): del mes actual hasta 11 meses atrás (el backend acepta hasta un año). No hay selector de fecha: no suma dependencias nativas.
 - **Cobertura total** y **por grupo**: kg recibidos contra la necesidad del grupo (`quota_kg`) y el porcentaje (`coverage_pct`).
@@ -83,7 +83,7 @@ El mapa de la API del Banco (punto 3) pide usar `/org/nutrition` para este rol, 
 - El Inicio suma "Alimentación de este mes": la cobertura total y los dos grupos con menos cobertura.
 - Se quitaron `nutritionApi.summary`, `useNutritionSummary` y su ruta simulada, que ya no se usaban. Los grupos de alimentos y la búsqueda de productos (`/nutritional-groups`, `/unified-products`) siguen detrás del módulo `nutricionApi`, apagado con la API real.
 
-### D-18 · Pantalla "Lo recibido" (2026-10-20)
+### D-20 · Pantalla "Lo recibido" (2026-10-20)
 `/recibido` lista lo que llegó del Banco: pedidos entregados y mermas retiradas.
 - **Períodos con chips** (último mes, 3 meses, 6 meses, último año), siempre terminando hoy. Así nunca se arma un período inválido (el 422 de "hasta anterior a desde") ni de más de un año. Por defecto, 3 meses, como el backend.
 - **Resumen del período entero** (sale de la primera página): kg, cantidad de entregas, la última, por origen y por mes.

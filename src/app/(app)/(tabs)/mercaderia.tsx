@@ -1,5 +1,5 @@
 import { Redirect, router } from 'expo-router';
-import { ShoppingCart } from 'lucide-react-native';
+import { Package, ShoppingCart } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { NotificationBell } from '@/components/notificaciones/NotificationBell';
@@ -39,6 +39,16 @@ function MercaderiaScreenContent() {
         <Skeleton className="h-32 w-full rounded-xl" />
       ) : quota.data ? (
         <QuotaCard quota={quota.data} />
+      ) : null}
+
+      {features.recibido ? (
+        <Button
+          title="Ver todo lo recibido"
+          icon={Package}
+          variant="outline"
+          fullWidth
+          onPress={() => router.push('/recibido')}
+        />
       ) : null}
 
       {waiting.limitReached ? (

@@ -99,3 +99,11 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 ### P-17 · Sin credenciales para probar contra la API real
 - **Síntoma:** el login de prueba respondió 422: `CHECK_API_EMAIL` y `CHECK_API_PASSWORD` están vacías en el `.env` de esta máquina.
 - **Solución (parcial):** se desarrolló contra las respuestas reales documentadas por el Banco y se agregaron mocks con la misma forma; se probó en web con Chrome headless (por CDP, sin instalar nada) en modo simulado. Queda pendiente repetir la prueba con el usuario real.
+
+### P-18 · `/org/received` no tiene la forma de las otras listas
+- **Síntoma:** `api.getPage` (y `toPage`) esperan `data` como lista, o `data.data` + `data.meta`. `/org/received` devuelve `data: { summary, items }` con la paginación en `meta`, **afuera** de `data`: con `getPage` la lista quedaba vacía.
+- **Solución:** `orgApi.received` usa `request` directo (como el alta de pedidos, que trae `warnings` fuera de `data`) y devuelve `{ summary, items, meta }`. Es compatible con `InfiniteList`. El resumen se toma de la primera página, porque es del período entero.
+
+### P-19 · El panel del navegador de la app de escritorio no recibía clics
+- **Síntoma:** en la prueba manual, el login simulado no avanzaba: los clics y el texto no llegaban a los campos, y las capturas fallaban porque la página "no terminaba de dibujarse" (la ventana estaba tapada).
+- **Solución:** se probó con Chrome headless manejado por CDP desde un script de Node, sin instalar nada (como en P-17), con un viewport de celular (390 × 844): 22 verificaciones automáticas y capturas de pantalla.

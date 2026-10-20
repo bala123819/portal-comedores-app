@@ -1,6 +1,7 @@
 import type { InteractionsFilter } from './interacciones/types';
 import type { AvailableMermasFilters } from './mermas/types';
 import type { CatalogFilter, DistributionsFilter } from './pedidos/types';
+import type { ReceivedFilter } from './recibido/types';
 
 export const qk = {
   health: ['health'] as const,
@@ -26,7 +27,6 @@ export const qk = {
   notificationsAll: ['notifications'] as const,
   unreadCount: ['notifications', 'unread'] as const,
   nutritionGroups: ['nutrition', 'groups'] as const,
-  nutritionSummary: (from: string, to: string) => ['nutrition', 'summary', from, to] as const,
   productSearch: (q: string) => ['nutrition', 'products', q] as const,
   families: ['families', 'list'] as const,
   familiesAll: ['families'] as const,
@@ -49,4 +49,7 @@ export const qk = {
   distributions: (status?: DistributionsFilter) => ['orders', 'list', status ?? 'all'] as const,
   distributionsAll: ['orders', 'list'] as const,
   distribution: (id: string) => ['orders', 'detail', id] as const,
+  received: (f: ReceivedFilter = {}) => ['received', 'list', f] as const,
+  receivedAll: ['received'] as const,
+  orgNutrition: (month: string) => ['received', 'nutrition', month] as const,
 };

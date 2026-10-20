@@ -475,7 +475,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Problemas y soluciones.** P-15 (endpoints fuera del OpenAPI), P-16 (`watch` vs. React Compiler), P-17 (sin credenciales para la API real).
 
 **Verificación.**
-- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias (también después del merge con `main`).
 - Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true`), manejada con Chrome headless por CDP en tamaño de celular (390×844): lista y contadores, filtro "Pendientes", detalle pendiente y atendido, validación del formulario vacío, alta de una solicitud (aviso "Le enviamos tu mensaje al Banco" y paso al detalle). Sin errores en la consola.
 - **No probado contra la API real** (P-17).
 
@@ -525,9 +525,9 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 
 ---
 
-## (pendiente de commit) · feat(contactos): CRUD de /org/contacts y pedir autorización al Banco
+## 380f583 · Contacto
 - **Fecha:** 2026-10-20 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
-- **Etapa:** Acople a la API real — módulos CRUD (rama `Contacto`)
+- **Etapa:** Acople a la API real — módulos CRUD (rama `Contacto`, integrada a `main` en el merge 4b61d19)
 
 **Objetivo.** Implementar los contactos de la organización según el post 4/14 de la serie "API organizaciones" (GoDubi, orden 1149): lista, alta, edición y baja con cargo, teléfono, email, DNI y contacto principal; mostrar quién está autorizado por el Banco a retirar (con vigencia); manejar los errores del backend; y pedir la autorización al Banco con una interacción `solicitud`. Migrar los contactos de `pickup.ts` a `/org/contacts` y prender el módulo `contactos`.
 
@@ -545,7 +545,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Problemas y soluciones.** P-18 (el 422 no se veía por `errors` pasado por props y el React Compiler; `expo start` con `CI=1` no recarga). P-19 (Mi organización se caía con la API real porque `vehicle_capacity_kg` llega como string: se corrigió `formatNumber`).
 
 **Verificación.**
-- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias (también después del merge con `main`).
 - API real, usuario de prueba de la organización (2026-10-20): `GET` 200 con la forma documentada; alta de un contacto `[PRUEBA TESIS]` (201), DNI repetido (422 en `dni`), edición (200), 409 `CONTACT_IDENTITY_LOCKED` sobre el contacto autorizado (sin cambiarlo), 404 `CONTACT_NOT_FOUND`, baja (200) y segunda baja (404). El padrón quedó como estaba.
 - Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true EXPO_PUBLIC_MODULES_SCOPE=real`), Playwright + Chrome en 390×844: 11/11 pasos (acceso desde Mi organización, lista, validación de email, DNI repetido en el campo, alta, autorizado con nombre y DNI fijos, cargar DNI y pedir autorización con el formulario completo y enviado, cambiar el principal, baja, URL inexistente). Sin errores de consola.
 - Web contra la API real en `localhost:3000` con el usuario de prueba: login, Más › Datos de la organización › Contactos, lista con los 2 contactos reales (autorizado y principal). Sin errores.
@@ -554,6 +554,5 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Pendientes.**
 - Probar en celular (Expo Go).
 - Preguntas al Banco en `docs/api-gaps.md` G-18 (aviso cuando autoriza).
-- Completar el hash de esta entrada al commitear.
 
 **Archivos principales.** `src/app/(app)/contactos/*`, `src/components/contactos/*`, `src/features/contactos/*`, `src/app/(app)/organizacion.tsx`, `src/app/(app)/banco/nueva.tsx`, `src/app/(app)/_layout.tsx`, `src/lib/format.ts`, `src/services/api/endpoints/org.ts`, `src/services/api/endpoints/pickup.ts`, `src/features/asignaciones/*`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/mocks/*`, `docs/bda/04-contactos.md`, `docs/decisiones.md`, `docs/api-gaps.md`, `docs/tesis/*`.

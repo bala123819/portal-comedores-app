@@ -1,4 +1,5 @@
 import type { Assignment } from '@/features/asignaciones/types';
+import type { ContactBody, OrganizationContact } from '@/features/contactos/types';
 import type {
   CreateInteractionBody,
   Interaction,
@@ -69,6 +70,19 @@ export const orgApi = {
     api.post<Assignment>(`/org/assignments/${id(assignmentId)}/complete`, body, key),
   cancelAssignment: (assignmentId: string, body: CancelAssignmentBody, key: string) =>
     api.post<Assignment>(`/org/assignments/${id(assignmentId)}/cancel`, body, key),
+
+  // ─── Contactos: padrón de la organización (docs/bda/04-contactos.md) ───────
+  /** Sin paginar. Trae `pickup_authorized` y `authorizations` (las da el Banco). */
+  contacts: () => api.get<OrganizationContact[]>('/org/contacts'),
+  /** 422 en `dni` si se repite dentro de la organización */
+  createContact: (body: ContactBody, key: string) =>
+    api.post<OrganizationContact>('/org/contacts', body, key),
+  /** 409 `CONTACT_IDENTITY_LOCKED` si se cambia nombre o DNI de alguien autorizado por el Banco */
+  updateContact: (contactId: string, body: ContactBody, key: string) =>
+    api.put<OrganizationContact>(`/org/contacts/${id(contactId)}`, body, key),
+  /** 409 `CONTACT_DECLARED_FOR_PICKUP` si está declarada para un retiro de merma en curso */
+  deleteContact: (contactId: string, key: string) =>
+    api.del<unknown>(`/org/contacts/${id(contactId)}`, key),
 
   /** Comunicación con el Banco (docs/bda/08-interacciones.md) */
   interactions: (page: number, perPage: number, f: InteractionsFilter = {}) =>

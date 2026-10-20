@@ -14,6 +14,7 @@
 | Avisos | `/notifications*` | Pendiente |
 | Perfil y clave | `PUT /auth/profile`, `PUT /auth/password` | Pendiente |
 | Comunicación con el Banco (sucesos, solicitudes, consultas, reclamos) | `/org/interactions`, `/org/interactions/{id}`, `/org/interactions/summary`, `POST /org/interactions` | Pendiente (sin credenciales en `.env`, P-17); probado en web en modo simulado |
+| Contactos de la organización (alta, edición, baja, principal, autorizaciones del Banco, pedir autorización) | `/org/contacts` | Verificado con la API real el 2026-10-20 (D-16) |
 
 Probado en web con datos simulados que tienen la forma real de la API.
 
@@ -23,7 +24,7 @@ Probado en web con datos simulados que tienen la forma real de la API.
 - Ayuda: preguntas frecuentes.
 
 ## Hecho pero apagado (el backend no lo ofrece hoy)
-Mermas disponibles, pedidos y retiros; contactos y autorizaciones de retiro;
+Mermas disponibles, pedidos y retiros;
 documentación y ficha social; jornadas y talleres; datos nutricionales de productos. Se ven en modo simulado.
 
 ## Pendiente
@@ -35,7 +36,7 @@ documentación y ficha social; jornadas y talleres; datos nutricionales de produ
 
 ### Backend (Banco de Alimentos) — ver `docs/api-gaps.md` G-12 y G-13
 - Habilitar mermas y retiros para el rol de organización.
-- Contactos, documentos, jornadas (la escritura de familias se habilitó el 2026-10-07).
+- Documentos, jornadas (la escritura de familias se habilitó el 2026-10-07; los contactos, el 2026-10-20).
 - Push nativo y clave VAPID; recuperar contraseña.
 - Corregir los 500 que deberían ser 404/422/429.
 

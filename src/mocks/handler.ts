@@ -562,19 +562,67 @@ on('DELETE', '/pickers/:id', (p) => {
   }
   return ok(null);
 });
-on('GET', '/organizations/:org/contacts', () => ok(db.contacts));
-on('POST', '/organizations/:org/contacts', (_, o) => {
+// ─── Contactos: /org/contacts (docs/bda/04-contactos.md) ──────────────────
+const onlyDigits = (v: unknown) => (typeof v === 'string' && v.trim() ? v.replace(/\D/g, '') : null);
+const DNI_TAKEN = 'Ya hay un contacto de la organización con ese DNI.';
+const contactDniTaken = (dni: string | null, exceptId?: string) =>
+  !!dni && db.contacts.some((c) => c.dni === dni && c.id !== exceptId);
+const setPrimary = (id: string) => db.contacts.forEach((c) => (c.is_primary = c.id === id));
+on('GET', '/org/contacts', () => ok(db.contacts));
+on('POST', '/org/contacts', (_, o) => {
   const b = body(o);
-  if (!b.name) return fail(422, 'Datos inválidos', { name: ['El nombre es obligatorio.'] });
-  const c = { id: `c-${Date.now()}`, name: String(b.name), dni: (b.dni as string) ?? null, phone: (b.phone as string) ?? null, position: (b.position as string) ?? null, is_primary: false };
+  if (!b.name) return fail(422, 'El nombre es obligatorio.', { name: ['El nombre es obligatorio.'] });
+  const dni = onlyDigits(b.dni);
+  if (contactDniTaken(dni)) return fail(422, DNI_TAKEN, { dni: [DNI_TAKEN] });
+  const c = {
+    id: randomUUID(),
+    name: String(b.name),
+    position: (b.position as string) ?? null,
+    phone: (b.phone as string) ?? null,
+    email: (b.email as string) ?? null,
+    dni,
+    is_primary: false,
+    pickup_authorized: false,
+    authorizations: [],
+  };
   db.contacts.push(c);
-  return json(201, { success: true, data: c });
+  if (b.is_primary === true) setPrimary(c.id);
+  return json(201, { success: true, message: 'Contacto agregado', data: c });
 });
-on('GET', '/organizations/:org/contacts/:c/pickup-authorizations', () => ok([]));
-on('POST', '/organizations/:org/contacts/:c/pickup-authorizations', (_, o) =>
-  json(201, { success: true, data: { id: `pa-${Date.now()}`, ...body(o) } }),
-);
-on('DELETE', '/pickup-authorizations/:id', () => ok(null));
+on('PUT', '/org/contacts/:id', (p, o) => {
+  const c = db.contacts.find((x) => x.id === p.id);
+  if (!c) return failCode(404, 'Contacto no encontrado', 'CONTACT_NOT_FOUND');
+  const b = body(o);
+  const dni = 'dni' in b ? onlyDigits(b.dni) : c.dni ?? null;
+  if (c.pickup_authorized && (('name' in b && b.name !== c.name) || dni !== (c.dni ?? null)))
+    return failCode(
+      409,
+      'Esta persona está autorizada por el banco para retirar: no se le puede cambiar el nombre ni el DNI. Si es otra persona, cargala como contacto nuevo y pedile al banco que la autorice.',
+      'CONTACT_IDENTITY_LOCKED',
+    );
+  if (contactDniTaken(dni, c.id)) return fail(422, DNI_TAKEN, { dni: [DNI_TAKEN] });
+  for (const k of ['name', 'position', 'phone', 'email'] as const) if (k in b) c[k] = (b[k] as string) ?? null;
+  c.dni = dni;
+  if (b.is_primary === true) setPrimary(c.id);
+  else if (b.is_primary === false) c.is_primary = false;
+  return json(200, { success: true, message: 'Contacto actualizado', data: c });
+});
+on('DELETE', '/org/contacts/:id', (p) => {
+  const c = db.contacts.find((x) => x.id === p.id);
+  if (!c) return failCode(404, 'Contacto no encontrado', 'CONTACT_NOT_FOUND');
+  const assignmentIds = Object.entries(db.pickers)
+    .filter(([, list]) => list.some((x) => x.organization_contact_id === c.id))
+    .map(([assignmentId]) => assignmentId);
+  if (assignmentIds.length)
+    return json(409, {
+      success: false,
+      message: 'Esta persona está declarada para retirar una merma en curso. Dala de baja de ese retiro primero.',
+      error_code: 'CONTACT_DECLARED_FOR_PICKUP',
+      details: { assignment_ids: assignmentIds },
+    });
+  db.contacts = db.contacts.filter((x) => x.id !== c.id);
+  return json(200, { success: true, message: 'Contacto dado de baja' });
+});
 
 // ─── Nutrición ─────────────────────────────────────────────────────────────
 on('GET', '/nutritional-groups', () => ok(db.nutritionalGroups));

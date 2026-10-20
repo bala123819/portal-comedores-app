@@ -85,7 +85,8 @@ function TypeOption({
 }
 
 export default function NuevaInteraccionScreen() {
-  const { tipo } = useLocalSearchParams<{ tipo?: string }>();
+  // `titulo` y `notas` llegan ya completos desde otras pantallas (p. ej. "Pedir autorización al Banco")
+  const { tipo, titulo, notas } = useLocalSearchParams<{ tipo?: string; titulo?: string; notas?: string }>();
   const create = useCreateInteraction((created) => {
     if (created?.id) router.replace({ pathname: '/banco/[id]', params: { id: created.id } });
     else router.back();
@@ -100,8 +101,8 @@ export default function NuevaInteraccionScreen() {
     resolver: zodResolver(schema),
     defaultValues: {
       interaction_type: isInteractionType(tipo) ? tipo : undefined,
-      title: '',
-      notes: '',
+      title: titulo?.slice(0, TITLE_MAX) ?? '',
+      notes: notas?.slice(0, NOTES_MAX) ?? '',
     },
   });
   const type = useWatch({ control, name: 'interaction_type' });

@@ -2,7 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { qk } from '@/features/query-keys';
 import { orgApi, pickupApi } from '@/services/api/endpoints';
 import type { CompleteAssignmentBody } from '@/services/api/endpoints/org';
-import type { AuthorizePickupBody, ContactBody, DeclarePickerBody } from '@/services/api/endpoints/pickup';
+import type { DeclarePickerBody } from '@/services/api/endpoints/pickup';
 import { useAction } from '@/services/api/use-action';
 
 const PER_PAGE = 15;
@@ -106,46 +106,5 @@ export function useRemovePicker(assignmentId: string) {
   return useAction((pickerId: string, key) => pickupApi.removePicker(pickerId, key), {
     invalidate: [qk.pickers(assignmentId)],
     successMessage: 'Quitamos a esa persona',
-  });
-}
-
-export function useContacts(orgId: string | null) {
-  return useQuery({
-    queryKey: qk.contacts(orgId ?? ''),
-    queryFn: () => pickupApi.contacts(orgId!),
-    enabled: !!orgId,
-    retry: false,
-  });
-}
-
-export function useCreateContact(orgId: string, onSuccess?: () => void) {
-  return useAction((body: ContactBody, key) => pickupApi.createContact(orgId, body, key), {
-    invalidate: [qk.contacts(orgId)],
-    successMessage: 'Agregamos el contacto',
-    onSuccess,
-    errorToast: false,
-  });
-}
-
-export function useAuthorizations(orgId: string | null, contactId: string) {
-  return useQuery({
-    queryKey: qk.authorizations(orgId ?? '', contactId),
-    queryFn: () => pickupApi.authorizations(orgId!, contactId),
-    enabled: !!orgId && !!contactId,
-    retry: false,
-  });
-}
-
-export function useAuthorizePickup(orgId: string, contactId: string) {
-  return useAction((body: AuthorizePickupBody, key) => pickupApi.authorize(orgId, contactId, body, key), {
-    invalidate: [qk.authorizations(orgId, contactId)],
-    successMessage: 'La persona quedó autorizada para retirar',
-  });
-}
-
-export function useRevokeAuthorization(orgId: string, contactId: string) {
-  return useAction((authorizationId: string, key) => pickupApi.revokeAuthorization(authorizationId, key), {
-    invalidate: [qk.authorizations(orgId, contactId)],
-    successMessage: 'Quitamos la autorización',
   });
 }

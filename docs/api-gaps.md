@@ -100,7 +100,7 @@ Formato: **qué falta · qué pantalla lo necesita · propuesta · mientras tant
 |---|---|---|
 | Mermas: postular y retirar probado para este rol | Disponibles, pedido, retiro, quién retira | `mermas` |
 | Alta y edición de familias | Registrar familia | `familiasAlta` |
-| Contactos y autorizaciones de retiro | Mi organización › Contactos | `contactos` |
+| ~~Contactos y autorizaciones de retiro~~ | Contactos (`/org/contacts`, habilitado; verificado el 2026-10-20, D-16). Autorizar lo hace el Banco | `contactos` |
 | Documentos, ficha social, carta compromiso | Documentación | `documentacion` |
 | Jornadas y talleres con vista de organización | Jornadas y talleres | `programas` |
 | Lectura de grupos nutricionales / resumen nutricional para este rol | Nutrición (secciones extra) | `nutricionApi` |
@@ -169,3 +169,9 @@ Verificado con GET contra el servidor real. Nada bloquea; para conversar con el 
 - `category` y `nutritional_group` vienen `null` en algunos productos del catálogo de prueba: no hay forma de agrupar todo el catálogo.
 - No hay endpoint de categorías para este rol: los filtros se arman con lo que trae el catálogo.
 - El remito es un PDF por pedido. Sigue abierta la pregunta del Banco sobre el "PDF de las donaciones" de un período (post "Todo lo que la app puede hacer", punto 8).
+
+### G-18 · Contactos: observaciones (2026-10-20)
+- `PUT /org/contacts/{id}` a una persona autorizada con el **mismo** nombre devuelve 200 (sólo da 409 si el valor cambia). La app igual no manda nombre ni DNI de una persona autorizada.
+- No hay `GET /org/contacts/{id}`: la ficha sale de la lista (alcanza mientras el padrón sea chico; la lista no viene paginada).
+- `CONTACT_DECLARED_FOR_PICKUP` no se pudo probar: hace falta una merma asignada con la persona declarada.
+- Pregunta: cuando el Banco atiende una solicitud de autorización, ¿llega un aviso? Hoy la app lo ve al recargar la lista (`pickup_authorized`).

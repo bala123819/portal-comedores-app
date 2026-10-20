@@ -69,7 +69,7 @@ Los pedidos de mercadería (`/org/catalog`, `/org/quota`, `/org/distributions*`)
 - **Errores por `error_code`**: el cliente ahora lee `error_code` (formato de la serie nueva) además de `code`/`error`.
 
 ### D-16 · Módulo `recibido` (lo recibido y panel nutricional) activo con la API real (2026-10-20)
-`GET /org/received` y `GET /org/nutrition` están documentados por el Banco con respuestas reales del servidor (post 11/14, copiado en `docs/bda/11-recibido-nutricion.md`). Se suma el módulo `recibido` a `enabledInBackend` en `src/lib/features.ts`, igual que `pedidos` (D-14). A diferencia de pedidos, **no se verificó todavía con GET contra el servidor**: se probó contra mocks con la forma exacta del post. Son sólo lecturas, así que el riesgo es bajo: si el servidor responde distinto, la pantalla muestra el error con "Reintentar" y el resto de la app no se afecta.
+`GET /org/received` y `GET /org/nutrition` están documentados por el Banco con respuestas reales del servidor (post 11/14, copiado en `docs/bda/11-recibido-nutricion.md`). Se suma el módulo `recibido` a `enabledInBackend` en `src/lib/features.ts`, igual que `pedidos` (D-14). Se desarrolló contra mocks con la forma exacta del post y el mismo día se verificó con GET contra el servidor real (`npm run smoke`, 25 PASS): `/org/received` (con su 422 de período inválido) y `/org/nutrition` responden con la forma que espera la app. El servidor agrega `summary.reconciliation_pending`, que el post no documenta (G-18).
 - Rama `recibido-nutricion` (Pilar 1 del reparto del equipo). Rangos de numeración reservados para esta rama: D-16 a D-19 y P-18 a P-21.
 
 ### D-17 · Panel nutricional sobre `/org/nutrition` (2026-10-20)

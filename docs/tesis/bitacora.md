@@ -668,3 +668,40 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Pendientes.** Push de `main` al remoto.
 
 **Archivos principales.** `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/api-gaps.md`, `docs/tesis/estado-actual.md`, `docs/tesis/modulo-recibido-nutricion.md`, `docs/tesis/bitacora.md`, `src/lib/features.ts`, `src/features/recibido/types.ts`
+
+---
+
+## b276976 · feat(perfil): perfil de la organización (post 3/14)
+- **Fecha:** 2026-10-22 18:06 · **Autoría:** Julieta Leiro (+ asistencia de IA: Claude Code)
+- **Etapa:** Acople a la API real — módulos CRUD (rama `perfil-organizacion`, integrada a `main` en el merge 2a0b05f)
+
+**Objetivo.** Implementar el post 3/14 de la serie "API organizaciones" publicada por el Banco en GoDubi: perfil editable, dirección, estadísticas, ficha social, capacidad logística, documentos y requisitos de documentación.
+
+**Qué se hizo.**
+- **Mi organización:** descripción y zona del Banco; edición del perfil en una hoja inferior (teléfono, email, descripción, modalidad, días de retiro con chips, horario con máscara, heladera, capacidad del vehículo); sección "Lo que recibieron" (kg, entregas, retiros completados); sección "Capacidad logística" con su propia hoja de edición (frío, transporte propio y tipo de vehículo, notas, contacto operativo).
+- **Documentación** sobre `/org/requirements`, `/org/documents` y `/org/social-data`: aviso de papeles obligatorios faltantes, requisitos ordenados, estado de verificación, vencimiento y peso de cada documento, ficha social ampliada. La carta compromiso se muestra por `terms_accepted_at`.
+- Capa de datos: tipos nuevos, `orgApi` (perfil, logística, ficha social, documentos, requisitos), hooks y lógica de formularios aparte (`src/features/org/form.ts`), que manda sólo los campos que cambiaron.
+- `api.raw` y la descarga nativa conservan el `error_code` (para `DOCUMENT_NOT_FOUND`).
+- Mocks con las reglas del post; módulo `documentacion` activo con la API real.
+- Copia del post en `docs/bda/03-perfil-organizacion.md`.
+
+**Decisiones.** D-21 (endpoints `/org/*`, carta compromiso por fecha, edición en hojas, reglas en el cliente, descargas con `error_code`). Al integrar con `main` se renumeró de D-16/G-18 a D-21/G-20, que ya usaban `Contacto` y `recibido-nutricion`.
+
+**Problemas y soluciones.**
+- La descarga del documento listado da 404 `DOCUMENT_NOT_FOUND` en el servidor: la app muestra un aviso propio. Anotado en G-20 para el Banco.
+- `api.raw` descartaba el cuerpo del error y la app mostraba "No encontramos lo que buscabas": ahora lee el JSON.
+- La carta compromiso (`/organizations/{id}/terms-pdf`) da 403 a este rol: se reemplazó por la fecha de aceptación.
+- La validación de logística responde en inglés: los errores se marcan en el campo con un mensaje propio.
+- Al integrar con `main`, "Mi organización" tenía conflicto con Contactos (que pasó a pantallas propias): se conservó el acceso de `main` y se sumaron las secciones nuevas.
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores (también después del merge con `main`).
+- Contra la API real: los seis GET del post responden con las formas documentadas; `PUT /org/profile` y `PUT /org/logistics` con los mismos valores (sin cambiar datos) y con los errores del post (`FIELD_NOT_EDITABLE`, días, horario, email).
+- Lógica de formularios con un script de `tsx` (diff de campos, normalización de días, máscara de hora, validaciones).
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true EXPO_PUBLIC_MODULES_SCOPE=real`), Chrome headless por CDP en 390×844: 7/7 pasos (perfil, error de horario, guardar perfil, logística con error y guardado, documentación, descarga sin archivo), sin errores de consola. Repetido sobre el código integrado con `main`.
+
+**Pendientes.**
+- Avisar al Banco del documento sin archivo y del resto de G-20.
+- Probar la edición real de perfil y logística con cambios (no sólo reenviando los mismos valores) y recorrer las pantallas en un celular.
+
+**Archivos principales.** `docs/api-gaps.md`, `docs/bda/03-perfil-organizacion.md`, `docs/bda/README.md`, `docs/decisiones.md`, `src/app/(app)/documentacion.tsx`, `src/app/(app)/organizacion.tsx`, `src/components/organizacion/LogisticsSheet.tsx`, `src/components/organizacion/ProfileSheet.tsx`, `src/features/documentacion/hooks.ts`, `src/features/org/form.ts`, `src/features/org/hooks.ts`, `src/features/org/types.ts`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/lib/labels.ts`, `src/mocks/data.ts`, `src/mocks/handler.ts`, `src/services/api/client.ts`, `src/services/api/endpoints/org.ts`, `src/services/api/endpoints/organizations.ts`, `src/services/download.ts`

@@ -475,7 +475,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Problemas y soluciones.** P-15 (endpoints fuera del OpenAPI), P-16 (`watch` vs. React Compiler), P-17 (sin credenciales para la API real).
 
 **Verificación.**
-- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias (también después del merge con `main`).
 - Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true`), manejada con Chrome headless por CDP en tamaño de celular (390×844): lista y contadores, filtro "Pendientes", detalle pendiente y atendido, validación del formulario vacío, alta de una solicitud (aviso "Le enviamos tu mensaje al Banco" y paso al detalle). Sin errores en la consola.
 - **No probado contra la API real** (P-17).
 
@@ -522,3 +522,149 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Observaciones para el Banco en `docs/api-gaps.md` G-17.
 
 **Archivos principales.** `docs/api-gaps.md`, `docs/bda/09-10-pedidos-mercaderia.md`, `docs/bda/README.md`, `docs/decisiones.md`, `docs/tesis/README.md`, `docs/tesis/modulo-pedidos-mercaderia.md`, `src/app/(app)/(tabs)/_layout.tsx`, `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/app/(app)/(tabs)/mercaderia.tsx`, `src/app/(app)/_layout.tsx`, `src/app/(app)/notificaciones.tsx`, `src/app/(app)/pedido/[id].tsx`, `src/app/(app)/pedido/confirmar.tsx`, `src/app/(app)/pedido/nuevo.tsx`, `src/components/pedidos/CatalogItem.tsx`, `src/components/pedidos/DistributionCard.tsx`, `src/components/pedidos/QuotaCard.tsx`, `src/features/notificaciones/types.ts`, `src/features/pedidos/cart.ts`, `src/features/pedidos/hooks.ts`, `src/features/pedidos/types.ts`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/lib/labels.ts`
+
+---
+
+## 380f583 · Contacto
+- **Fecha:** 2026-10-20 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Acople a la API real — módulos CRUD (rama `Contacto`, integrada a `main` en el merge 4b61d19)
+
+**Objetivo.** Implementar los contactos de la organización según el post 4/14 de la serie "API organizaciones" (GoDubi, orden 1149): lista, alta, edición y baja con cargo, teléfono, email, DNI y contacto principal; mostrar quién está autorizado por el Banco a retirar (con vigencia); manejar los errores del backend; y pedir la autorización al Banco con una interacción `solicitud`. Migrar los contactos de `pickup.ts` a `/org/contacts` y prender el módulo `contactos`.
+
+**Qué se hizo.**
+- Datos: `src/features/contactos/` (tipos escritos a mano a partir del post 4/14, hooks de React Query, formulario con zod, mensajes por `error_code`), `orgApi.contacts / createContact / updateContact / deleteContact`, query key `qk.contacts`.
+- Migración: se sacaron de `pickup.ts` y `features/asignaciones` el padrón y las autorizaciones (`/organizations/{id}/contacts*`, `/pickup-authorizations`); queda sólo "quién retira" una merma.
+- Pantallas: `/contactos` (autorizadas a retirar primero, badge "Principal", estado de la autorización), `/contactos/nuevo` y `/contactos/[id]` (edición parcial, nombre y DNI con candado si el Banco la autorizó, autorizaciones con ámbito y vigencia, baja con confirmación). "Mi organización" queda con un acceso y el resumen.
+- **Pedir autorización al Banco:** abre `/banco/nueva` con tipo `solicitud`, asunto y detalle (nombre y DNI) ya completos; `/banco/nueva` acepta `titulo` y `notas`.
+- Errores: DNI repetido (422 en el campo), `CONTACT_IDENTITY_LOCKED` (409: vuelve nombre y DNI a lo guardado), `CONTACT_NOT_FOUND` (vuelve a la lista actualizada), `CONTACT_DECLARED_FOR_PICKUP` (mensaje en la ficha).
+- Módulo `contactos` en `enabledInBackend`; rutas protegidas con `Stack.Protected`. Mocks de `/org/contacts` con las mismas reglas y errores.
+- Copia de la especificación en `docs/bda/04-contactos.md`.
+
+**Decisiones.** D-16 (migración a `/org/contacts`, módulo activo, pantallas propias, identidad bloqueada) y D-17 (pedir autorización reutilizando `/banco/nueva`).
+
+**Problemas y soluciones.** P-18 (el 422 no se veía por `errors` pasado por props y el React Compiler; `expo start` con `CI=1` no recarga). P-19 (Mi organización se caía con la API real porque `vehicle_capacity_kg` llega como string: se corrigió `formatNumber`).
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias (también después del merge con `main`).
+- API real, usuario de prueba de la organización (2026-10-20): `GET` 200 con la forma documentada; alta de un contacto `[PRUEBA TESIS]` (201), DNI repetido (422 en `dni`), edición (200), 409 `CONTACT_IDENTITY_LOCKED` sobre el contacto autorizado (sin cambiarlo), 404 `CONTACT_NOT_FOUND`, baja (200) y segunda baja (404). El padrón quedó como estaba.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true EXPO_PUBLIC_MODULES_SCOPE=real`), Playwright + Chrome en 390×844: 11/11 pasos (acceso desde Mi organización, lista, validación de email, DNI repetido en el campo, alta, autorizado con nombre y DNI fijos, cargar DNI y pedir autorización con el formulario completo y enviado, cambiar el principal, baja, URL inexistente). Sin errores de consola.
+- Web contra la API real en `localhost:3000` con el usuario de prueba: login, Más › Datos de la organización › Contactos, lista con los 2 contactos reales (autorizado y principal). Sin errores.
+- **No probado:** `CONTACT_DECLARED_FOR_PICKUP` contra la API real (requiere una merma asignada); recorrido en un celular.
+
+**Pendientes.**
+- Probar en celular (Expo Go).
+- Preguntas al Banco en `docs/api-gaps.md` G-18 (aviso cuando autoriza).
+
+**Archivos principales.** `src/app/(app)/contactos/*`, `src/components/contactos/*`, `src/features/contactos/*`, `src/app/(app)/organizacion.tsx`, `src/app/(app)/banco/nueva.tsx`, `src/app/(app)/_layout.tsx`, `src/lib/format.ts`, `src/services/api/endpoints/org.ts`, `src/services/api/endpoints/pickup.ts`, `src/features/asignaciones/*`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/mocks/*`, `docs/bda/04-contactos.md`, `docs/decisiones.md`, `docs/api-gaps.md`, `docs/tesis/*`.
+
+---
+
+## 6cfd9ce · feat(recibido): lo recibido y panel nutricional (post 11/14)
+- **Fecha:** 2026-10-20 19:47 · **Autoría:** bala123819 (Tomás Balardini) + asistencia de IA (Claude Code, conectado a GoDubi por MCP)
+- **Etapa:** Acople a la API real — módulos CRUD (rama `recibido-nutricion`, Pilar 1 del reparto del equipo)
+
+**Objetivo.** Construir el "panel nutricional" de la propuesta de tesis con lo que el Banco ya tiene en el backend: que la organización vea todo lo que recibió en un período y cuánto cubre eso de lo que necesitan sus familias, por grupo de alimentos. Es el punto 3 del mapa de la API que publicó el Banco en GoDubi y el paso 5 del orden que sugirió. El equipo se repartió lo que falta en tres pilares, uno por rama: 1) lo recibido y panel nutricional, 2) perfil y ficha de la organización, 3) contactos.
+
+**Qué se hizo.**
+- Se releyó la orden 1149 de GoDubi (mapa "Todo lo que la app puede hacer", posts 1 a 14 y resumen de la reunión del 07/10) y se copió el post 11/14 a `docs/bda/11-recibido-nutricion.md`.
+- Datos: tipos con las formas reales (`src/features/recibido/`), `orgApi.received` y `orgApi.nutrition`, hooks de React Query, query keys y períodos/meses.
+- **Lo recibido** (`/recibido`):
+  - chips de período: último mes, 3 meses, 6 meses y último año;
+  - resumen del período (kg, entregas, la última, por origen y por mes);
+  - filtro por origen;
+  - lista paginada con hasta 3 productos por entrega y el número de remito;
+  - un pedido abre su detalle.
+- **Nutrición › Cobertura nutricional**:
+  - selector de mes;
+  - cobertura total y por grupo, con niveles con ícono y texto (Cubierto / En camino / Falta);
+  - kg sin grupo, bultos surtidos y origen;
+  - caso sin necesidad cargada (`needs_available: false`).
+
+  Reemplaza la sección que usaba `/nutrition/summary`. Se quitaron el endpoint, el hook y la ruta simulada viejos.
+- **Inicio:** "Alimentación de este mes", con la cobertura total y los dos grupos que más faltan.
+- **Accesos:** Mercadería ("Ver todo lo recibido"), Más › Alimentación ("Lo recibido") y Nutrición.
+- Módulo `recibido` en `src/lib/features.ts`, activo con la API real, y ruta protegida.
+- **Mocks:** `/org/received` y `/org/nutrition` se arman con los pedidos entregados y los retiros completados del mock, con las validaciones del post (período inválido, hasta un año, `kind`, `month`). Se sumaron dos entregas de meses anteriores.
+- Configuración `web-mocks` en `.claude/launch.json` (puerto 3001, modo simulado con `MODULES_SCOPE=real`).
+- Documento del módulo: `docs/tesis/modulo-recibido-nutricion.md`.
+
+**Decisiones.** D-18 (módulo `recibido` activo con la API real, sin verificar todavía con GET), D-19 (panel nutricional sobre `/org/nutrition` y umbrales de cobertura) y D-20 (pantalla "Lo recibido"). Esta rama usa los rangos D-18 a D-19 y P-20 a P-21, para no chocar con las otras dos al integrar.
+
+**Problemas y soluciones.**
+- P-20: `/org/received` trae la paginación fuera de `data`, así que se usa `request` directo.
+- P-21: el panel del navegador de la app de escritorio no recibía clics, así que la prueba se hizo con Chrome headless por CDP.
+- Detalles visuales encontrados en la prueba y corregidos antes del commit:
+  - "Este Mes (Octubre)" por el `capitalize` de CSS: el mes ahora se escribe en mayúscula sólo al principio, en el código;
+  - el "%" se cortaba en otra línea: ahora va con espacio no separable.
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true EXPO_PUBLIC_MODULES_SCOPE=real`), Chrome headless por CDP en 390 × 844. Pasaron las 22 verificaciones (Inicio, Lo recibido con filtros de período y origen, apertura del pedido, Nutrición con cambio de mes, accesos desde Mercadería, Más y Nutrición), sin errores de consola. Detalle en `docs/tesis/modulo-recibido-nutricion.md` §5.
+- **No probado contra la API real** (D-18).
+
+**Pendientes.**
+- GET contra el servidor con el usuario de prueba para confirmar las formas.
+- Validar los umbrales de cobertura con el área social.
+- Preguntas al Banco en `docs/api-gaps.md` G-19.
+- Probar en un celular.
+- Integrar la rama a `main` con merge commit.
+
+**Archivos principales.** `docs/bda/11-recibido-nutricion.md`, `docs/tesis/modulo-recibido-nutricion.md`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/api-gaps.md`, `docs/tesis/estado-actual.md`, `src/app/(app)/recibido.tsx`, `src/app/(app)/nutricion.tsx`, `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/mercaderia.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/app/(app)/_layout.tsx`, `src/components/recibido/*`, `src/components/nutricion/CoverageBars.tsx`, `src/components/nutricion/MonthNavigator.tsx`, `src/features/recibido/*`, `src/services/api/endpoints/org.ts`, `src/lib/features.ts`, `src/lib/labels.ts`, `src/mocks/*`
+
+---
+
+## 61d675b · test(smoke): verificar lo recibido y panel nutricional contra la API real
+- **Fecha:** 2026-10-20 19:55 · **Autoría:** bala123819 (Tomás Balardini) + asistencia de IA (Claude Code)
+- **Etapa:** Acople a la API real — verificación (rama `recibido-nutricion`)
+
+**Objetivo.** Confirmar contra el servidor del Banco lo construido en 6cfd9ce, que sólo se había probado con mocks.
+
+**Qué se hizo.**
+- `npm run smoke` suma chequeos de sólo lectura:
+  - `GET /org/received` y la forma de un ítem: `data.items`, `data.summary`, y `meta` afuera de `data`;
+  - el 422 por período inválido;
+  - `GET /org/nutrition?month=`.
+- El servidor real devuelve `summary.reconciliation_pending` (`{count, kg}`), que el post 11 no documenta. Se agregó al tipo como campo opcional; la app no lo muestra y queda como pregunta para el Banco en G-19.
+- Se actualizó D-18: el módulo `recibido` quedó verificado contra el servidor.
+
+**Verificación.**
+- `npm run smoke:samples` contra `https://cloud.mermab.com/api`: 25 PASS, 0 FAIL.
+- Tenant de pruebas, últimos 90 días: 3 entregas y 50,1 kg (1 pedido de 24,4 kg y 2 mermas de 25,7 kg).
+- Octubre: 21,4 % de cobertura (50,1 de 234 kg) y 10 kg sin grupo.
+- **App en modo real** (sin mocks, `localhost:3001`, sesión iniciada por el usuario):
+  - Nutrición muestra exactamente esos valores: cuota de 234 kg, 7 personas, "21 % cubierto", cereales 19 %, lácteos 89 %;
+  - en Lo recibido, al elegir "Último año" la app pidió en vivo `GET /org/received?from=2025-10-21&to=2026-10-20` y mostró las 3 entregas reales (MRM-20261007-0005, MRM-20261007-0001 y DIST-2026-00047, con el remito REC-DIST-2026-00047-110326).
+
+**Pendientes.** Respuesta del Banco sobre `reconciliation_pending`. Validar los umbrales de cobertura con el área social. Probar en un celular.
+
+**Archivos principales.** `scripts/smoke-test.ts`, `src/features/recibido/types.ts`, `docs/api-gaps.md`, `docs/decisiones.md`
+
+---
+
+## bbc55ee · docs: renumerar las decisiones del pilar 1 para integrar con main
+- **Fecha:** 2026-10-20 20:16 · **Autoría:** bala123819 (Tomás Balardini) + asistencia de IA (Claude Code)
+- **Etapa:** Trabajo en equipo — integración de la rama `recibido-nutricion` a `main` (merge 5c0c403)
+
+**Objetivo.** Integrar el Pilar 1 a `main` sin repetir números. La rama `Contacto` ya estaba en `main` y había usado D-16, D-17, P-18, P-19 y G-18, los mismos números que había usado esta rama.
+
+**Qué se hizo.**
+- En la rama, antes de mergear:
+  - D-16, D-17 y D-18 pasaron a D-18, D-19 y D-20;
+  - P-18 y P-19 pasaron a P-20 y P-21;
+  - G-18 pasó a G-19.
+- Los cambios alcanzan a decisiones, problemas, api-gaps, estado actual, el documento del módulo, las entradas 6cfd9ce y 61d675b de esta bitácora y dos comentarios de código (`features.ts`, `recibido/types.ts`). En la rama esos números eran todos de este pilar, así que el reemplazo fue seguro.
+- El documento del módulo suma la verificación contra la API real y saca ese punto de los pendientes.
+- **Merge 5c0c403** (`recibido-nutricion` → `main`, con merge commit):
+  - Conflictos en `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/api-gaps.md` y esta bitácora: las dos ramas habían agregado al final. Se conservaron los dos lados, primero lo de Contacto y después lo de este pilar.
+  - En `src/lib/features.ts` quedan prendidos `contactos` y `recibido` con la API real.
+  - `estado-actual.md` marca "Lo recibido" y la cobertura nutricional como verificados con la API real.
+
+**Problemas y soluciones.** Mientras el merge tenía marcas de conflicto, el servidor de desarrollo seguía levantado y Metro mostró errores de compilación. Al resolver los conflictos desaparecieron; no tienen que ver con el código final. La regla de reservar rangos por rama no se respetó en las dos ramas, así que para la próxima conviene anotar en `docs/decisiones.md` el próximo número libre antes de empezar.
+
+**Verificación (sobre el código combinado).**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- Web en modo simulado (`MODULES_SCOPE=real`), Chrome headless por CDP en 390 × 844: 24 de 24, sin errores de consola. Son las 22 verificaciones del Pilar 1 más "Mi organización" y "Contactos", que trajo la rama `Contacto`.
+
+**Pendientes.** Push de `main` al remoto.
+
+**Archivos principales.** `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/api-gaps.md`, `docs/tesis/estado-actual.md`, `docs/tesis/modulo-recibido-nutricion.md`, `docs/tesis/bitacora.md`, `src/lib/features.ts`, `src/features/recibido/types.ts`

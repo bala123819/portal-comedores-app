@@ -29,8 +29,16 @@ export default function AppLayout() {
         <Stack.Screen name="familia/[id]/miembro/nuevo" />
         <Stack.Screen name="familia/[id]/miembro/[memberId]" />
       </Stack.Protected>
+      <Stack.Protected guard={features.contactos}>
+        <Stack.Screen name="contactos/index" />
+        <Stack.Screen name="contactos/nuevo" />
+        <Stack.Screen name="contactos/[id]" />
+      </Stack.Protected>
       <Stack.Protected guard={features.programas}>
         <Stack.Screen name="jornadas" />
+      </Stack.Protected>
+      <Stack.Protected guard={features.recibido}>
+        <Stack.Screen name="recibido" />
       </Stack.Protected>
       <Stack.Protected guard={features.documentacion}>
         <Stack.Screen name="documentacion" />

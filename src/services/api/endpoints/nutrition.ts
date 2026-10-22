@@ -11,9 +11,7 @@ export const nutritionApi = {
   groups: () => api.get<NutritionalGroup[]>('/nutritional-groups'),
   mermaSummary: (mermaId: string) =>
     api.get<NutritionSummary>(`/nutrition/merma/${id(mermaId)}/summary`),
-  /** Fechas YYYY-MM-DD */
-  summary: (startDate: string, endDate: string) =>
-    api.get<NutritionSummary>('/nutrition/summary', { start_date: startDate, end_date: endDate }),
+  // Lo recibido por grupo para la organización: `orgApi.nutrition` (/org/nutrition), no `/nutrition/summary`.
   searchProducts: (q: string, limit = 20) =>
     api.get<UnifiedProduct[]>('/unified-products/search', { q, limit }),
   product: (productId: string) => api.get<UnifiedProduct>(`/unified-products/${id(productId)}`),

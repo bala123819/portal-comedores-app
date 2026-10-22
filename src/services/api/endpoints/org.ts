@@ -1,4 +1,5 @@
 import type { Assignment } from '@/features/asignaciones/types';
+import type { ContactBody, OrganizationContact } from '@/features/contactos/types';
 import type {
   CreateInteractionBody,
   Interaction,
@@ -28,6 +29,13 @@ import type {
   Quota,
 } from '@/features/pedidos/types';
 import type { Application } from '@/features/postulaciones/types';
+import type {
+  OrgNutrition,
+  ReceivedFilter,
+  ReceivedItem,
+  ReceivedPage,
+  ReceivedSummary,
+} from '@/features/recibido/types';
 import { api, isUuid, request } from '../client';
 import { ApiError } from '../errors';
 import type { BodyOf } from '../types';
@@ -93,6 +101,19 @@ export const orgApi = {
   cancelAssignment: (assignmentId: string, body: CancelAssignmentBody, key: string) =>
     api.post<Assignment>(`/org/assignments/${id(assignmentId)}/cancel`, body, key),
 
+  // ─── Contactos: padrón de la organización (docs/bda/04-contactos.md) ───────
+  /** Sin paginar. Trae `pickup_authorized` y `authorizations` (las da el Banco). */
+  contacts: () => api.get<OrganizationContact[]>('/org/contacts'),
+  /** 422 en `dni` si se repite dentro de la organización */
+  createContact: (body: ContactBody, key: string) =>
+    api.post<OrganizationContact>('/org/contacts', body, key),
+  /** 409 `CONTACT_IDENTITY_LOCKED` si se cambia nombre o DNI de alguien autorizado por el Banco */
+  updateContact: (contactId: string, body: ContactBody, key: string) =>
+    api.put<OrganizationContact>(`/org/contacts/${id(contactId)}`, body, key),
+  /** 409 `CONTACT_DECLARED_FOR_PICKUP` si está declarada para un retiro de merma en curso */
+  deleteContact: (contactId: string, key: string) =>
+    api.del<unknown>(`/org/contacts/${id(contactId)}`, key),
+
   /** Comunicación con el Banco (docs/bda/08-interacciones.md) */
   interactions: (page: number, perPage: number, f: InteractionsFilter = {}) =>
     api.getPage<Interaction>('/org/interactions', {
@@ -142,4 +163,20 @@ export const orgApi = {
     api.post<Distribution>(`/org/distributions/${id(distributionId)}/cancel`, { reason }, key),
   /** Remito en PDF, desde `lista_para_retiro` (`receipt_available`). Se descarga con el Bearer. */
   receiptPath: (distributionId: string) => `/org/distributions/${id(distributionId)}/receipt`,
+
+  // ─── Lo recibido y panel nutricional (docs/bda/11-recibido-nutricion.md) ────
+  /** `data` trae `{ summary, items }` y la paginación viene en `meta`, afuera de `data`. */
+  received: async (page: number, perPage: number, f: ReceivedFilter = {}): Promise<ReceivedPage> => {
+    const res = await request<{ summary: ReceivedSummary; items: ReceivedItem[] }>('GET', '/org/received', {
+      query: { page, per_page: perPage, from: f.from, to: f.to, kind: f.kind },
+    });
+    const items = res.data?.items ?? [];
+    return {
+      summary: res.data.summary,
+      items,
+      meta: res.meta ?? { current_page: page, last_page: page, per_page: perPage, total: items.length },
+    };
+  },
+  /** Para este rol se usa `/org/nutrition`, no `/nutrition/summary` (mapa de la API del Banco, punto 3). */
+  nutrition: (month?: string) => api.get<OrgNutrition>('/org/nutrition', { month }),
 };

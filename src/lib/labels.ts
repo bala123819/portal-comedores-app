@@ -364,3 +364,27 @@ export const transportVehicleTypeLabels: Record<string, string> = {
   moto: 'Moto',
   otro: 'Otro',
 };
+
+// ─── Lo recibido y panel nutricional (docs/bda/11-recibido-nutricion.md) ───
+/** Nombres de los grupos de `/org/nutrition` (la API los manda sin tildes: "Lacteos") */
+export const coverageGroupLabels: Record<string, string> = {
+  cereales: 'Cereales',
+  frutas_verduras: 'Frutas y verduras',
+  lacteos: 'Lácteos',
+  proteinas: 'Proteínas animales',
+  aceites: 'Aceites',
+};
+
+export const receivedKindLabels: Record<string, string> = {
+  distribution: 'Pedidos al Banco',
+  merma: 'Rescates de merma',
+};
+
+/** `origin.tag`; se prefiere `origin.label`, que ya viene listo para mostrar */
+export const receivedOriginLabels: Record<string, string> = {
+  inventario: 'Pedido al banco',
+  merma: 'Rescate de merma',
+  kit: 'Kit',
+  programa: 'Programa',
+  donacion_directa: 'Donación directa',
+};

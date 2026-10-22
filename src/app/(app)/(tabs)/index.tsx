@@ -15,6 +15,7 @@ import {
 } from 'lucide-react-native';
 import { View } from 'react-native';
 import { DemographicsSummary } from '@/components/familias/DemographicsSummary';
+import { CoverageTotal, groupName } from '@/components/nutricion/CoverageBars';
 import { MermaCard } from '@/components/mermas/MermaCard';
 import { NotificationBell } from '@/components/notificaciones/NotificationBell';
 import { DistributionCard } from '@/components/pedidos/DistributionCard';
@@ -43,6 +44,8 @@ import { useAvailableMermas } from '@/features/mermas/hooks';
 import { useUnreadCount } from '@/features/notificaciones/hooks';
 import { useOrgProfile, useOrgStats } from '@/features/org/hooks';
 import { useDistributions, useQuota } from '@/features/pedidos/hooks';
+import { useOrgNutrition } from '@/features/recibido/hooks';
+import { currentMonth } from '@/features/recibido/period';
 import { features } from '@/lib/features';
 import { formatNumber, parseDate } from '@/lib/format';
 import { label, organizationStatusLabels } from '@/lib/labels';
@@ -144,6 +147,40 @@ function PedidosSection() {
   );
 }
 
+/** Cobertura nutricional del mes (módulo `recibido`, /org/nutrition) con los grupos que más faltan */
+function NutricionSection() {
+  const nutrition = useOrgNutrition(currentMonth());
+  const data = nutrition.data;
+  const missing = data?.needs_available
+    ? [...data.groups]
+        .filter((g) => g.coverage_pct != null && g.coverage_pct < 50)
+        .sort((a, b) => (a.coverage_pct ?? 0) - (b.coverage_pct ?? 0))
+        .slice(0, 2)
+    : [];
+
+  if (nutrition.isError) return null;
+  return (
+    <>
+      <SectionHeader
+        title="Alimentación de este mes"
+        action={<Button title="Ver panel" variant="ghost" size="sm" onPress={() => router.push('/nutricion')} />}
+      />
+      {data ? (
+        <Card onPress={() => router.push('/nutricion')} className="gap-3" accessibilityLabel="Ver el panel nutricional">
+          <CoverageTotal data={data} />
+          {missing.length ? (
+            <Text className="text-sm">
+              Lo que más falta: {missing.map((g) => `${groupName(g).toLowerCase()} (${formatNumber(g.coverage_pct, 0)} %)`).join(' y ')}.
+            </Text>
+          ) : null}
+        </Card>
+      ) : (
+        <Skeleton className="h-28 w-full rounded-xl" />
+      )}
+    </>
+  );
+}
+
 export default function HomeScreen() {
   const me = useSession((s) => s.me);
   const profile = useOrgProfile();
@@ -163,6 +200,7 @@ export default function HomeScreen() {
     void unread.refetch();
     void interactions.refetch();
     if (features.pedidos) void qc.invalidateQueries({ queryKey: ['orders'] });
+    if (features.recibido) void qc.invalidateQueries({ queryKey: ['received'] });
   };
 
   return (
@@ -233,6 +271,8 @@ export default function HomeScreen() {
       )}
 
       {features.pedidos ? <PedidosSection /> : null}
+
+      {features.recibido ? <NutricionSection /> : null}
 
       {features.mermas ? <MermasSection /> : null}
 

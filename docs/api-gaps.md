@@ -57,7 +57,7 @@ Formato: **qué falta · qué pantalla lo necesita · propuesta · mientras tant
 - `Idempotency-Key` y `Retry-After` no están declarados en ninguna operación del spec (solo en `llms.txt`).
 - **Mientras tanto:** los labels contemplan todos los valores vistos, con fallback.
 
-### G-08 · Cuota nutricional de la organización
+### G-08 · Cuota nutricional de la organización (resuelto 2026-10-20: `/org/nutrition`, ver G-19)
 - **Qué falta:** existe `PUT /organizations/{id}/quota` (admin) pero no un GET explícito de la cuota ni de su consumo para la organización.
 - **Pantallas:** Información nutricional.
 - **Propuesta:** incluir la cuota en `GET /org/profile` o `GET /org/stats`, o un `GET /org/nutrition` con cuota vs. recibido en el período.
@@ -100,10 +100,10 @@ Formato: **qué falta · qué pantalla lo necesita · propuesta · mientras tant
 |---|---|---|
 | Mermas: postular y retirar probado para este rol | Disponibles, pedido, retiro, quién retira | `mermas` |
 | Alta y edición de familias | Registrar familia | `familiasAlta` |
-| Contactos y autorizaciones de retiro | Mi organización › Contactos | `contactos` |
+| ~~Contactos y autorizaciones de retiro~~ | Contactos (`/org/contacts`, habilitado; verificado el 2026-10-20, D-16). Autorizar lo hace el Banco | `contactos` |
 | Documentos, ficha social, carta compromiso | Documentación | `documentacion` |
 | Jornadas y talleres con vista de organización | Jornadas y talleres | `programas` |
-| Lectura de grupos nutricionales / resumen nutricional para este rol | Nutrición (secciones extra) | `nutricionApi` |
+| ~~Lectura de grupos nutricionales / resumen nutricional para este rol~~ Resuelto con `/org/nutrition` (G-19) | Nutrición › Cobertura nutricional | `recibido` |
 | Push nativo (FCM/APNs/Expo) y clave VAPID pública para Web Push | Avisos en el dispositivo | — |
 | Recuperar contraseña (los mails no salen del servidor) | Login | — |
 | Editar teléfono y mail de la organización | Mi organización | — |
@@ -170,7 +170,22 @@ Verificado con GET contra el servidor real. Nada bloquea; para conversar con el 
 - No hay endpoint de categorías para este rol: los filtros se arman con lo que trae el catálogo.
 - El remito es un PDF por pedido. Sigue abierta la pregunta del Banco sobre el "PDF de las donaciones" de un período (post "Todo lo que la app puede hacer", punto 8).
 
-### G-18 · Perfil de la organización: observaciones (2026-10-20)
+### G-18 · Contactos: observaciones (2026-10-20)
+- `PUT /org/contacts/{id}` a una persona autorizada con el **mismo** nombre devuelve 200 (sólo da 409 si el valor cambia). La app igual no manda nombre ni DNI de una persona autorizada.
+- No hay `GET /org/contacts/{id}`: la ficha sale de la lista (alcanza mientras el padrón sea chico; la lista no viene paginada).
+- `CONTACT_DECLARED_FOR_PICKUP` no se pudo probar: hace falta una merma asignada con la persona declarada.
+- Pregunta: cuando el Banco atiende una solicitud de autorización, ¿llega un aviso? Hoy la app lo ve al recargar la lista (`pickup_authorized`).
+
+### G-19 · Lo recibido y panel nutricional: observaciones (2026-10-20)
+Implementado según el post 11/14 (`docs/bda/11-recibido-nutricion.md`). Con esto quedan **resueltos** G-08 (cuota y consumo nutricional de la organización) y la fila "Lectura de grupos nutricionales / resumen nutricional para este rol" de G-13: para este rol se usa `/org/nutrition`. **Verificado con GET contra el servidor el 2026-10-20** (`npm run smoke`): `/org/received`, el 422 de período inválido y `/org/nutrition` responden con la forma del post. Para conversar con el Banco:
+- **`summary.reconciliation_pending`** (`{count, kg}`): lo devuelve el servidor y no figura en el post 11. En el tenant de pruebas coincide con las 2 mermas retiradas (25,7 kg). ¿Qué significa? ¿Mermas cuyas cantidades recibidas todavía no se conciliaron? ¿Hay que mostrárselo a la organización? Mientras tanto, la app no lo muestra.
+- **Nombres de los grupos sin tildes** ("Lacteos", "Proteinas animales", "Frutas verduras"). La app los corrige con su propia tabla por `code`; convendría que el backend los mande bien escritos.
+- **`color`** viene `null` en la mitad de los grupos, y donde viene es el mismo verde para todos. La app no usa el color del grupo: colorea por nivel de cobertura.
+- **Kilos sin grupo (`unclassified_kg`):** en el ejemplo del post son 10 de 40,3 kg (25 %). Mientras el catálogo tenga productos sin `nutritional_group` (ver G-17), la cobertura por grupo va a quedar por debajo de la real.
+- **Umbrales de cobertura:** la app usa 100 % = cubierto, 50 % = en camino. ¿El Banco o el área social usan otro criterio?
+- **"PDF de las donaciones"** (post "Todo lo que la app puede hacer", punto 8): si es un comprobante de todo lo recibido en un período, se podría generar desde `/org/received`. Falta que el Banco lo defina.
+
+### G-20 · Perfil de la organización: observaciones (2026-10-20)
 | Tema | Detalle |
 |---|---|
 | Descarga de documentos | `GET /org/documents/{id}/download` del único documento listado ("Estatuto [PRUEBA TESIS]", id `2e205742-…`) responde **404 `DOCUMENT_NOT_FOUND`**, aunque `GET /org/documents` lo devuelve con su `download_path`. Parece que el registro existe sin archivo. La app muestra "El Banco todavía no tiene el archivo de este documento". **Avisar al Banco.** |

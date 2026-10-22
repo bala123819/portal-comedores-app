@@ -11,6 +11,7 @@ para usarlo como material de la documentación final de la tesis (Banco de Alime
 | [plan-de-accion.md](plan-de-accion.md) | Propuesta vs. estado, decisiones pendientes, cronograma hasta la entrega, riesgos. | Al replanificar |
 | [estado-actual.md](estado-actual.md) | Foto del estado del proyecto: qué funciona, qué está apagado, qué falta (front, back, agentes). | Al cerrar cada etapa |
 | [modulo-pedidos-mercaderia.md](modulo-pedidos-mercaderia.md) | Módulo de pedidos de mercadería: pantallas, archivos, reglas del Banco, verificación y pendientes. | Mientras se trabaja en el módulo |
+| [modulo-recibido-nutricion.md](modulo-recibido-nutricion.md) | Módulo "Lo recibido" y panel nutricional: pantallas, archivos, reglas del Banco, verificación y pendientes. | Mientras se trabaja en el módulo |
 
 Documentos relacionados (fuera de esta carpeta):
 - `docs/propuesta/` — **propuesta de tesis** acordada con el Banco (alcance oficial).

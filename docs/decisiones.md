@@ -68,7 +68,41 @@ Los pedidos de mercadería (`/org/catalog`, `/org/quota`, `/org/distributions*`)
 - **Categorías**: se arman con lo que trae el catálogo (no hay listado de categorías para este rol) y se filtra en el cliente.
 - **Errores por `error_code`**: el cliente ahora lee `error_code` (formato de la serie nueva) además de `code`/`error`.
 
-### D-16 · Perfil de la organización sobre `/org/*` (post 3/14) (2026-10-20)
+### D-16 · Contactos sobre `/org/contacts` y módulo `contactos` activo (2026-10-20)
+El padrón de la organización se migró de `/organizations/{id}/contacts*` (rol del Banco, en `pickup.ts`) a `/org/contacts` (post 4/14): la organización la resuelve el backend por el usuario, igual que familias (D-12). Se quitaron de la app la autorización y la revocación de retiros (`/pickup-authorizations`): **autorizar es del Banco**; la app sólo muestra `pickup_authorized` y `authorizations` (ámbito y vigencia). `pickup.ts` queda sólo con "quién retira" una merma (módulo `mermas`, apagado). El 2026-10-20 se verificó contra el servidor con el usuario de prueba (lista, alta, 422 por DNI repetido, edición, 409 `CONTACT_IDENTITY_LOCKED`, 404 `CONTACT_NOT_FOUND`, baja) y se suma `contactos` a `enabledInBackend`.
+- **Pantallas propias** (`/contactos`, `/contactos/nuevo`, `/contactos/[id]`) en lugar de hojas dentro de "Mi organización", que queda con un acceso y el resumen ("N personas · M autorizadas a retirar"). No hay `GET /org/contacts/{id}`: la ficha sale de la lista cacheada.
+- **Identidad bloqueada en el cliente:** si `pickup_authorized`, nombre y DNI se muestran fijos (candado); igual se maneja el 409 por si el Banco la autorizó mientras se editaba (se vuelven a lo guardado y se recarga).
+- **Edición parcial:** el `PUT` manda sólo los campos que cambiaron (`changedFields`, como en miembros).
+- **Contacto principal:** un switch; el backend desmarca al anterior y la app recarga la lista.
+- **Errores por `error_code`:** `CONTACT_NOT_FOUND` vuelve a la lista actualizada; `CONTACT_DECLARED_FOR_PICKUP` se muestra en la ficha (no se puede probar con la API real hasta que haya mermas).
+
+### D-17 · "Pedir autorización al Banco" reutiliza `/banco/nueva` (2026-10-20)
+Siguiendo el post 4/14 ("cárguenla con su DNI y pídanlo con una interacción de tipo `solicitud`"), la ficha del contacto sin autorización vigente tiene el botón **Pedir autorización al Banco**, que abre `/banco/nueva` con `tipo=solicitud`, `titulo` ("Autorizar a <nombre> a retirar alimentos") y `notas` (nombre, DNI y cargo) ya completos y editables. No se envía sola: la persona revisa y toca "Enviar al Banco". Sin DNI el botón no aparece (se pide cargarlo primero). `/banco/nueva` acepta ahora `titulo` y `notas` como parámetros, recortados a los límites del backend.
+
+### D-18 · Módulo `recibido` (lo recibido y panel nutricional) activo con la API real (2026-10-20)
+`GET /org/received` y `GET /org/nutrition` están documentados por el Banco con respuestas reales del servidor (post 11/14, copiado en `docs/bda/11-recibido-nutricion.md`). Se suma el módulo `recibido` a `enabledInBackend` en `src/lib/features.ts`, igual que `pedidos` (D-14). Se desarrolló contra mocks con la forma exacta del post y el mismo día se verificó con GET contra el servidor real (`npm run smoke`, 25 PASS): `/org/received` (con su 422 de período inválido) y `/org/nutrition` responden con la forma que espera la app. El servidor agrega `summary.reconciliation_pending`, que el post no documenta (G-19).
+- Rama `recibido-nutricion` (Pilar 1 del reparto del equipo). Al integrar con `main` se renumeró a D-18–D-20, P-20–P-21 y G-19, porque la rama `Contacto` ya había usado D-16, D-17, P-18, P-19 y G-18.
+
+### D-19 · Panel nutricional sobre `/org/nutrition` (2026-10-20)
+El mapa de la API del Banco (punto 3) pide usar `/org/nutrition` para este rol, no `/nutrition/summary`. La sección "Lo que recibieron" de Nutrición, que adivinaba la forma de `/nutrition/summary` (G-01), se reemplazó por **Cobertura nutricional**:
+- **Mes navegable** (flechas): del mes actual hasta 11 meses atrás (el backend acepta hasta un año). No hay selector de fecha: no suma dependencias nativas.
+- **Cobertura total** y **por grupo**: kg recibidos contra la necesidad del grupo (`quota_kg`) y el porcentaje (`coverage_pct`).
+- **Niveles de cobertura (criterio propio, a validar con el área social):** 100 % o más = "Cubierto", de 50 % a 99 % = "En camino", menos de 50 % = "Falta". Cada nivel tiene ícono y texto, nunca sólo color.
+- Si `needs_available` es `false`, se muestran los kg recibidos sin porcentaje y un aviso de que el Banco todavía no cargó la necesidad por grupo.
+- Se muestran también los kg **sin grupo cargado** (`unclassified_kg`), los **bultos surtidos** (`bulk_kg`) y el origen (pedidos / mermas).
+- Los nombres de los grupos se muestran con tildes (`coverageGroupLabels`): la API los manda sin tildes ("Lacteos").
+- El Inicio suma "Alimentación de este mes": la cobertura total y los dos grupos con menos cobertura.
+- Se quitaron `nutritionApi.summary`, `useNutritionSummary` y su ruta simulada, que ya no se usaban. Los grupos de alimentos y la búsqueda de productos (`/nutritional-groups`, `/unified-products`) siguen detrás del módulo `nutricionApi`, apagado con la API real.
+
+### D-20 · Pantalla "Lo recibido" (2026-10-20)
+`/recibido` lista lo que llegó del Banco: pedidos entregados y mermas retiradas.
+- **Períodos con chips** (último mes, 3 meses, 6 meses, último año), siempre terminando hoy. Así nunca se arma un período inválido (el 422 de "hasta anterior a desde") ni de más de un año. Por defecto, 3 meses, como el backend.
+- **Resumen del período entero** (sale de la primera página): kg, cantidad de entregas, la última, por origen y por mes.
+- **Filtro por origen** (pedidos / mermas): sólo aparece si en el período hay de los dos. Si ya se eligió un origen, sigue visible para poder volver a "Todo".
+- Cada entrega muestra hasta 3 productos (`items_preview`) y "y N productos más". Un pedido abre su detalle (`/pedido/[id]`). Una merma abre el retiro sólo si el módulo `mermas` está activo; si no, la tarjeta no se puede tocar.
+- **Accesos:** Mercadería ("Ver todo lo recibido"), Más › Alimentación ("Lo recibido") y Nutrición ("Ver todo lo recibido").
+
+### D-21 · Perfil de la organización sobre `/org/*` (post 3/14) (2026-10-20)
 Se implementa el post 3/14 de la serie "API organizaciones" (`docs/bda/03-perfil-organizacion.md`): perfil editable, dirección, estadísticas, ficha social, capacidad logística, documentos y requisitos.
 - **Verificado contra el servidor real el 2026-10-20:** los seis GET responden con las formas documentadas; `PUT /org/profile` y `PUT /org/logistics` se probaron reenviando los mismos valores (no cambian datos) y con los errores del post (422 `FIELD_NOT_EDITABLE`, días con mayúscula, horario invertido, email inválido).
 - **Documentación pasa a `/org/requirements`, `/org/documents` y `/org/social-data`** (antes `/organizations/{id}/*`, que con el rol organización dan 403). El módulo `documentacion` se suma a `enabledInBackend` en `src/lib/features.ts`. Perfil editable y logística no tienen interruptor (como interacciones, D-13).
@@ -77,3 +111,4 @@ Se implementa el post 3/14 de la serie "API organizaciones" (`docs/bda/03-perfil
 - **Reglas del Banco en el cliente:** días en minúscula y sin tilde (chips lunes–sábado; los que llegan con tilde se normalizan), horas `HH:MM` con máscara, fin posterior al inicio, email válido, kilos y m³ ≥ 0. Los 422 de los días llegan por posición (`preferred_pickup_days.0`) y se muestran en el campo.
 - **Lógica de formularios aparte** (`src/features/org/form.ts`): valores del form ⇄ cuerpo de la API, testeable sin pantalla.
 - **Descargas con `error_code`:** `api.raw` ahora lee el JSON del error, y la descarga nativa repite el pedido para conocerlo (`downloadFileAsync` no lo expone). Así la app distingue `DOCUMENT_NOT_FOUND` de un corte de conexión.
+- Rama `perfil-organizacion`. Al integrar con `main` se renumeró a D-21 y G-20, porque `Contacto` y `recibido-nutricion` ya habían usado D-16–D-20 y G-18–G-19. "Mi organización" conserva el acceso a Contactos de D-16 y suma la edición del perfil y la capacidad logística.

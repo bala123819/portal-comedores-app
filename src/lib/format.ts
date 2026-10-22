@@ -101,10 +101,15 @@ const numberFormatter = (max: number) => ({
   },
 });
 
-/** Formato argentino: 1.234,5 */
-export function formatNumber(n: number | null | undefined, maxDecimals = 1): string {
-  if (n === null || n === undefined || Number.isNaN(n)) return '—';
-  return numberFormatter(maxDecimals).format(n);
+/**
+ * Formato argentino: 1.234,5. La API manda algunos decimales como string
+ * (`vehicle_capacity_kg: "300.00"`): se aceptan y se convierten.
+ */
+export function formatNumber(n: number | string | null | undefined, maxDecimals = 1): string {
+  if (n === null || n === undefined || n === '') return '—';
+  const value = typeof n === 'number' ? n : Number(n);
+  if (!Number.isFinite(value)) return '—';
+  return numberFormatter(maxDecimals).format(value);
 }
 
 /** "30 kilos", "1 paquete", "2,5 litros". Unidades como vienen de la API. */

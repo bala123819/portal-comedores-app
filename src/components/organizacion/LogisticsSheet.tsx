@@ -36,7 +36,7 @@ export function LogisticsSheet({ logistics, onClose }: { logistics: OrgLogistics
     }
     update.mutate(body, {
       onError: (e) => {
-        // Los 422 de este endpoint llegan en inglés (G-18): se marca el campo con un mensaje propio
+        // Los 422 de este endpoint llegan en inglés (G-20): se marca el campo con un mensaje propio
         if (isApiError(e) && e.fieldErrors) {
           const fields = Object.keys(e.fieldErrors).filter((f): f is keyof LogisticsValues => f in initial);
           fields.forEach((f) => setError(f, { type: 'server', message: 'Revisá este dato' }));

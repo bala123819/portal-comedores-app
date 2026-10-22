@@ -2,7 +2,8 @@
  * Datos simulados para EXPO_PUBLIC_USE_MOCKS=true. Solo campos que existen en el OpenAPI.
  * Nombres y datos ficticios.
  */
-import type { Assignment, OrganizationContact, Picker } from '@/features/asignaciones/types';
+import type { Assignment, Picker } from '@/features/asignaciones/types';
+import type { OrganizationContact } from '@/features/contactos/types';
 import type { Family, FamilyMember } from '@/features/familias/types';
 import type { Interaction } from '@/features/interacciones/types';
 import type { Merma } from '@/features/mermas/types';
@@ -250,9 +251,10 @@ export function createMockDb() {
   ];
 
   const contacts: OrganizationContact[] = [
-    { id: 'c-1', name: 'Marta Gómez', position: 'Referente', phone: '221 555-0101', dni: '22111222', is_primary: true },
-    { id: 'c-2', name: 'Carlos Pérez', position: 'Voluntario', phone: '221 555-0102', dni: '28123456', is_primary: false },
-    { id: 'c-3', name: 'Lucía Fernández', position: 'Cocinera', phone: null, dni: null, is_primary: false },
+    // Formas de /org/contacts (docs/bda/04-contactos.md). Ids UUID como en la API real.
+    { id: 'c0a1c000-0000-4000-8000-000000000001', name: 'Marta Gómez', position: 'Referente', phone: '221 555-0101', email: 'marta@girasoles.test', dni: '22111222', is_primary: true, pickup_authorized: false, authorizations: [] },
+    { id: 'c0a1c000-0000-4000-8000-000000000002', name: 'Carlos Pérez', position: 'Voluntario', phone: '221 555-0102', email: null, dni: '28123456', is_primary: false, pickup_authorized: true, authorizations: [{ scope_type: 'all', valid_from: null, valid_until: null }] },
+    { id: 'c0a1c000-0000-4000-8000-000000000003', name: 'Lucía Fernández', position: 'Cocinera', phone: null, email: null, dni: null, is_primary: false, pickup_authorized: false, authorizations: [] },
   ];
 
   const pickers: Record<string, Picker[]> = { 'asg-001': [] };
@@ -482,6 +484,9 @@ export function createMockDb() {
     { ...base, id: 'd1a00000-0000-4000-8000-000000000053', number: 'DIST-2026-00053', status: 'pendiente', status_label: 'Pendiente de revisión', request_date: day(0), requested_distribution_date: day(2), scheduled_distribution_date: null, actual_distribution_date: null, time_slot: 'mañana', total_items: 2, total_kg: 10.18, notes: 'Pedido semanal', can_cancel: true, receipt_available: false, created_at: at(0, '10:15'), updated_at: at(0, '10:15'), items: [item(1, 1, 4, null, null), item(2, 4, 6, null, null)] },
     { ...base, id: 'd1a00000-0000-4000-8000-000000000052', number: 'DIST-2026-00052', status: 'lista_para_retiro', status_label: 'Listo para retirar', request_date: day(-3), requested_distribution_date: day(1), scheduled_distribution_date: day(1), actual_distribution_date: null, time_slot: 'tarde', total_items: 2, total_kg: 7.2, notes: 'Se sumaron familias nuevas', receipt_number: 'REC-DIST-2026-00052', can_cancel: false, receipt_available: true, created_at: at(-3, '11:00'), updated_at: at(0, '09:30'), items: [item(3, 3, 8, 6, null), item(4, 5, 8, 8, null)] },
     { ...base, id: 'd1a00000-0000-4000-8000-000000000047', number: 'DIST-2026-00047', status: 'distribuida', status_label: 'Entregado', request_date: day(-10), requested_distribution_date: day(-8), scheduled_distribution_date: day(-8), actual_distribution_date: day(-8), time_slot: null, total_items: 3, total_kg: 24.4, notes: 'Entrega de ejemplo', received_by_name: 'Marta Gómez', receipt_number: 'REC-DIST-2026-00047', can_cancel: false, receipt_available: true, created_at: at(-10, '14:03'), updated_at: at(-8, '12:00'), items: [item(5, 4, 12, 12, 12), item(6, 1, 10, 10, 10), item(7, 2, 12, 12, 12)] },
+    // Entregas de meses anteriores: alimentan "Lo recibido" (por mes) y el panel nutricional
+    { ...base, id: 'd1a00000-0000-4000-8000-000000000041', number: 'DIST-2026-00041', status: 'distribuida', status_label: 'Entregado', request_date: day(-40), requested_distribution_date: day(-37), scheduled_distribution_date: day(-37), actual_distribution_date: day(-37), time_slot: 'mañana', total_items: 4, total_kg: 29.62, notes: null, received_by_name: 'Carlos Pérez', receipt_number: 'REC-DIST-2026-00041', can_cancel: false, receipt_available: true, created_at: at(-40, '10:00'), updated_at: at(-37, '11:30'), items: [item(9, 1, 12, 12, 12), item(10, 4, 10, 10, 10), item(11, 0, 4, 4, 4), item(12, 5, 10, 10, 10)] },
+    { ...base, id: 'd1a00000-0000-4000-8000-000000000036', number: 'DIST-2026-00036', status: 'distribuida', status_label: 'Entregado', request_date: day(-70), requested_distribution_date: day(-66), scheduled_distribution_date: day(-66), actual_distribution_date: day(-66), time_slot: null, total_items: 2, total_kg: 14.08, notes: null, received_by_name: 'Marta Gómez', receipt_number: 'REC-DIST-2026-00036', can_cancel: false, receipt_available: true, created_at: at(-70, '09:20'), updated_at: at(-66, '12:10'), items: [item(13, 3, 20, 20, 20), item(14, 2, 24, 24, 24)] },
     { ...base, id: 'd1a00000-0000-4000-8000-000000000045', number: 'DIST-2026-00045', status: 'rechazada', status_label: 'Rechazado', request_date: day(-15), requested_distribution_date: day(-13), scheduled_distribution_date: null, actual_distribution_date: null, time_slot: null, total_items: 1, total_kg: 41.5, notes: null, rejection_reason: 'No tenemos stock de aceite este mes', can_cancel: false, receipt_available: false, created_at: at(-15, '09:00'), updated_at: at(-14, '10:00'), items: [item(8, 0, 50, null, null)] },
   ];
 

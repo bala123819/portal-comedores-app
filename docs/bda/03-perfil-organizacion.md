@@ -1,7 +1,7 @@
 # API organizaciones (3/14) — Perfil de la organización
 
 > Copia del post 3/14 de la serie "API organizaciones" publicada por el Banco en el feed de la orden #1149 de GoDubi el 07/10/2026 (post 6497).
-> Verificado contra el servidor el 20/10/2026: ver D-16 y G-18.
+> Verificado contra el servidor el 20/10/2026: ver D-21 y G-20.
 
 | | Endpoint | Qué hace |
 |---|---|---|

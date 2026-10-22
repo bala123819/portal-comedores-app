@@ -230,7 +230,19 @@ export const api = {
     const res = await doFetch('GET', path, opts);
     if (!res.ok) {
       if (res.status === 401 && state.token) state.onUnauthorized?.();
-      throw new ApiError({ kind: kindFromStatus(res.status), status: res.status });
+      // Los errores de una descarga vienen en JSON (p. ej. 404 `DOCUMENT_NOT_FOUND`): se conserva el `error_code`
+      let json: { message?: unknown; error_code?: string; code?: string } | null = null;
+      try {
+        json = await res.json();
+      } catch {
+        json = null;
+      }
+      throw new ApiError({
+        kind: kindFromStatus(res.status),
+        status: res.status,
+        serverMessage: typeof json?.message === 'string' ? json.message : undefined,
+        code: json?.error_code ?? json?.code,
+      });
     }
     return res;
   },

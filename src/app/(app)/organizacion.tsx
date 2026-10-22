@@ -1,19 +1,25 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Location from 'expo-location';
 import {
+  Box,
   Building2,
   CalendarDays,
   Car,
   Clock,
+  Contact,
+  HandHeart,
   LocateFixed,
   Mail,
+  Map as MapIcon,
   MapPin,
+  Package,
   Pencil,
   Phone,
   Scale,
   ShieldCheck,
   ShieldOff,
   Snowflake,
+  StickyNote,
   Truck,
   UserPlus,
   Users,
@@ -35,6 +41,7 @@ import {
   Screen,
   SectionHeader,
   SkeletonList,
+  StatCard,
   SwitchRow,
   Text,
   toast,
@@ -47,17 +54,22 @@ import {
   useRevokeAuthorization,
 } from '@/features/asignaciones/hooks';
 import type { OrganizationContact } from '@/features/asignaciones/types';
-import { useOrgProfile, useUpdateAddress } from '@/features/org/hooks';
+import { LogisticsSheet } from '@/components/organizacion/LogisticsSheet';
+import { ProfileSheet } from '@/components/organizacion/ProfileSheet';
+import { toNumber } from '@/features/org/form';
+import { useOrgLogistics, useOrgProfile, useOrgStats, useUpdateAddress } from '@/features/org/hooks';
 import type { Organization } from '@/features/org/types';
 import { features } from '@/lib/features';
 import { formatDate, formatNumber, formatTimeRange } from '@/lib/format';
 import {
+  coldCapacityTypeLabels,
   label,
   organizationStatusLabels,
   organizationTypeLabels,
   pickupDayLabels,
   pickupPreferenceLabels,
   pickupScopeLabels,
+  transportVehicleTypeLabels,
 } from '@/lib/labels';
 import { humanMessage } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
@@ -68,11 +80,10 @@ function addressText(o: Organization): string | null {
   return a.full_address || [[a.street, a.street_number].filter(Boolean).join(' '), a.neighborhood, a.city, a.state].filter(Boolean).join(', ') || null;
 }
 
-/** La API manda las coordenadas como número o como string ("-38.95160000") */
-function toCoord(v: number | string | null | undefined): number | null {
-  if (v === null || v === undefined || v === '') return null;
-  const n = typeof v === 'number' ? v : Number(v);
-  return Number.isFinite(n) ? n : null;
+function zoneName(o: Organization): string | null {
+  const z = o.geographic_zone;
+  if (!z) return null;
+  return typeof z === 'string' ? z : (z.name ?? null);
 }
 
 /** Campos de `PUT /org/address`: street*, city*, state*, latitude*, longitude* (+ opcionales) */
@@ -89,8 +100,9 @@ type AddressValues = z.infer<typeof addressSchema>;
 function AddressSheet({ org, visible, onClose }: { org: Organization; visible: boolean; onClose: () => void }) {
   const update = useUpdateAddress();
   const a = org.address ?? null;
-  const lat0 = toCoord(a?.latitude);
-  const lng0 = toCoord(a?.longitude);
+  // La API manda las coordenadas como número o como string ("-38.95160000")
+  const lat0 = toNumber(a?.latitude);
+  const lng0 = toNumber(a?.longitude);
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(
     lat0 !== null && lng0 !== null ? { latitude: lat0, longitude: lng0 } : null,
   );
@@ -266,6 +278,10 @@ function NewContactSheet({ orgId, visible, onClose }: { orgId: string; visible: 
 export default function OrganizacionScreen() {
   const profile = useOrgProfile();
   const org = profile.data;
+  const logistics = useOrgLogistics();
+  const stats = useOrgStats();
+  const [editProfile, setEditProfile] = useState(false);
+  const [editLogistics, setEditLogistics] = useState(false);
   // Contactos y autorizaciones: el backend no los ofrece hoy (docs/bda 1/6 §6) → no se llaman.
   const contacts = useContacts(features.contactos ? (org?.id ?? null) : null);
   const [editAddress, setEditAddress] = useState(false);
@@ -283,6 +299,11 @@ export default function OrganizacionScreen() {
   const pickupDays = (org.preferred_pickup_days ?? []).map((d) => label(pickupDayLabels, d)).join(', ');
   const pickupHours = formatTimeRange(org.preferred_pickup_time_start, org.preferred_pickup_time_end);
   const yesNo = (v?: boolean | null) => (v == null ? null : v ? 'Sí' : 'No');
+  const vehicleKg = toNumber(org.vehicle_capacity_kg);
+  const lg = logistics.data;
+  const coldM3 = toNumber(lg?.cold_capacity_m3);
+  const impacto = stats.data?.impacto;
+  const asignaciones = stats.data?.asignaciones;
 
   return (
     <Screen
@@ -290,6 +311,8 @@ export default function OrganizacionScreen() {
       refreshing={profile.isRefetching}
       onRefresh={() => {
         void profile.refetch();
+        void logistics.refetch();
+        void stats.refetch();
         if (features.contactos) void contacts.refetch();
       }}
     >
@@ -302,12 +325,28 @@ export default function OrganizacionScreen() {
             {org.status ? <Badge label={label(organizationStatusLabels, org.status)} tone={org.status === 'aprobada' ? 'success' : 'warning'} /> : null}
           </View>
         </View>
+        {org.description ? <Text>{org.description}</Text> : null}
         <InfoRow icon={MapPin} label="Dirección" value={addressText(org)} />
+        <InfoRow icon={MapIcon} label="Zona del Banco" value={zoneName(org)} />
         <InfoRow icon={Phone} label="Teléfono" value={org.phone} />
         <InfoRow icon={Mail} label="Email" value={org.email} />
-        <Button title="Actualizar dirección" icon={Pencil} variant="outline" size="sm" className="self-start" onPress={() => setEditAddress(true)} />
-        <Text variant="caption">Para cambiar el teléfono o el email, comunicate con el Banco de Alimentos.</Text>
+        <View className="flex-row flex-wrap gap-2">
+          <Button title="Editar datos" icon={Pencil} variant="outline" size="sm" onPress={() => setEditProfile(true)} />
+          <Button title="Actualizar dirección" icon={MapPin} variant="outline" size="sm" onPress={() => setEditAddress(true)} />
+        </View>
+        <Text variant="caption">Nombre, CUIT y tipo de organización los cambia el Banco de Alimentos.</Text>
       </Card>
+
+      {impacto || asignaciones ? (
+        <>
+          <SectionHeader title="Lo que recibieron" />
+          <View className="flex-row flex-wrap gap-3">
+            {impacto ? <StatCard icon={Package} label="Kilos recibidos" value={`${formatNumber(impacto.total_kg_recibidos)} kg`} /> : null}
+            {impacto ? <StatCard icon={Truck} label="Entregas del Banco" value={formatNumber(impacto.total_distribuciones)} /> : null}
+            {asignaciones ? <StatCard icon={HandHeart} label="Retiros completados" value={formatNumber(asignaciones.completadas)} /> : null}
+          </View>
+        </>
+      ) : null}
 
       <SectionHeader title="Personas y cuota" />
       <Card className="gap-4">
@@ -324,8 +363,46 @@ export default function OrganizacionScreen() {
         <InfoRow icon={Clock} label="Horario preferido" value={pickupHours || null} />
         <InfoRow icon={Snowflake} label="Tienen heladera o freezer" value={yesNo(org.has_refrigeration)} />
         <InfoRow icon={Car} label="Tienen vehículo propio" value={yesNo(org.has_own_vehicle)} />
-        {org.vehicle_capacity_kg ? <InfoRow icon={Car} label="Capacidad del vehículo" value={`${formatNumber(org.vehicle_capacity_kg)} kg`} /> : null}
+        {vehicleKg ? <InfoRow icon={Car} label="Capacidad del vehículo" value={`${formatNumber(vehicleKg)} kg`} /> : null}
+        <Button title="Editar retiro" icon={Pencil} variant="outline" size="sm" className="self-start" onPress={() => setEditProfile(true)} />
       </Card>
+
+      <SectionHeader title="Capacidad logística" />
+      {logistics.isPending ? (
+        <SkeletonList count={1} />
+      ) : logistics.isError ? (
+        <ErrorState error={logistics.error} onRetry={() => logistics.refetch()} />
+      ) : (
+        <Card className="gap-4">
+          <InfoRow
+            icon={Snowflake}
+            label="Frío"
+            value={
+              [lg?.cold_capacity_type ? label(coldCapacityTypeLabels, lg.cold_capacity_type) : null, coldM3 ? `${formatNumber(coldM3)} m³` : null]
+                .filter(Boolean)
+                .join(' · ') || null
+            }
+          />
+          <InfoRow
+            icon={Box}
+            label="Transporte propio"
+            value={
+              lg?.own_transport_capable == null
+                ? null
+                : lg.own_transport_capable
+                  ? ['Sí', lg.transport_vehicle_type ? label(transportVehicleTypeLabels, lg.transport_vehicle_type) : null].filter(Boolean).join(' · ')
+                  : 'No'
+            }
+          />
+          <InfoRow icon={StickyNote} label="Notas" value={lg?.transport_notes} />
+          <InfoRow
+            icon={Contact}
+            label="Contacto operativo"
+            value={[lg?.operational_contact_name, lg?.operational_contact_phone, lg?.operational_contact_email].filter(Boolean).join(' · ') || null}
+          />
+          <Button title="Editar capacidad logística" icon={Pencil} variant="outline" size="sm" className="self-start" onPress={() => setEditLogistics(true)} />
+        </Card>
+      )}
 
       {features.contactos ? (
         <>
@@ -354,6 +431,8 @@ export default function OrganizacionScreen() {
       ) : null}
 
       <AddressSheet org={org} visible={editAddress} onClose={() => setEditAddress(false)} />
+      {editProfile ? <ProfileSheet org={org} onClose={() => setEditProfile(false)} /> : null}
+      {editLogistics ? <LogisticsSheet logistics={lg} onClose={() => setEditLogistics(false)} /> : null}
     </Screen>
   );
 }

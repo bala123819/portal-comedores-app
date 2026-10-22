@@ -67,3 +67,13 @@ Los pedidos de mercadería (`/org/catalog`, `/org/quota`, `/org/distributions*`)
 - **`warnings`** (stock o cupo superados): el pedido entra igual; se muestran en un diálogo antes de ir al detalle.
 - **Categorías**: se arman con lo que trae el catálogo (no hay listado de categorías para este rol) y se filtra en el cliente.
 - **Errores por `error_code`**: el cliente ahora lee `error_code` (formato de la serie nueva) además de `code`/`error`.
+
+### D-16 · Perfil de la organización sobre `/org/*` (post 3/14) (2026-10-20)
+Se implementa el post 3/14 de la serie "API organizaciones" (`docs/bda/03-perfil-organizacion.md`): perfil editable, dirección, estadísticas, ficha social, capacidad logística, documentos y requisitos.
+- **Verificado contra el servidor real el 2026-10-20:** los seis GET responden con las formas documentadas; `PUT /org/profile` y `PUT /org/logistics` se probaron reenviando los mismos valores (no cambian datos) y con los errores del post (422 `FIELD_NOT_EDITABLE`, días con mayúscula, horario invertido, email inválido).
+- **Documentación pasa a `/org/requirements`, `/org/documents` y `/org/social-data`** (antes `/organizations/{id}/*`, que con el rol organización dan 403). El módulo `documentacion` se suma a `enabledInBackend` en `src/lib/features.ts`. Perfil editable y logística no tienen interruptor (como interacciones, D-13).
+- **Carta compromiso:** `/organizations/{id}/terms-pdf` da 403 `INSUFFICIENT_PERMISSION` a este rol, así que se quita la descarga y se muestra la fecha de aceptación (`terms_accepted_at` de la ficha social).
+- **Edición en hojas inferiores** dentro de "Mi organización" (`ProfileSheet`, `LogisticsSheet`): se mandan sólo los campos que cambiaron (un `""` o `null` borra el dato, G-15) y nunca los que maneja el Banco. Los dos horarios viajan juntos porque el backend valida el rango con ambos.
+- **Reglas del Banco en el cliente:** días en minúscula y sin tilde (chips lunes–sábado; los que llegan con tilde se normalizan), horas `HH:MM` con máscara, fin posterior al inicio, email válido, kilos y m³ ≥ 0. Los 422 de los días llegan por posición (`preferred_pickup_days.0`) y se muestran en el campo.
+- **Lógica de formularios aparte** (`src/features/org/form.ts`): valores del form ⇄ cuerpo de la API, testeable sin pantalla.
+- **Descargas con `error_code`:** `api.raw` ahora lee el JSON del error, y la descarga nativa repite el pedido para conocerlo (`downloadFileAsync` no lo expone). Así la app distingue `DOCUMENT_NOT_FOUND` de un corte de conexión.

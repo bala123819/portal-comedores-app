@@ -8,7 +8,7 @@ import type { Interaction } from '@/features/interacciones/types';
 import type { Merma } from '@/features/mermas/types';
 import type { AppNotification } from '@/features/notificaciones/types';
 import type { NutritionalGroup } from '@/features/nutricion/types';
-import type { DocumentRequirement, Organization } from '@/features/org/types';
+import type { DocumentRequirement, Organization, OrganizationDocument, OrgLogistics } from '@/features/org/types';
 import type { CatalogProduct, Distribution, Quota } from '@/features/pedidos/types';
 import type { Application } from '@/features/postulaciones/types';
 import type { CollectionSession, Program, Training } from '@/features/programas/types';
@@ -40,6 +40,7 @@ export function createMockDb() {
     organization_type: 'comedor',
     email: 'contacto@girasoles.test',
     phone: '+54 299 555 0101',
+    description: 'Almuerzo de lunes a viernes para 40 chicos y merienda los sábados.',
     total_beneficiaries: 6,
     services_per_day: 1,
     monthly_quota_kg: 198,
@@ -52,7 +53,7 @@ export function createMockDb() {
     has_own_vehicle: false,
     vehicle_capacity_kg: null,
     compliance_score: 0,
-    geographic_zone: null,
+    geographic_zone: { id: 'zone-0001', code: 'NQN-OESTE', name: 'Neuquén Oeste', max_radius_km: 50, is_active: true },
     address: {
       street: 'Calle 12',
       street_number: '345',
@@ -375,10 +376,55 @@ export function createMockDb() {
     },
   ];
 
-  const requirements: DocumentRequirement[] = [
-    { id: 'r-1', document_type: 'personeria_juridica', label: 'Personería jurídica', is_required: true, has_expiration: false, status: 'presentado' },
-    { id: 'r-2', document_type: 'estatuto', label: 'Estatuto social', is_required: true, has_expiration: false, status: 'faltante' },
+  // Formas de docs/bda/03-perfil-organizacion.md (post 3/14)
+  const documents: OrganizationDocument[] = [
+    {
+      id: 'b1c2d3e4-0000-4000-8000-000000000001',
+      document_type: 'estatuto',
+      document_name: 'Estatuto 2024',
+      mime_type: 'application/pdf',
+      file_size: 248_312,
+      expires_at: '2027-12-31',
+      is_expired: false,
+      is_verified: true,
+      created_at: '2026-03-02T15:05:07.000000Z',
+      download_path: '/api/org/documents/b1c2d3e4-0000-4000-8000-000000000001/download',
+    },
+    {
+      id: 'b1c2d3e4-0000-4000-8000-000000000002',
+      document_type: 'habilitacion',
+      document_name: 'Habilitación municipal',
+      mime_type: 'application/pdf',
+      file_size: 91_204,
+      expires_at: '2026-06-30',
+      is_expired: true,
+      is_verified: false,
+      created_at: '2025-07-01T12:00:00.000000Z',
+      download_path: '/api/org/documents/b1c2d3e4-0000-4000-8000-000000000002/download',
+    },
   ];
+
+  const requirements: DocumentRequirement[] = [
+    { id: 'r-1', document_type: 'personeria_juridica', label: 'Personería Jurídica', is_required: true, has_expiration: false, sort_order: 1, scope: 'global', status: 'missing', document: null },
+    { id: 'r-2', document_type: 'cuit', label: 'Constancia CUIT/CUIL', is_required: true, has_expiration: false, sort_order: 2, scope: 'global', status: 'missing', document: null },
+    { id: 'r-3', document_type: 'estatuto', label: 'Estatuto', is_required: false, has_expiration: true, sort_order: 5, scope: 'global', status: 'verified', document: documents[0] },
+    { id: 'r-4', document_type: 'habilitacion', label: 'Habilitación Municipal', is_required: true, has_expiration: true, sort_order: 10, scope: 'type', status: 'expired', document: documents[1] },
+  ];
+
+  const logistics: OrgLogistics = {
+    id: 'c0ffee00-0000-4000-8000-000000000001',
+    organization_id: ORG_ID,
+    cold_capacity_m3: 0.6,
+    cold_capacity_type: 'heladera',
+    own_transport_capable: false,
+    transport_vehicle_type: null,
+    transport_notes: 'Retiramos en el auto de una voluntaria.',
+    operational_contact_name: 'Marta Gómez',
+    operational_contact_phone: '+54 299 555 0101',
+    operational_contact_email: null,
+    created_at: '2026-03-02T11:27:33-03:00',
+    updated_at: '2026-03-02T11:27:33-03:00',
+  };
 
   const programs: Program[] = [
     { id: 'prog-1', name: 'Recolección en supermercados', program_type: 'recoleccion', frequency: 'mensual' },
@@ -452,6 +498,8 @@ export function createMockDb() {
     nutritionalGroups,
     families,
     requirements,
+    documents,
+    logistics,
     programs,
     sessions,
     trainings,

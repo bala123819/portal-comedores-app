@@ -6,7 +6,17 @@ import type {
   InteractionsSummary,
 } from '@/features/interacciones/types';
 import type { AvailableMermasFilters, Merma } from '@/features/mermas/types';
-import type { OrgProfileResponse, OrgStats, UpdateAddressResponse } from '@/features/org/types';
+import type {
+  DocumentRequirement,
+  OrganizationDocument,
+  OrgLogistics,
+  OrgProfileResponse,
+  OrgStats,
+  SocialData,
+  UpdateAddressResponse,
+  UpdateLogisticsBody,
+  UpdateProfileBody,
+} from '@/features/org/types';
 import type {
   CatalogFilter,
   CatalogProduct,
@@ -33,9 +43,22 @@ const id = (v: string) => encodeURIComponent(v);
 export const orgApi = {
   /** Devuelve `{ organization, user }` */
   profile: () => api.get<OrgProfileResponse>('/org/profile'),
+  /** Sólo los campos de `UpdateProfileBody`; el resto da 422 `FIELD_NOT_EDITABLE`. Devuelve `{ organization, user }`. */
+  updateProfile: (body: UpdateProfileBody, key: string) =>
+    api.put<OrgProfileResponse>('/org/profile', body, key),
   stats: () => api.get<OrgStats>('/org/stats'),
   updateAddress: (body: AddressBody, key: string) =>
     api.put<UpdateAddressResponse>('/org/address', body, key),
+
+  // ─── Perfil de la organización (docs/bda/03-perfil-organizacion.md, post 3/14) ──
+  socialData: () => api.get<SocialData>('/org/social-data'),
+  logistics: () => api.get<OrgLogistics>('/org/logistics'),
+  updateLogistics: (body: UpdateLogisticsBody, key: string) =>
+    api.put<OrgLogistics>('/org/logistics', body, key),
+  documents: () => api.get<OrganizationDocument[]>('/org/documents'),
+  /** Se descarga con el Bearer (`downloadAndOpen`). Documento ajeno o inexistente: 404 `DOCUMENT_NOT_FOUND`. */
+  documentDownloadPath: (documentId: string) => `/org/documents/${id(documentId)}/download`,
+  requirements: () => api.get<DocumentRequirement[]>('/org/requirements'),
 
   availableMermas: (page: number, perPage: number, f: AvailableMermasFilters = {}) =>
     api.getPage<Merma>('/org/mermas/available', {

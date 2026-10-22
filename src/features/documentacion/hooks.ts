@@ -1,30 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { qk } from '@/features/query-keys';
-import { organizationsApi } from '@/services/api/endpoints';
+import { orgApi } from '@/services/api/endpoints';
 
-export function useRequirements(orgId: string | null) {
-  return useQuery({
-    queryKey: qk.requirements(orgId ?? ''),
-    queryFn: () => organizationsApi.requirements(orgId!),
-    enabled: !!orgId,
-    retry: false,
-  });
+/** Portal de la organización (post 3/14): la organización la resuelve el backend por el usuario. */
+export function useRequirements() {
+  return useQuery({ queryKey: qk.requirements, queryFn: orgApi.requirements, meta: { persist: true } });
 }
 
-export function useDocuments(orgId: string | null) {
-  return useQuery({
-    queryKey: qk.documents(orgId ?? ''),
-    queryFn: () => organizationsApi.documents(orgId!),
-    enabled: !!orgId,
-    retry: false,
-  });
+export function useDocuments() {
+  return useQuery({ queryKey: qk.documents, queryFn: orgApi.documents, meta: { persist: true } });
 }
 
-export function useSocialData(orgId: string | null) {
-  return useQuery({
-    queryKey: qk.socialData(orgId ?? ''),
-    queryFn: () => organizationsApi.socialData(orgId!),
-    enabled: !!orgId,
-    retry: false,
-  });
+export function useSocialData() {
+  return useQuery({ queryKey: qk.socialData, queryFn: orgApi.socialData, meta: { persist: true } });
 }

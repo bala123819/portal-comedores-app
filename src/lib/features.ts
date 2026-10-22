@@ -20,7 +20,7 @@ export type Module =
   | 'familiasAlta'
   /** Contactos de la organización y autorizaciones de retiro */
   | 'contactos'
-  /** Requerimientos, documentos, ficha social, carta compromiso */
+  /** Requerimientos, documentos y ficha social (`/org/requirements`, `/org/documents`, `/org/social-data`) */
   | 'documentacion'
   /** Jornadas de recolección y talleres */
   | 'programas'
@@ -42,8 +42,9 @@ const mocksShowEverything = env.useMocks && process.env.EXPO_PUBLIC_MODULES_SCOP
  * Módulos que el Banco ya habilitó para el rol de organización, prendidos también con la API real.
  * - familiasAlta: alta, edición y baja de familias y miembros, desplegado el 2026-10-07 (aviso en GoDubi).
  * - pedidos: catálogo, cupo, pedidos, cancelar y remito, verificado con GET contra la API el 2026-10-14 (D-14).
+ * - documentacion: requerimientos, documentos y ficha social en `/org/*` (post 3/14), verificado con GET el 2026-10-20 (D-16).
  */
-const enabledInBackend = new Set<Module>(['familiasAlta', 'pedidos']);
+const enabledInBackend = new Set<Module>(['familiasAlta', 'pedidos', 'documentacion']);
 
 export function isEnabled(module: Module): boolean {
   return mocksShowEverything || enabledInBackend.has(module) || forced.has(module);

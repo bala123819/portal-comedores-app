@@ -213,6 +213,9 @@ export const orgDocumentTypeLabels: Record<string, string> = {
   personeria_juridica: 'Personería jurídica',
   estatuto: 'Estatuto',
   inscripcion_renspa: 'Inscripción RENSPA',
+  cuit: 'Constancia de CUIT/CUIL',
+  habilitacion: 'Habilitación municipal',
+  bromatologia: 'Habilitación bromatológica',
 };
 
 export const requirementStatusLabels: Record<string, string> = {
@@ -222,6 +225,15 @@ export const requirementStatusLabels: Record<string, string> = {
   pendiente: 'Pendiente',
   vencido: 'Vencido',
   rechazado: 'Rechazado',
+  // `GET /org/requirements` responde en inglés (visto: `missing`; el resto, por las dudas)
+  missing: 'Falta presentar',
+  pending: 'En revisión',
+  uploaded: 'Presentado',
+  submitted: 'Presentado',
+  verified: 'Verificado',
+  approved: 'Aprobado',
+  expired: 'Vencido',
+  rejected: 'Rechazado',
 };
 
 export const socialDataLabels: Record<string, string> = {
@@ -337,4 +349,18 @@ export const pickupDayLabels: Record<string, string> = {
 export const pickupPreferenceLabels: Record<string, string> = {
   pickup: 'Retiran ustedes',
   delivery: 'Se lo llevan',
+};
+
+export const coldCapacityTypeLabels: Record<string, string> = {
+  heladera: 'Heladera',
+  freezer: 'Freezer',
+  camara_frigorifica: 'Cámara frigorífica',
+  ninguna: 'No tienen frío',
+};
+
+export const transportVehicleTypeLabels: Record<string, string> = {
+  camioneta: 'Camioneta',
+  camion: 'Camión',
+  moto: 'Moto',
+  otro: 'Otro',
 };

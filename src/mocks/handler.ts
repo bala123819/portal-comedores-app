@@ -117,6 +117,106 @@ on('PUT', '/auth/password', (_, o) => {
 on('GET', '/org/profile', () =>
   ok({ organization: db.organization, user: { id: db.me.id, full_name: db.me.full_name, email: db.me.email } }),
 );
+// PUT /org/profile (post 3/14): sólo campos editables; lo demás → 422 FIELD_NOT_EDITABLE
+const EDITABLE_PROFILE_FIELDS = [
+  'email',
+  'phone',
+  'description',
+  'pickup_preference',
+  'preferred_pickup_days',
+  'preferred_pickup_time_start',
+  'preferred_pickup_time_end',
+  'has_refrigeration',
+  'vehicle_capacity_kg',
+];
+const DAYS_MESSAGE = 'Los días van en minúscula y sin tilde: lunes, martes, miercoles, jueves, viernes, sabado.';
+on('PUT', '/org/profile', (_, o) => {
+  const b = body(o);
+  const locked = Object.keys(b).filter((k) => !EDITABLE_PROFILE_FIELDS.includes(k));
+  if (locked.length)
+    return json(422, {
+      success: false,
+      message: `Estos datos no se pueden cambiar desde la app: ${locked.join(', ')}. Pedíselo al banco.`,
+      error_code: 'FIELD_NOT_EDITABLE',
+      details: { fields: locked, editable_fields: EDITABLE_PROFILE_FIELDS },
+    });
+  const errors: Record<string, string[]> = {};
+  if (b.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(b.email))) errors.email = ['El email no es válido.'];
+  if (b.pickup_preference !== undefined && !['pickup', 'delivery'].includes(String(b.pickup_preference)))
+    errors.pickup_preference = ['La preferencia tiene que ser pickup (retiran ustedes) o delivery (se la llevan).'];
+  ((b.preferred_pickup_days as string[] | undefined) ?? []).forEach((d, i) => {
+    if (!['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'].includes(d)) errors[`preferred_pickup_days.${i}`] = [DAYS_MESSAGE];
+  });
+  const start = (b.preferred_pickup_time_start as string | null | undefined) ?? db.organization.preferred_pickup_time_start?.slice(0, 5);
+  const end = (b.preferred_pickup_time_end as string | null | undefined) ?? db.organization.preferred_pickup_time_end?.slice(0, 5);
+  if (start && end && end <= start)
+    errors.preferred_pickup_time_end = ['El horario de fin tiene que ser posterior al de inicio.'];
+  if (Object.keys(errors).length) return fail(422, Object.values(errors)[0][0], errors);
+  const withSeconds = (t: unknown) => (typeof t === 'string' && t ? `${t.slice(0, 5)}:00` : null);
+  for (const k of EDITABLE_PROFILE_FIELDS) {
+    if (!(k in b)) continue;
+    const v = b[k];
+    (db.organization as unknown as Record<string, unknown>)[k] = k.startsWith('preferred_pickup_time')
+      ? withSeconds(v)
+      : k === 'vehicle_capacity_kg'
+        ? v == null ? null : Number(v).toFixed(2)
+        : v === '' ? null : v;
+  }
+  return ok({ organization: db.organization, user: { id: db.me.id, full_name: db.me.full_name, email: db.me.email } });
+});
+on('GET', '/org/logistics', () => ok(db.logistics));
+on('PUT', '/org/logistics', (_, o) => {
+  const b = body(o);
+  const errors: Record<string, string[]> = {};
+  // El servidor real responde estos 422 en inglés (G-18)
+  if (b.cold_capacity_m3 != null && !(Number(b.cold_capacity_m3) >= 0))
+    errors.cold_capacity_m3 = ['The cold capacity m3 field must be at least 0.'];
+  if (b.cold_capacity_type != null && !['camara_frigorifica', 'freezer', 'heladera', 'ninguna'].includes(String(b.cold_capacity_type)))
+    errors.cold_capacity_type = ['The selected cold capacity type is invalid.'];
+  if (b.transport_vehicle_type != null && !['camion', 'camioneta', 'moto', 'otro'].includes(String(b.transport_vehicle_type)))
+    errors.transport_vehicle_type = ['The selected transport vehicle type is invalid.'];
+  if (b.operational_contact_email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(b.operational_contact_email)))
+    errors.operational_contact_email = ['The operational contact email field must be a valid email address.'];
+  if (Object.keys(errors).length) return fail(422, Object.values(errors)[0][0], errors);
+  db.logistics = { ...db.logistics, ...b, updated_at: now() };
+  return json(200, { success: true, message: 'Capacidad logística actualizada', data: db.logistics });
+});
+on('GET', '/org/social-data', () =>
+  ok({
+    organization_id: ORG_ID,
+    fields: {
+      fantasy_name: 'Los Girasoles',
+      interviewed_by: 'Equipo social del Banco',
+      founding_year: 2009,
+      has_legal_status: true,
+      legal_status_type: 'Asociación civil',
+      delivers_viandas: true,
+      viandas_notes: 'Los viernes, para llevar',
+      generates_own_income: false,
+      income_methods: [],
+      water_source: 'red_publica',
+      has_bathroom: true,
+      cooking_sources: ['gas_envasado'],
+      property_ownership: 'comodato',
+      storage_methods: ['estante', 'heladera', 'freezer'],
+      terms_accepted_at: '2026-03-02T14:00:00.000000Z',
+      terms_accepted_by: db.me.id,
+    },
+    fiscal_address: null,
+    services: [],
+    meal_schedule: [],
+    funding_sources: [],
+    kitchen_equipment: [],
+  }),
+);
+on('GET', '/org/documents', () => ok(db.documents));
+on('GET', '/org/documents/:id/download', (p) => {
+  const d = db.documents.find((x) => x.id === p.id);
+  // Igual que el servidor hoy (G-18): el documento listado no tiene archivo
+  if (!d || d.is_expired) return failCode(404, 'Documento no encontrado', 'DOCUMENT_NOT_FOUND');
+  return new Response('%PDF-1.4\n% documento de prueba\n', { status: 200, headers: { 'Content-Type': 'application/pdf' } });
+});
+on('GET', '/org/requirements', () => ok(db.requirements));
 on('GET', '/org/stats', () =>
   ok({
     postulaciones: {
@@ -876,26 +976,7 @@ on('POST', '/notifications/subscribe', () =>
 );
 on('POST', '/notifications/unsubscribe', () => ok({ message: 'Suscripción cancelada' }));
 
-// ─── Organización: documentos y jornadas ─────────────────────────
-on('GET', '/organizations/:org/requirements', () => ok(db.requirements));
-on('GET', '/organizations/:org/documents', () =>
-  ok([{ id: 'doc-1', document_type: 'personeria_juridica', document_name: 'Personería 2024.pdf', created_at: now() }]),
-);
-on('GET', '/organizations/:org/social-data', () =>
-  ok({
-    organization_fields: {
-      fantasy_name: 'Los Girasoles',
-      founding_year: 2009,
-      delivers_viandas: true,
-      water_source: 'red_publica',
-      has_bathroom: true,
-      cooking_sources: ['gas_envasado'],
-      property_ownership: 'comodato',
-      storage_methods: ['estante', 'heladera', 'freezer'],
-    },
-  }),
-);
-on('GET', '/organizations/:org/terms-pdf', () => fail(404, 'La carta compromiso todavía no fue aceptada'));
+// ─── Organización: jornadas ─────────────────────────
 on('GET', '/organizations/:org/collection-commitments', () =>
   ok({ year: new Date().getFullYear(), scheduled: 4, attended: 3, no_show: 1 }),
 );

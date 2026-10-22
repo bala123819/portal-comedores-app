@@ -169,3 +169,13 @@ Verificado con GET contra el servidor real. Nada bloquea; para conversar con el 
 - `category` y `nutritional_group` vienen `null` en algunos productos del catálogo de prueba: no hay forma de agrupar todo el catálogo.
 - No hay endpoint de categorías para este rol: los filtros se arman con lo que trae el catálogo.
 - El remito es un PDF por pedido. Sigue abierta la pregunta del Banco sobre el "PDF de las donaciones" de un período (post "Todo lo que la app puede hacer", punto 8).
+
+### G-18 · Perfil de la organización: observaciones (2026-10-20)
+| Tema | Detalle |
+|---|---|
+| Descarga de documentos | `GET /org/documents/{id}/download` del único documento listado ("Estatuto [PRUEBA TESIS]", id `2e205742-…`) responde **404 `DOCUMENT_NOT_FOUND`**, aunque `GET /org/documents` lo devuelve con su `download_path`. Parece que el registro existe sin archivo. La app muestra "El Banco todavía no tiene el archivo de este documento". **Avisar al Banco.** |
+| Idioma de los 422 de logística | `PUT /org/logistics` valida en inglés ("The cold capacity m3 field must be at least 0."). `PUT /org/profile`, en cambio, responde en español. La app marca el campo con un mensaje propio. |
+| Enums de logística | `cold_capacity_type` (`camara_frigorifica`, `freezer`, `heladera`, `ninguna`) y `transport_vehicle_type` (`camion`, `camioneta`, `moto`, `otro`) no están en el post 3: se tomaron del OpenAPI y se confirmaron con un 422 del servidor. |
+| `status` de requisitos | Sólo se vio `missing` (en inglés, a diferencia del resto de la API). Falta el listado de estados posibles. |
+| Carta compromiso | No hay ruta para el rol organización: `/organizations/{id}/terms-pdf` da 403. Sólo se sabe si la aceptaron por `terms_accepted_at`. |
+| Ficha social vacía | En una ficha sin relevar, los booleanos llegan en `false` (no `null`): no se distingue "no" de "sin dato". La app sólo muestra los `true`. |

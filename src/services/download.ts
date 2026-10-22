@@ -22,6 +22,9 @@ export async function downloadAndOpen(path: string, filename: string): Promise<v
       idempotent: true,
     });
   } catch {
+    // `downloadFileAsync` no expone el cuerpo del error: se repite el pedido para saber qué pasó
+    // (p. ej. 404 `DOCUMENT_NOT_FOUND`). Si el pedido anda, el problema fue de la descarga.
+    await api.raw(path);
     throw new ApiError({ kind: 'network', message: 'No pudimos descargar el archivo.' });
   }
   if (await Sharing.isAvailableAsync()) {

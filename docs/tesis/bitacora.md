@@ -710,7 +710,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 
 ## 222f1f2 · fix: borrar los datos al cerrar sesión, validar fechas de nacimiento y volver después de guardar
 - **Fecha:** 2026-10-23 17:35 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
-- **Etapa:** Calidad — testing integral (rama `fix/testing-integral`)
+- **Etapa:** Calidad — testing integral (rama `fix/testing-integral`, integrada a `main` en el merge de4a8fe)
 
 **Objetivo.** Corregir los tres errores de la app que encontró el testing integral del 2026-10-23.
 
@@ -739,7 +739,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
   - "Agregar persona" muestra "Esa fecha no existe" y "La fecha no puede ser futura", y con una fecha válida guarda y calcula la edad.
 
 **Pendientes.**
-- Actualizar los paquetes de Expo a las versiones de parche del SDK 57 (`npx expo install --fix`) y volver a probar.
+- Los paquetes de Expo atrasados en versión de parche y el paso al SDK 58 se descartaron por ahora (decisión del equipo, 2026-10-23): la app sigue en el SDK 57 tal como está.
 - Detalles menores del testing: plurales ("1 embarazadas"), tres cifras distintas de kilos recibidos, etiquetas de campos opcionales, motivo obligatorio al cancelar un pedido sin aviso, pantallas de "no encontrado" con "Reintentar", días de retiro fuera de los preferidos, vehículo "No" con capacidad, etiqueta "Vence" sin fecha, avisos de mermas con el módulo apagado.
 - Probar contra el servidor real qué responde a una fecha de nacimiento futura.
 

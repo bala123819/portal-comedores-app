@@ -63,6 +63,9 @@ export const useSession = create<SessionState>((set, get) => ({
   async hydrate() {
     const token = await storage.getSecure(STORAGE_KEYS.token);
     if (!token) {
+      // Sin sesión no puede quedar nada de una organización en el dispositivo (P-22)
+      queryClient.clear();
+      await clearPersistedCache();
       set({ status: 'signedOut' });
       return;
     }

@@ -1,5 +1,6 @@
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { MutationCache, QueryCache, QueryClient, type Query } from '@tanstack/react-query';
+import { apiConfig } from './api/client';
 import { isApiError } from './api/errors';
 import { storage, STORAGE_KEYS } from './storage';
 
@@ -40,10 +41,16 @@ export const queryClient = new QueryClient({
   },
 });
 
-/** Adaptador de storage para el persister (AsyncStorage en nativo, localStorage en web) */
+/**
+ * Adaptador de storage para el persister (AsyncStorage en nativo, localStorage en web).
+ * Sin sesión no se escribe: el persister guarda con demora y, al cerrar sesión, una escritura
+ * pendiente volvía a dejar en el dispositivo los datos de la organización (P-22).
+ */
 const persisterStorage = {
   getItem: (key: string) => storage.get(key),
-  setItem: (key: string, value: string) => storage.set(key, value),
+  setItem: async (key: string, value: string) => {
+    if (apiConfig.getToken()) await storage.set(key, value);
+  },
   removeItem: (key: string) => storage.remove(key),
 };
 

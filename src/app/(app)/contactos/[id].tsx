@@ -35,6 +35,7 @@ import {
   isAuthorizationActive,
   isContactError,
 } from '@/features/contactos/types';
+import { goBack } from '@/lib/navigation';
 import { humanMessage, isApiError } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 import { colors } from '@/theme/tokens';
@@ -64,14 +65,14 @@ export default function ContactoScreen() {
     if (!isContactError(e, 'CONTACT_NOT_FOUND')) return false;
     toast.error(contactErrorMessage(e)!);
     void q.refetch();
-    router.back();
+    goBack('/contactos');
     return true;
   };
 
   const update = useUpdateContact(id, () => setProblem(null));
   const remove = useDeleteContact(id, () => {
     setConfirmDelete(false);
-    router.back();
+    goBack('/contactos');
   });
 
   const header = (

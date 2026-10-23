@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import type { Href } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import {
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '@/lib/cn';
+import { goBack } from '@/lib/navigation';
 import { colors } from '@/theme/tokens';
 import { IconButton } from './Button';
 import { OfflineBanner } from './States';
@@ -34,7 +35,7 @@ export function Header({ title, subtitle, back, backFallback = '/', right }: Hea
           <IconButton
             icon={ArrowLeft}
             label="Volver"
-            onPress={() => (router.canGoBack() ? router.back() : router.replace(backFallback as never))}
+            onPress={() => goBack(backFallback as Href)}
           />
         ) : (
           <View className="w-2" />

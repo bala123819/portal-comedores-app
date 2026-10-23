@@ -36,7 +36,22 @@ export const fromIso = (d?: string | null) => {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
 };
 
-const optionalEmail = z.union([z.literal(''), z.string().trim().email('Revisá el email')]).optional();
+/** dd/mm/aaaa que existe (no 31/02), no es futura y no tiene más de 120 años; null si está bien */
+export function birthDateError(d: string): string | null {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(d);
+  if (!m) return 'Usá el formato día/mes/año';
+  const [day, month, year] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return 'Esa fecha no existe';
+  }
+  const today = new Date();
+  if (date > today) return 'La fecha no puede ser futura';
+  if (today.getFullYear() - year > 120) return 'Revisá el año';
+  return null;
+}
+
+const optionalEmail =z.union([z.literal(''), z.string().trim().email('Revisá el email')]).optional();
 
 export const memberSchema = z.object({
   first_name: z.string().trim().min(1, 'Obligatorio').max(100),
@@ -45,7 +60,10 @@ export const memberSchema = z.object({
   birth_date: z
     .string()
     .trim()
-    .refine((v) => v === '' || /^\d{2}\/\d{2}\/\d{4}$/.test(v), 'Usá el formato día/mes/año')
+    .superRefine((v, ctx) => {
+      const error = v === '' ? null : birthDateError(v);
+      if (error) ctx.addIssue({ code: 'custom', message: error });
+    })
     .optional(),
   relationship: z.string().optional(),
   gender: z.string().optional(),

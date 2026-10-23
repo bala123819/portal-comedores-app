@@ -1,10 +1,11 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, ArrowRight, Check, ListChecks } from 'lucide-react-native';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomSheet, Button, Header, ProgressBar, Text } from '@/components/ui';
 import { useReceta } from '@/features/recetas/hooks';
+import { goBack } from '@/lib/navigation';
 import { scaleFactor, scaleQuantity } from '@/lib/recipe-scale';
 
 /** Modo cocina: un paso por pantalla, letra grande, botones grandes. */
@@ -56,7 +57,7 @@ export default function CocinarScreen() {
             onPress={() => setStep((s) => Math.max(0, s - 1))}
           />
           {last ? (
-            <Button title="¡Listo!" icon={Check} size="lg" className="flex-1" onPress={() => router.back()} />
+            <Button title="¡Listo!" icon={Check} size="lg" className="flex-1" onPress={() => goBack('/recetas')} />
           ) : (
             <Button
               title="Siguiente"

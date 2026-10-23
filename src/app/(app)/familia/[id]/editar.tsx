@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Save } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { useForm, type Control, type FieldValues, type Path } from 'react-hook-form';
@@ -17,6 +17,7 @@ import {
   type FamilyValues,
 } from '@/features/familias/form';
 import { useFamily, useFamilyFormConfig, useFamilyTypes, useUpdateFamily } from '@/features/familias/hooks';
+import { goBack } from '@/lib/navigation';
 import { humanMessage } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 
@@ -28,7 +29,7 @@ export default function EditarFamiliaScreen() {
   const types = useFamilyTypes();
   const formConfig = useFamilyFormConfig();
   const cfg = formConfig.data;
-  const update = useUpdateFamily(id, () => router.back());
+  const update = useUpdateFamily(id, () => goBack(`/familia/${id}`));
 
   const { control, handleSubmit, setError, reset } = useForm<FamilyValues>({
     resolver: zodResolver(familySchema),
@@ -58,7 +59,7 @@ export default function EditarFamiliaScreen() {
     const changes = changedFields(familyBody(familyToValues(f), cfg), familyBody(v, cfg));
     if (!Object.keys(changes).length) {
       toast.info('No hay cambios para guardar');
-      router.back();
+      goBack(`/familia/${id}`);
       return;
     }
     update.mutate(changes, { onError: (e) => applyFieldErrors(e, setError) });

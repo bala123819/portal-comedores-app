@@ -25,6 +25,7 @@ import { useCreateDistribution, useQuota } from '@/features/pedidos/hooks';
 import type { CreateDistributionResult } from '@/features/pedidos/types';
 import { formatDay, formatNumber, formatQuantity, toISODate } from '@/lib/format';
 import { timeSlotLabels } from '@/lib/labels';
+import { goBack } from '@/lib/navigation';
 import { humanMessage, isApiError } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 import { colors } from '@/theme/tokens';
@@ -159,7 +160,7 @@ export default function ConfirmarPedidoScreen() {
             icon={Plus}
             variant="ghost"
             size="sm"
-            onPress={() => router.back()}
+            onPress={() => goBack('/pedido/nuevo')}
           />
         }
       />

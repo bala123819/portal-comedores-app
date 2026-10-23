@@ -118,3 +118,18 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 ### P-21 · El panel del navegador de la app de escritorio no recibía clics
 - **Síntoma:** en la prueba manual, el login simulado no avanzaba: los clics y el texto no llegaban a los campos, y las capturas fallaban porque la página "no terminaba de dibujarse" (la ventana estaba tapada).
 - **Solución:** se probó con Chrome headless manejado por CDP desde un script de Node, sin instalar nada (como en P-17), con un viewport de celular (390 × 844): 22 verificaciones automáticas y capturas de pantalla.
+
+### P-22 · Al cerrar sesión quedaban los datos de la organización en el dispositivo
+- **Síntoma:** en el testing integral (2026-10-23), después de cerrar sesión `pc.queryCache` seguía en el almacenamiento del navegador con familias, pedidos e interacciones. En un celular compartido, la próxima persona podía tener esos datos guardados.
+- **Causa:** `signOut` vaciaba el caché y borraba la copia guardada, pero el persister de React Query guarda con demora (`throttleTime: 2000`) y una escritura que ya estaba en curso volvía a dejar la copia después del borrado.
+- **Solución:** el adaptador de storage del persister no escribe si no hay token (`src/services/query-client.ts`), y al abrir la app sin sesión se vacía el caché y se borra cualquier copia que haya quedado (`hydrate` en `src/features/auth/store.ts`). Verificado en web: con la sesión abierta el caché se sigue guardando (lo necesita el modo sin conexión) y al cerrar sesión no queda nada ni a los 7 segundos.
+
+### P-23 · Formularios que no se cerraban después de guardar
+- **Síntoma:** al abrir un formulario directo (recargar la página o entrar por un link) y guardar, la app se quedaba en el formulario con los datos cargados; se podía guardar dos veces. Se vio en "Agregar contacto".
+- **Causa:** después de guardar se llamaba a `router.back()`, que en web no hace nada si no hay historial.
+- **Solución:** `goBack(fallback)` en `src/lib/navigation.ts` vuelve atrás si hay historial y, si no, va a la pantalla que corresponde. Se usa en los 11 lugares que volvían después de una acción (contactos, familias y miembros, mensaje al Banco, pedido, contraseña, receta, retiro) y en el botón "Volver" del encabezado, que ya hacía lo mismo.
+
+### P-24 · El alta de miembros aceptaba fechas de nacimiento imposibles
+- **Síntoma:** con `31/02/2030` la persona se guardaba y aparecía con "-4 años" (en modo simulado; no se probó qué hace el servidor real, para no cargar datos falsos).
+- **Causa:** el formulario sólo controlaba el formato dd/mm/aaaa.
+- **Solución:** `birthDateError` en `src/features/familias/form.ts` controla que la fecha exista, que no sea futura y que no tenga más de 120 años. Lo usan el alta de familia, el alta de miembro y la edición de miembro.

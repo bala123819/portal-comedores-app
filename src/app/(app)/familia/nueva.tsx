@@ -19,6 +19,7 @@ import {
 } from '@/features/familias/form';
 import { useCreateFamily, useFamilyFormConfig, useFamilyTypes } from '@/features/familias/hooks';
 import type { CreateFamilyInput } from '@/features/familias/types';
+import { goBack } from '@/lib/navigation';
 import { humanMessage } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 import { colors } from '@/theme/tokens';
@@ -33,7 +34,7 @@ export default function NuevaFamiliaScreen() {
   const cfg = formConfig.data;
   const create = useCreateFamily((id) => {
     if (id) router.replace({ pathname: '/familia/[id]', params: { id } });
-    else router.back();
+    else goBack('/familias');
   });
 
   const { control, handleSubmit, setError } = useForm<FormValues>({

@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
 import { KeyRound } from 'lucide-react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button, Header, Input, Screen, Text } from '@/components/ui';
+import { goBack } from '@/lib/navigation';
 import { authApi } from '@/services/api/endpoints';
 import type { PasswordBody } from '@/services/api/endpoints/auth';
 import { humanMessage } from '@/services/api/errors';
@@ -22,7 +22,7 @@ type FormValues = z.infer<typeof schema>;
 export default function ContrasenaScreen() {
   const change = useAction((body: PasswordBody, key) => authApi.changePassword(body, key), {
     successMessage: 'Cambiaste tu contraseña',
-    onSuccess: () => router.back(),
+    onSuccess: () => goBack('/perfil'),
     errorToast: false,
   });
   const { control, handleSubmit, setError, formState: { errors } } = useForm<FormValues>({

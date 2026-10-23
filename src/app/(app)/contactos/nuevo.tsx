@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
 import { Save } from 'lucide-react-native';
 import { useForm } from 'react-hook-form';
 import { ContactFields } from '@/components/contactos/ContactFields';
@@ -12,12 +11,13 @@ import {
 } from '@/features/contactos/form';
 import { useCreateContact } from '@/features/contactos/hooks';
 import { contactErrorMessage } from '@/features/contactos/types';
+import { goBack } from '@/lib/navigation';
 import { humanMessage, isApiError } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 
 /** `POST /org/contacts`. El DNI no se repite en la organización (422 en `dni`). */
 export default function NuevoContactoScreen() {
-  const create = useCreateContact(() => router.back());
+  const create = useCreateContact(() => goBack('/contactos'));
   const { control, handleSubmit, setError } = useForm<ContactValues>({
     resolver: zodResolver(contactSchema),
     defaultValues: emptyContact(),

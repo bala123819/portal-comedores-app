@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { RotateCcw, Save, Trash2, UserMinus } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useForm, type Control, type FieldValues, type Path } from 'react-hook-form';
@@ -31,6 +31,7 @@ import {
   type MemberValues,
 } from '@/features/familias/form';
 import { useFamily, useFamilyFormConfig, useRemoveMember, useUpdateMember } from '@/features/familias/hooks';
+import { goBack } from '@/lib/navigation';
 import { humanMessage } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 
@@ -50,11 +51,11 @@ export default function MiembroScreen() {
 
   const update = useUpdateMember(id, memberId, () => {
     if (confirmStatus) setConfirmStatus(null);
-    else router.back();
+    else goBack(`/familia/${id}`);
   });
   const remove = useRemoveMember(id, memberId, () => {
     setConfirmRemove(false);
-    router.back();
+    goBack(`/familia/${id}`);
   });
 
   const { control, handleSubmit, setError, reset } = useForm<MemberValues>({
@@ -90,7 +91,7 @@ export default function MiembroScreen() {
     const changes = changedFields(memberBody(memberToValues(m), cfg), memberBody(v, cfg));
     if (!Object.keys(changes).length) {
       toast.info('No hay cambios para guardar');
-      router.back();
+      goBack(`/familia/${id}`);
       return;
     }
     update.mutate(changes, { onError: (e) => applyFieldErrors(e, setError) });

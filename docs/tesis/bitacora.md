@@ -705,3 +705,42 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Probar la edición real de perfil y logística con cambios (no sólo reenviando los mismos valores) y recorrer las pantallas en un celular.
 
 **Archivos principales.** `docs/api-gaps.md`, `docs/bda/03-perfil-organizacion.md`, `docs/bda/README.md`, `docs/decisiones.md`, `src/app/(app)/documentacion.tsx`, `src/app/(app)/organizacion.tsx`, `src/components/organizacion/LogisticsSheet.tsx`, `src/components/organizacion/ProfileSheet.tsx`, `src/features/documentacion/hooks.ts`, `src/features/org/form.ts`, `src/features/org/hooks.ts`, `src/features/org/types.ts`, `src/features/query-keys.ts`, `src/lib/features.ts`, `src/lib/labels.ts`, `src/mocks/data.ts`, `src/mocks/handler.ts`, `src/services/api/client.ts`, `src/services/api/endpoints/org.ts`, `src/services/api/endpoints/organizations.ts`, `src/services/download.ts`
+
+---
+
+## 222f1f2 · fix: borrar los datos al cerrar sesión, validar fechas de nacimiento y volver después de guardar
+- **Fecha:** 2026-10-23 17:35 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Calidad — testing integral (rama `fix/testing-integral`)
+
+**Objetivo.** Corregir los tres errores de la app que encontró el testing integral del 2026-10-23.
+
+**Cómo se hizo el testing.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores. `npx expo-doctor`: 9 paquetes de Expo con versión de parche atrasada respecto del SDK 57 (no se actualizaron en este commit).
+- `npm run smoke` contra la API real: 24 PASS y 1 FAIL. `/health` corta la conexión de forma intermitente desde la máquina de desarrollo; desde el navegador responde, y la app sólo lo usa en el diagnóstico.
+- Recorrido de todas las pantallas con la API real y el usuario de prueba (sólo lectura, en web a 375 × 812): inicio, mercadería, catálogo, pedido, familias, ficha de familia, resumen, lo recibido, nutrición, mi organización, documentación, contactos, comunicación con el Banco, avisos, perfil, recetas, asistente, ayuda, diagnóstico, rutas de módulos apagados e ids inexistentes. Sin errores propios de la app.
+- Altas, ediciones y bajas en modo simulado, para no cargar datos en el servidor del Banco: familia, miembro, pasar a inactiva, baja, mensaje al Banco, contacto, pedido y su cancelación, cierre de sesión.
+
+**Qué se hizo.**
+- **Datos al cerrar sesión (P-22):** el persister de React Query no escribe si no hay token, y al abrir la app sin sesión se vacía el caché y se borra la copia guardada.
+- **Fecha de nacimiento (P-24):** `birthDateError` controla que la fecha exista, no sea futura y no tenga más de 120 años. Lo usan el alta de familia, el alta de miembro y la edición de miembro.
+- **Volver después de guardar (P-23):** `goBack(fallback)` en `src/lib/navigation.ts`, usado en los 11 lugares que volvían después de una acción y en el botón "Volver" del encabezado.
+
+**Decisiones.** Ninguna nueva.
+
+**Problemas y soluciones.** P-22, P-23 y P-24.
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores ni advertencias.
+- Casos de `birthDateError` con un script de `tsx`: `15/03/1990` y `29/02/2024` válidas; `29/02/2023` y `31/02/2030` no existen; `01/01/2030` futura; `01/01/1880` fuera de rango; vacía, permitida.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true`, `MODULES_SCOPE=real`):
+  - al abrir la app sin sesión se borró el caché que había quedado de la prueba anterior;
+  - con la sesión abierta el caché se guarda; al cerrar sesión no queda nada al segundo ni a los 7 segundos;
+  - "Agregar contacto" abierto directo por URL vuelve a Contactos después de guardar;
+  - "Agregar persona" muestra "Esa fecha no existe" y "La fecha no puede ser futura", y con una fecha válida guarda y calcula la edad.
+
+**Pendientes.**
+- Actualizar los paquetes de Expo a las versiones de parche del SDK 57 (`npx expo install --fix`) y volver a probar.
+- Detalles menores del testing: plurales ("1 embarazadas"), tres cifras distintas de kilos recibidos, etiquetas de campos opcionales, motivo obligatorio al cancelar un pedido sin aviso, pantallas de "no encontrado" con "Reintentar", días de retiro fuera de los preferidos, vehículo "No" con capacidad, etiqueta "Vence" sin fecha, avisos de mermas con el módulo apagado.
+- Probar contra el servidor real qué responde a una fecha de nacimiento futura.
+
+**Archivos principales.** `src/services/query-client.ts`, `src/features/auth/store.ts`, `src/features/familias/form.ts`, `src/lib/navigation.ts`, `src/components/ui/Layout.tsx`, `src/app/(app)/contactos/*`, `src/app/(app)/familia/**`, `src/app/(app)/banco/nueva.tsx`, `src/app/(app)/pedido/confirmar.tsx`, `src/app/(app)/perfil/contrasena.tsx`, `src/app/(app)/receta/[id]/cocinar.tsx`, `src/app/(app)/retiro/[id]/completar.tsx`, `docs/tesis/problemas-y-soluciones.md`

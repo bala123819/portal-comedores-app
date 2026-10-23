@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { UserPlus } from 'lucide-react-native';
 import { useForm, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { MemberFields } from '@/components/familias/MemberFields';
@@ -13,6 +13,7 @@ import {
   type MemberValues,
 } from '@/features/familias/form';
 import { useAddMember, useFamily, useFamilyFormConfig } from '@/features/familias/hooks';
+import { goBack } from '@/lib/navigation';
 import { humanMessage } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 
@@ -22,7 +23,7 @@ export default function NuevoMiembroScreen() {
   const family = useFamily(id);
   const formConfig = useFamilyFormConfig();
   const cfg = formConfig.data;
-  const add = useAddMember(id, () => router.back());
+  const add = useAddMember(id, () => goBack(`/familia/${id}`));
 
   const { control, handleSubmit, setError } = useForm<MemberValues>({
     resolver: zodResolver(memberSchema),

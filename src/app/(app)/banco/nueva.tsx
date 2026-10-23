@@ -16,6 +16,7 @@ import {
 } from '@/features/interacciones/types';
 import { cn } from '@/lib/cn';
 import { interactionTypeHints, interactionTypeLabels, label } from '@/lib/labels';
+import { goBack } from '@/lib/navigation';
 import { humanMessage, isApiError } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 import { colors } from '@/theme/tokens';
@@ -89,7 +90,7 @@ export default function NuevaInteraccionScreen() {
   const { tipo, titulo, notas } = useLocalSearchParams<{ tipo?: string; titulo?: string; notas?: string }>();
   const create = useCreateInteraction((created) => {
     if (created?.id) router.replace({ pathname: '/banco/[id]', params: { id: created.id } });
-    else router.back();
+    else goBack('/banco');
   });
 
   const {

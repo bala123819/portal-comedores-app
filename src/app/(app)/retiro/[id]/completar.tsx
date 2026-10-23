@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { PackageCheck } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -7,6 +7,7 @@ import { ScrollView, View } from 'react-native';
 import { z } from 'zod';
 import { Button, Card, Chip, ConfirmDialog, Header, Input, Screen, Text, TextArea } from '@/components/ui';
 import { useAssignment, useCompleteAssignment, usePickers } from '@/features/asignaciones/hooks';
+import { goBack } from '@/lib/navigation';
 import { humanMessage } from '@/services/api/errors';
 import { applyFieldErrors } from '@/services/api/use-action';
 
@@ -25,7 +26,7 @@ export default function CompletarRetiroScreen() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const complete = useCompleteAssignment(() => {
     setConfirmOpen(false);
-    router.back();
+    goBack('/retiros');
   });
 
   const {

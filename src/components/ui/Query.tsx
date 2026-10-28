@@ -91,7 +91,7 @@ export function InfiniteList<T extends { id: string }>({
       refreshControl={
         <RefreshControl
           refreshing={query.isRefetching && !query.isFetchingNextPage}
-          onRefresh={() => query.refetch()}
+          onRefresh={() => void query.refetch()}
           colors={[colors.primary]}
           tintColor={colors.primary}
         />

@@ -133,3 +133,13 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 - **Síntoma:** con `31/02/2030` la persona se guardaba y aparecía con "-4 años" (en modo simulado; no se probó qué hace el servidor real, para no cargar datos falsos).
 - **Causa:** el formulario sólo controlaba el formato dd/mm/aaaa.
 - **Solución:** `birthDateError` en `src/features/familias/form.ts` controla que la fecha exista, que no sea futura y que no tenga más de 120 años. Lo usan el alta de familia, el alta de miembro y la edición de miembro.
+
+### P-25 · Con el SDK 58, la app sin sesión abría "No encontramos esta pantalla"
+- **Síntoma:** después del paso al SDK 58 (D-22), al abrir la app sin sesión la URL pasaba a `/(auth)` y se veía la pantalla de ruta inexistente en vez del login.
+- **Causa:** en Expo Router 58 un `Stack.Protected` cuyo guard falla ya no quita la ruta: redirige. Sin `redirectTo`, redirigía al grupo `(auth)`, que no tiene `index`.
+- **Solución:** `src/app/_layout.tsx` calcula la pantalla que corresponde según la sesión (`/login`, `/sin-organizacion` o `/`) y la pasa como `redirectTo` a los cuatro guards. Verificado en web: sin sesión abre el login, al entrar va al inicio y al cerrar sesión vuelve al login.
+
+### P-26 · Tipos estrictos de React Native 0.88
+- **Síntoma:** `tsc` daba 21 errores después del upgrade, casi todos por pasar `handleSubmit(...)` de react-hook-form directo a `onPress`.
+- **Causa:** RN 0.87 activa por defecto la "Strict TypeScript API": el evento de toque ya no es compatible con el `BaseSyntheticEvent` que espera `handleSubmit`, y los refs pasan a tipos de instancia (`TextInputInstance`).
+- **Solución:** `Button` declara `onPress?: () => unknown` y no le pasa el evento (como ya hacía `IconButton`), lo que arregla 17 de los errores de una vez. Además: `Ref<TextInputInstance>` en `Input`, `onRefresh={() => void query.refetch()}` en las listas y `onSubmitEditing={() => void onSubmit()}` en el login.

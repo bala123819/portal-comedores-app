@@ -112,3 +112,10 @@ Se implementa el post 3/14 de la serie "API organizaciones" (`docs/bda/03-perfil
 - **Lógica de formularios aparte** (`src/features/org/form.ts`): valores del form ⇄ cuerpo de la API, testeable sin pantalla.
 - **Descargas con `error_code`:** `api.raw` ahora lee el JSON del error, y la descarga nativa repite el pedido para conocerlo (`downloadFileAsync` no lo expone). Así la app distingue `DOCUMENT_NOT_FOUND` de un corte de conexión.
 - Rama `perfil-organizacion`. Al integrar con `main` se renumeró a D-21 y G-20, porque `Contacto` y `recibido-nutricion` ya habían usado D-16–D-20 y G-18–G-19. "Mi organización" conserva el acceso a Contactos de D-16 y suma la edición del perfil y la capacidad logística.
+
+### D-22 · Paso al Expo SDK 58 (2026-10-28)
+Se actualiza el proyecto del SDK 57 al 58 (React Native 0.86 → 0.88, React 19.2 → 19.3, Expo Router 58). Revierte lo decidido en el testing integral (2026-10-23, entrada 222f1f2) de quedarse en el SDK 57.
+- **Motivo:** Expo Go del celular se actualizó al SDK 58 y sólo abre proyectos de ese SDK, así que la app dejó de poder probarse en el teléfono.
+- **Cómo:** `npx expo install expo@^58.0.0 --fix`, siguiendo la guía oficial de upgrade y la de migración de Expo Router 57 → 58. `node_modules` y `package-lock.json` se regeneraron de cero porque npm no podía resolver el árbol viejo (ERESOLVE).
+- **Ajustes de código:** `redirectTo` en los guards de la raíz (P-25) y los tipos estrictos de React Native (P-26). El código no usaba ninguna de las APIs que se quitan (`initialRouteName`, `freezeOnBlur`, `InteractionManager`, `ImageBackground`, imports profundos de `react-native/Libraries`, `File.write`).
+- `react-native-gesture-handler` sube de versión mayor (2 → 3); la app no lo usa directamente.

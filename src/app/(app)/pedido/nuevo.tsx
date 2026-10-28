@@ -178,7 +178,7 @@ export default function NuevoPedidoScreen() {
         refreshControl={
           <RefreshControl
             refreshing={query.isRefetching && !query.isFetchingNextPage}
-            onRefresh={() => query.refetch()}
+            onRefresh={() => void query.refetch()}
             colors={[colors.primary]}
             tintColor={colors.primary}
           />

@@ -1,6 +1,6 @@
 import { Eye, EyeOff, type LucideIcon } from 'lucide-react-native';
 import { useState, type Ref } from 'react';
-import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, TextInput, View, type TextInputInstance, type TextInputProps } from 'react-native';
 import { cn } from '@/lib/cn';
 import { colors } from '@/theme/tokens';
 import { Text } from './Text';
@@ -12,7 +12,7 @@ export interface InputProps extends TextInputProps {
   icon?: LucideIcon;
   containerClassName?: string;
   className?: string;
-  ref?: Ref<TextInput>;
+  ref?: Ref<TextInputInstance>;
 }
 
 export function Input({

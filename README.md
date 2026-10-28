@@ -1,7 +1,7 @@
 # Portal Comedores
 
 App para comedores y organizaciones sociales del **Banco de Alimentos**, sobre la **API Mermab**.
-Android, iOS y web (PWA) desde una sola base de código: Expo SDK 57 + Expo Router + TypeScript.
+Android, iOS y web (PWA) desde una sola base de código: Expo SDK 58 + Expo Router + TypeScript.
 
 > Fuente de verdad del backend: **`docs/bda/`** (guía del Banco, probada contra el servidor).
 

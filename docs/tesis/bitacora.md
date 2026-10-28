@@ -744,3 +744,33 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Probar contra el servidor real qué responde a una fecha de nacimiento futura.
 
 **Archivos principales.** `src/services/query-client.ts`, `src/features/auth/store.ts`, `src/features/familias/form.ts`, `src/lib/navigation.ts`, `src/components/ui/Layout.tsx`, `src/app/(app)/contactos/*`, `src/app/(app)/familia/**`, `src/app/(app)/banco/nueva.tsx`, `src/app/(app)/pedido/confirmar.tsx`, `src/app/(app)/perfil/contrasena.tsx`, `src/app/(app)/receta/[id]/cocinar.tsx`, `src/app/(app)/retiro/[id]/completar.tsx`, `docs/tesis/problemas-y-soluciones.md`
+
+---
+
+## 5a6964e · chore: pasar a Expo SDK 58
+- **Fecha:** 2026-10-28 18:52 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Mantenimiento — actualización del SDK (rama `chore/sdk-58`)
+
+**Objetivo.** Volver a poder probar la app en el celular: Expo Go se actualizó al SDK 58 y no abre proyectos del SDK 57.
+
+**Qué se hizo.**
+- `npx expo install expo@^58.0.0 --fix` según la guía oficial de upgrade y la de migración de Expo Router 57 → 58. React Native 0.86 → 0.88, React 19.2 → 19.3, todos los paquetes `expo-*` a 58, `react-native-gesture-handler` 2 → 3, `eslint-config-expo` 58. `node_modules` y `package-lock.json` se regeneraron porque npm no resolvía el árbol viejo (ERESOLVE con `expo-symbols`).
+- Se buscaron en el código las APIs que el SDK 58 quita o cambia: no se usaba ninguna.
+- Guards de la raíz con `redirectTo` (P-25) y ajustes por los tipos estrictos de RN 0.88 (P-26).
+- Arquitectura y README con el SDK nuevo.
+
+**Decisiones.** D-22 (revierte el "quedarse en el SDK 57" del 2026-10-23).
+
+**Problemas y soluciones.** P-25 y P-26.
+
+**Verificación.**
+- `npx expo-doctor`: 20/20 checks. `npx expo install --check`: dependencias al día.
+- `npx tsc --noEmit` y `npx expo lint`: sin errores.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true`, `MODULES_SCOPE=real`): el bundle compila; sin sesión abre el login; el login lleva al inicio con todos los datos; "Escribirle al Banco" y "Volver" funcionan; cerrar sesión vuelve al login. Sin errores en consola.
+
+**Pendientes.**
+- Probar en el celular con Expo Go SDK 58 (Android/iOS): no se pudo verificar desde la máquina de desarrollo.
+- En web, `react-native-safe-area-context` ya no da los márgenes del notch (Expo Router 58): en la PWA instalada en un iPhone podrían faltar márgenes arriba y abajo; si pasa, usar `env(safe-area-inset-*)`.
+- `npm audit` informa 8 vulnerabilidades (5 bajas, 3 altas) en dependencias de desarrollo/transitivas; no se revisaron.
+
+**Archivos principales.** `package.json`, `package-lock.json`, `src/app/_layout.tsx`, `src/components/ui/Button.tsx`, `src/components/ui/Input.tsx`, `src/components/ui/Query.tsx`, `src/app/(auth)/login.tsx`, `src/app/(app)/pedido/nuevo.tsx`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/tesis/arquitectura.md`, `README.md`

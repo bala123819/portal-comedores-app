@@ -3,6 +3,7 @@ import {
   Bell,
   Building2,
   CalendarDays,
+  ChevronRight,
   FileText,
   HeartHandshake,
   LifeBuoy,
@@ -36,11 +37,12 @@ export default function MasScreen() {
   return (
     <Screen header={<Header title="Más" />}>
       <Card onPress={() => router.push('/perfil')} className="flex-row items-center gap-3">
-        <Avatar name={displayName(me) || 'Usuario'} uri={me?.avatar_url} />
+        <Avatar name={displayName(me) || 'Usuario'} uri={me?.avatar_url} size="lg" />
         <View className="flex-1">
-          <Text variant="label">{displayName(me)}</Text>
+          <Text variant="heading">{displayName(me)}</Text>
           <Text variant="caption">{org?.name ?? me?.email}</Text>
         </View>
+        <ChevronRight size={20} color={colors.mutedForeground} />
       </Card>
 
       <SectionHeader title="Mi organización" />

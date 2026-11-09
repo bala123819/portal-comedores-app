@@ -1,4 +1,4 @@
-import { ChefHat, Clock, Users } from 'lucide-react-native';
+import { ChefHat, ChevronRight, Clock, Users } from 'lucide-react-native';
 import { View } from 'react-native';
 import { Card, Text } from '@/components/ui';
 import type { Receta } from '@/features/recetas/schema';
@@ -14,12 +14,12 @@ export function RecipeCard({
   motivo?: string;
 }) {
   return (
-    <Card onPress={onPress} className="flex-row gap-3" accessibilityLabel={`Receta ${receta.nombre}`}>
+    <Card onPress={onPress} className="flex-row items-center gap-3" accessibilityLabel={`Receta ${receta.nombre}`}>
       <View className="h-12 w-12 items-center justify-center rounded-xl bg-accent">
         <ChefHat size={24} color={colors.accentForeground} />
       </View>
       <View className="flex-1 gap-1">
-        <Text variant="label">{receta.nombre}</Text>
+        <Text variant="heading" className="text-base">{receta.nombre}</Text>
         <Text variant="caption">{receta.categoria}</Text>
         <View className="mt-1 flex-row flex-wrap gap-3">
           <View className="flex-row items-center gap-1">
@@ -35,6 +35,7 @@ export function RecipeCard({
         </View>
         {motivo ? <Text className="mt-1 text-sm text-accent-foreground">{motivo}</Text> : null}
       </View>
+      <ChevronRight size={20} color={colors.mutedForeground} />
     </Card>
   );
 }

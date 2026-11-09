@@ -13,9 +13,9 @@ type Tone =
   | 'inverse';
 
 const variantClass: Record<Variant, string> = {
-  display: 'text-3xl font-bold',
-  title: 'text-2xl font-bold',
-  heading: 'text-lg font-semibold',
+  display: 'text-3xl font-bold tracking-tight',
+  title: 'text-2xl font-bold tracking-tight',
+  heading: 'text-lg font-bold tracking-tight',
   body: 'text-base',
   label: 'text-base font-semibold',
   caption: 'text-sm',

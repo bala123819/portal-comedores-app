@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react-native';
 import { ActivityIndicator, Pressable, View, type PressableProps } from 'react-native';
 import { cn } from '@/lib/cn';
-import { colors } from '@/theme/tokens';
+import { colors, shadows } from '@/theme/tokens';
 import { Text } from './Text';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
@@ -10,7 +10,7 @@ type Size = 'sm' | 'md' | 'lg';
 const containerClass: Record<ButtonVariant, string> = {
   primary: 'bg-primary',
   secondary: 'bg-accent',
-  outline: 'border border-border bg-card',
+  outline: 'border border-border bg-card web:hover:border-primary/40',
   ghost: 'bg-transparent',
   destructive: 'bg-destructive',
 };
@@ -31,10 +31,17 @@ const iconColor: Record<ButtonVariant, string> = {
   destructive: colors.primaryForeground,
 };
 
+/** Sombra por variante: el primario "flota" para marcar la acción principal. */
+const variantShadow: Partial<Record<ButtonVariant, object>> = {
+  primary: shadows.primary,
+  outline: shadows.sm,
+  destructive: shadows.sm,
+};
+
 const sizeClass: Record<Size, string> = {
-  sm: 'min-h-10 px-3 rounded-md',
-  md: 'min-h-12 px-4 rounded-lg',
-  lg: 'min-h-14 px-5 rounded-xl',
+  sm: 'min-h-10 px-3 rounded-lg',
+  md: 'min-h-12 px-4 rounded-xl',
+  lg: 'min-h-14 px-6 rounded-2xl',
 };
 
 export interface ButtonProps extends Omit<PressableProps, 'children'> {
@@ -58,6 +65,7 @@ export function Button({
   disabled,
   fullWidth,
   className,
+  style,
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
@@ -70,13 +78,14 @@ export function Button({
       disabled={isDisabled}
       hitSlop={size === 'sm' ? 4 : undefined}
       className={cn(
-        'flex-row items-center justify-center gap-2 active:opacity-80',
+        'flex-row items-center justify-center gap-2 active:opacity-85',
         containerClass[variant],
         sizeClass[size],
         fullWidth && 'w-full',
         isDisabled && 'opacity-50',
         className,
       )}
+      style={[!isDisabled && variantShadow[variant], typeof style === 'function' ? undefined : style]}
       {...props}
     >
       {loading ? (
@@ -86,7 +95,7 @@ export function Button({
       )}
       <Text
         variant="label"
-        className={cn(textClass[variant], size === 'lg' && 'text-lg', 'text-center')}
+        className={cn(textClass[variant], size === 'lg' && 'text-lg font-bold', 'text-center')}
         numberOfLines={2}
       >
         {title}

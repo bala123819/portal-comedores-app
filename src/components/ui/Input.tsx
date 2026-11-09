@@ -2,7 +2,7 @@ import { Eye, EyeOff, type LucideIcon } from 'lucide-react-native';
 import { useState, type Ref } from 'react';
 import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
 import { cn } from '@/lib/cn';
-import { colors } from '@/theme/tokens';
+import { colors, shadows } from '@/theme/tokens';
 import { Text } from './Text';
 
 export interface InputProps extends TextInputProps {
@@ -37,10 +37,11 @@ export function Input({
       {label ? <Text variant="label">{label}</Text> : null}
       <View
         className={cn(
-          'flex-row items-center rounded-lg border bg-card px-3',
+          'flex-row items-center rounded-xl border bg-card px-3',
           multiline ? 'min-h-28 items-start py-2' : 'min-h-12',
           error ? 'border-destructive' : focused ? 'border-primary' : 'border-input',
         )}
+        style={focused && !error ? shadows.focus : undefined}
       >
         {Icon ? (
           <View className={cn('mr-2', multiline && 'mt-1')}>

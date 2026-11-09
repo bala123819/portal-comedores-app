@@ -13,7 +13,8 @@ export interface ChipProps {
 }
 
 export function Chip({ label, selected, onPress, icon: Icon, className }: ChipProps) {
-  const color = selected ? colors.primaryForeground : colors.foreground;
+  // Seleccionado = verde suave: indica el filtro activo sin competir con el botón primario.
+  const color = selected ? colors.accentForeground : colors.mutedForeground;
   return (
     <Pressable
       accessibilityRole="button"
@@ -22,13 +23,13 @@ export function Chip({ label, selected, onPress, icon: Icon, className }: ChipPr
       onPress={onPress}
       className={cn(
         'min-h-10 flex-row items-center gap-1.5 rounded-full border px-4 active:opacity-80',
-        selected ? 'border-primary bg-primary' : 'border-border bg-card',
+        selected ? 'border-primary/40 bg-accent' : 'border-border bg-card web:hover:border-primary/30',
         className,
       )}
     >
       {selected ? <Check size={16} color={color} /> : Icon ? <Icon size={16} color={color} /> : null}
       <Text
-        className={cn('text-sm font-semibold', selected ? 'text-primary-foreground' : 'text-foreground')}
+        className={cn('text-sm font-semibold', selected ? 'text-accent-foreground' : 'text-foreground')}
       >
         {label}
       </Text>

@@ -21,6 +21,7 @@ import { cartKg, cartLines, useCart } from '@/features/pedidos/cart';
 import { useCatalog } from '@/features/pedidos/hooks';
 import { ORDER_RULES, type CatalogProduct } from '@/features/pedidos/types';
 import { formatNumber } from '@/lib/format';
+import { useContentPadding } from '@/lib/layout';
 import { colors } from '@/theme/tokens';
 
 /**
@@ -40,6 +41,7 @@ export default function NuevoPedidoScreen() {
   const query = useCatalog({ search });
   const lines = useCart((s) => s.lines);
   const setQuantity = useCart((s) => s.setQuantity);
+  const contentPadding = useContentPadding();
 
   const products = flattenPages(query.data);
   // Categorías a partir de lo cargado: la API no tiene un listado de categorías para este rol.
@@ -162,7 +164,7 @@ export default function NuevoPedidoScreen() {
         ListHeaderComponent={header}
         ListEmptyComponent={listEmpty}
         ItemSeparatorComponent={() => <View className="h-3" />}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 16, paddingHorizontal: contentPadding, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
         onEndReachedThreshold={0.4}
         onEndReached={() => {

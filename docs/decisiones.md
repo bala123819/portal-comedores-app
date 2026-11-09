@@ -112,3 +112,12 @@ Se implementa el post 3/14 de la serie "API organizaciones" (`docs/bda/03-perfil
 - **Lógica de formularios aparte** (`src/features/org/form.ts`): valores del form ⇄ cuerpo de la API, testeable sin pantalla.
 - **Descargas con `error_code`:** `api.raw` ahora lee el JSON del error, y la descarga nativa repite el pedido para conocerlo (`downloadFileAsync` no lo expone). Así la app distingue `DOCUMENT_NOT_FOUND` de un corte de conexión.
 - Rama `perfil-organizacion`. Al integrar con `main` se renumeró a D-21 y G-20, porque `Contacto` y `recibido-nutricion` ya habían usado D-16–D-20 y G-18–G-19. "Mi organización" conserva el acceso a Contactos de D-16 y suma la edición del perfil y la capacidad logística.
+
+### D-22 · Rediseño visual: ancho completo, paleta accesible y elevación (2026-11-09)
+Pasada de diseño sobre el sistema de diseño (tokens y componentes base de `src/components/ui`), sin cambios de lógica. Rama `cambiosvisuales`.
+- **Ancho completo en web:** `max-w-content` pasa de 720 px a `100%`, así el contenido acompaña a la barra de pestañas. Los márgenes laterales crecen con la pantalla (16 / 32 / 48 px a partir de 768 y 1024 px) con las clases `md:`/`lg:` en `Screen` y el hook `useContentPadding` (`src/lib/layout.ts`) en las listas de FlashList, que no toman clases responsive.
+- **Listas en 2 columnas desde 1024 px** (`layout.twoColumnsFrom`): `InfiniteList` usa `numColumns` para que las tarjetas no queden estiradas en monitores anchos. En el celular, una columna como antes.
+- **Primario más profundo:** `#3B9B6E` (152 45 % 42 %) → `#2E845C` (152 48 % 35 %), mismo tono. El texto blanco sobre el primario pasa de 3,4:1 a ≈4,6:1 y cumple WCAG AA. Los neutros cálidos (tono 40) pasan a neutros con tinte verde (tono 140) para armonizar con la marca.
+- **Elevación con `boxShadow`** (tokens `shadows` en `src/theme/tokens.ts`; RN ≥ 0.76 lo soporta en web, iOS y Android): las tarjetas neutras flotan con sombra suave; las de aviso (tono) quedan planas. El botón primario lleva sombra verde para marcar la acción principal. Radios más amplios (`lg` 12, `xl` 16, `2xl` 20).
+- **Jerarquía:** el chip seleccionado pasa de verde lleno a verde suave para no competir con el botón primario; la pestaña activa lleva una píldora de fondo (patrón Material 3); las tarjetas que se pueden tocar muestran un chevron.
+- **Inicio** con encabezado de bienvenida verde que integra la tarjeta de la organización (mismo destino, `/organizacion`). **Login** con panel de marca en pantallas anchas y encabezado verde con tarjeta superpuesta en el celular.

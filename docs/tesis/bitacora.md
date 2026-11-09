@@ -744,3 +744,103 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Probar contra el servidor real qué responde a una fecha de nacimiento futura.
 
 **Archivos principales.** `src/services/query-client.ts`, `src/features/auth/store.ts`, `src/features/familias/form.ts`, `src/lib/navigation.ts`, `src/components/ui/Layout.tsx`, `src/app/(app)/contactos/*`, `src/app/(app)/familia/**`, `src/app/(app)/banco/nueva.tsx`, `src/app/(app)/pedido/confirmar.tsx`, `src/app/(app)/perfil/contrasena.tsx`, `src/app/(app)/receta/[id]/cocinar.tsx`, `src/app/(app)/retiro/[id]/completar.tsx`, `docs/tesis/problemas-y-soluciones.md`
+
+---
+
+## 30ab765 · style: rediseño visual del sistema de diseño y ancho completo en web
+- **Fecha:** 2026-11-09 20:21 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual (rama `cambiosvisuales`)
+
+**Objetivo.** En web, el contenido quedaba en una columna angosta de 720 px en el centro mientras la barra de pestañas ocupaba todo el ancho. Además, la interfaz se veía plana y el botón primario no llegaba al contraste mínimo de accesibilidad con texto blanco.
+
+**Qué se hizo.**
+- **Ancho completo:** `max-w-content` pasa a `100%`. Márgenes laterales responsive (16 / 32 / 48 px) en `Screen`, en el encabezado y en el pie; las listas de FlashList usan el hook nuevo `useContentPadding` (`src/lib/layout.ts`).
+- **Listas en 2 columnas** desde 1024 px en `InfiniteList`.
+- **Paleta:** primario `#2E845C` (antes `#3B9B6E`), neutros con tinte verde, `global.css` y `tokens.ts` sincronizados.
+- **Elevación y forma:** tokens `shadows` (`sm`, `md`, `lg`, `primary`, `bar`, `focus`) y radios más amplios. `Card`, `Button`, `ListItem`, `StatCard` e `Input` (anillo de foco) los usan; hover del borde en web.
+- **Barra de pestañas:** píldora detrás del ícono activo y sombra en lugar de la línea superior.
+- **Chips:** el seleccionado pasa a verde suave (`bg-accent`) para no competir con el botón primario.
+- **Tarjeta de cupo:** los kg disponibles en grande, "% usado" y Corresponde / Recibido / En curso en tres columnas.
+- **Tarjeta de pedido:** chevron y separador antes de la fecha del pedido.
+
+**Decisiones.** D-22.
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.** `npx tsc --noEmit` y `npx expo lint`: sin errores. Bundle web compilado sin errores con el servidor de Expo (`--clear`, porque el cambio de `tailwind.config.js` no se aplica en caliente).
+
+**Pendientes.** Recorrer las pantallas en un celular real y en web a 375 × 812 para confirmar márgenes y sombras en Android.
+
+**Archivos principales.** `src/global.css`, `src/theme/tokens.ts`, `tailwind.config.js`, `src/lib/layout.ts`, `src/components/ui/{Button,Card,Chip,Data,Input,Layout,ListItem,Query,Text}.tsx`, `src/components/pedidos/{QuotaCard,DistributionCard}.tsx`, `src/app/(app)/(tabs)/_layout.tsx`, `src/app/(app)/(tabs)/recetas.tsx`, `src/app/(app)/pedido/nuevo.tsx`
+
+---
+
+## 947326a · docs(tesis): agregar capítulos, figuras y documento de la tesis
+- **Fecha:** 2026-11-09 20:21 · **Autoría:** Martina Gonella
+- **Etapa:** Documentación de la tesis
+
+**Objetivo.** Versionar el documento de la tesis junto con el código.
+
+**Qué se hizo.**
+- Capítulos en Markdown (`docs/tesis/capitulos/00-indice.md` a `09-referencias.md`).
+- 13 figuras en `docs/tesis/capitulos/figuras/`.
+- Documento armado en Word (`Tesis-Portal-Comedores.docx` y `Tesis-Portal-Comedores-v2.docx`).
+
+**Decisiones.** Ninguna.
+
+**Problemas y soluciones.** Ninguno.
+
+**Verificación.** No aplica (sólo documentación).
+
+**Pendientes.** Ninguno.
+
+**Archivos principales.** `docs/tesis/capitulos/*`, `docs/tesis/capitulos/figuras/*`, `docs/tesis/Tesis-Portal-Comedores.docx`, `docs/tesis/Tesis-Portal-Comedores-v2.docx`
+
+---
+
+## ffb0808 · style: encabezado de bienvenida en Inicio y pulido de listas
+- **Fecha:** 2026-11-09 20:23 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual (rama `cambiosvisuales`)
+
+**Objetivo.** Dar identidad al Inicio y hacer más reconocibles las listas.
+
+**Qué se hizo.**
+- **Inicio:** encabezado verde (`HomeHero`) con el saludo, la campana de avisos y la tarjeta de la organización (nombre, estado y dirección). Reemplaza al `Header` y a la tarjeta de organización del cuerpo; tocarla sigue llevando a `/organizacion`.
+- **Accesos rápidos** en grilla: 2 columnas en pantallas anchas, una en el celular.
+- **Familias:** avatar con iniciales en lugar del mismo ícono para todas, y chevron.
+- **Recetas y "Más":** chevron en las tarjetas; el perfil de "Más" con avatar grande.
+- `NotificationBell` acepta `color` y `className` para usarse sobre fondos de color.
+
+**Decisiones.** D-22.
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.** `npx tsc --noEmit` y `npx expo lint`: sin errores. Bundle web compilado sin errores.
+
+**Pendientes.** Ver en un celular real cómo queda el encabezado con el área segura (notch).
+
+**Archivos principales.** `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/familias.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/components/recetas/RecipeCard.tsx`, `src/components/notificaciones/NotificationBell.tsx`
+
+---
+
+## be1e8ba · style(login): panel de marca en pantallas anchas y encabezado verde en el celular
+- **Fecha:** 2026-11-09 20:39 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual (rama `cambiosvisuales`)
+
+**Objetivo.** Con el ancho completo, el formulario del login quedaba estirado en la compu. Además, es la primera pantalla que ve el usuario y no comunicaba para qué sirve la app.
+
+**Qué se hizo.**
+- **Pantallas anchas (≥ 1024 px):** panel verde a la izquierda (`BrandPanel`) con el logo, un título, una bajada y tres puntos (pedidos, familias, alimentación); el formulario a la derecha con un ancho máximo cómodo (`max-w-md`).
+- **Celular:** encabezado verde con el logo en una tarjeta blanca y el formulario en una tarjeta superpuesta (`-mt-10`).
+- Título "Ingresá a tu cuenta", error con ícono y borde, y un separador "¿Necesitás ayuda?" antes del WhatsApp.
+- La lógica del formulario no cambia: validación con zod, credenciales incorrectas, errores por campo, WhatsApp y aviso de modo de prueba.
+
+**Decisiones.** D-22.
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.** `npx tsc --noEmit` y `npx expo lint`: sin errores. Bundle web compilado sin errores.
+
+**Pendientes.** Probar el ingreso real en el celular con el teclado abierto (KeyboardAvoidingView en iOS).
+
+**Archivos principales.** `src/app/(auth)/login.tsx`

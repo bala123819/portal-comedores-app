@@ -844,3 +844,26 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Pendientes.** Probar el ingreso real en el celular con el teclado abierto (KeyboardAvoidingView en iOS).
 
 **Archivos principales.** `src/app/(auth)/login.tsx`
+
+---
+
+## ab9bfd8 · style(inicio): panel verde rectangular que se desplaza con el contenido
+- **Fecha:** 2026-11-09 20:44 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual (rama `cambiosvisuales`)
+
+**Objetivo.** Ajuste pedido sobre el encabezado de bienvenida de ffb0808: que no quede fijo arriba y que sea un rectángulo, sin las esquinas inferiores redondeadas.
+
+**Qué se hizo.**
+- `Screen` suma la prop `hero`: un bloque a todo el ancho al principio del scroll, sin los márgenes del contenido. Con `hero`, el contenido va en un `View` con las mismas clases de siempre.
+- El Inicio pasa `HomeHero` por `hero` en lugar de `header`, así se desplaza con el resto. Se quitan `rounded-b-3xl` y la sombra verde.
+- Sólo queda fija una franja verde del alto del área segura superior (barra de estado del celular), para que el contenido no pase por debajo de la hora y la batería. En web mide 0.
+
+**Decisiones.** D-22 (ajuste del encabezado del Inicio).
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.** `npx tsc --noEmit` y `npx expo lint`: sin errores. Bundle web compilado sin errores.
+
+**Pendientes.** Confirmar en un celular con notch que la franja de la barra de estado se ve bien al desplazar.
+
+**Archivos principales.** `src/components/ui/Layout.tsx`, `src/app/(app)/(tabs)/index.tsx`

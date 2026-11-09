@@ -49,7 +49,7 @@ import { features } from '@/lib/features';
 import { formatNumber, parseDate } from '@/lib/format';
 import { label, organizationStatusLabels } from '@/lib/labels';
 import { isOpenAssignment } from '@/lib/status';
-import { colors, shadows } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 import type { Organization } from '@/features/org/types';
 
 function greeting() {
@@ -194,12 +194,8 @@ function HomeHero({
   org: Organization | undefined;
   loading: boolean;
 }) {
-  const insets = useSafeAreaInsets();
   return (
-    <View
-      className="rounded-b-3xl bg-primary"
-      style={{ ...shadows.primary, paddingTop: insets.top }}
-    >
+    <View className="bg-primary">
       <View className="w-full gap-4 px-4 pb-5 pt-3 md:px-8 lg:px-12">
         <View className="flex-row items-center gap-2">
           <View className="flex-1">
@@ -265,6 +261,7 @@ export default function HomeScreen() {
   const unread = useUnreadCount();
   const interactions = useInteractionsSummary();
   const qc = useQueryClient();
+  const insets = useSafeAreaInsets();
   const org = profile.data;
   const impacto = stats.data?.impacto;
 
@@ -281,7 +278,9 @@ export default function HomeScreen() {
 
   return (
     <Screen
-      header={
+      // Sólo la franja de la barra de estado queda fija (en web mide 0); el panel se desplaza.
+      header={<View className="bg-primary" style={{ height: insets.top }} />}
+      hero={
         <HomeHero
           title={`${greeting()}${me?.first_name ? `, ${me.first_name}` : ''}`}
           org={org}

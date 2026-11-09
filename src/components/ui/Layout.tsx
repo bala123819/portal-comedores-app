@@ -65,6 +65,8 @@ export interface ScreenProps extends Omit<ScrollViewProps, 'children'> {
   onRefresh?: () => void;
   footer?: ReactNode;
   contentClassName?: string;
+  /** Bloque a todo el ancho al principio del scroll (se desplaza con el contenido, sin márgenes) */
+  hero?: ReactNode;
 }
 
 /**
@@ -79,9 +81,14 @@ export function Screen({
   onRefresh,
   footer,
   contentClassName,
+  hero,
   ...props
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const contentClasses = cn(
+    'w-full max-w-content self-center gap-4 p-4 pb-8 md:px-8 lg:px-12',
+    contentClassName,
+  );
   return (
     <View className="flex-1 bg-background">
       {header}
@@ -93,7 +100,7 @@ export function Screen({
         {scroll ? (
           <ScrollView
             className="flex-1"
-            contentContainerClassName={cn('w-full max-w-content self-center gap-4 p-4 pb-8 md:px-8 lg:px-12', contentClassName)}
+            contentContainerClassName={hero ? 'w-full' : contentClasses}
             keyboardShouldPersistTaps="handled"
             refreshControl={
               onRefresh ? (
@@ -107,7 +114,14 @@ export function Screen({
             }
             {...props}
           >
-            {children}
+            {hero ? (
+              <>
+                {hero}
+                <View className={contentClasses}>{children}</View>
+              </>
+            ) : (
+              children
+            )}
           </ScrollView>
         ) : (
           <View className={cn('w-full max-w-content flex-1 self-center', contentClassName)}>

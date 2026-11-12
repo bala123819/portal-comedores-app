@@ -900,7 +900,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 
 ---
 
-## (pendiente de commit) · feat(asistente): chat con el asistente de GoDubi dentro de la app
+## e568c30 · feat(asistente): chat con el asistente de GoDubi dentro de la app
 - **Fecha:** 2026-11-11 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
 - **Etapa:** Agentes / asistente (rama `cambiosvisuales`)
 
@@ -932,7 +932,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 
 ---
 
-## (pendiente de commit) · feat(asistente): dictado por voz en el chat
+## e568c30 · feat(asistente): dictado por voz en el chat
 - **Fecha:** 2026-11-11 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
 - **Etapa:** Agentes / asistente (rama `cambiosvisuales`)
 
@@ -955,3 +955,34 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Pendientes.** Generar un *development build* y probar con voz real en Android y en iOS (ruido de cocina, acentos, nombres propios). Si GoDubi acepta audio como adjunto, evaluar sumarlo.
 
 **Archivos principales.** `src/features/asistente/dictation.ts`, `src/components/asistente/Composer.tsx`, `app.json`, `package.json`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/asistente/README.md`, `docs/tesis/arquitectura.md`
+
+---
+
+## fb247a5 · Merge origin/main en chore/sdk-58: rediseño visual y asistente sobre el SDK 58
+- **Fecha:** 2026-11-12 18:44 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Integración — el SDK 58 (5a6964e) con el rediseño visual y el asistente de Martina Gonella (30ab765 … e568c30)
+
+**Objetivo.** Llevar el paso al SDK 58 a `main`, que mientras tanto había recibido el rediseño visual y el asistente, sin perder nada de ninguno de los dos lados.
+
+**Qué se hizo.**
+- Se trajo `origin/main` a la rama `chore/sdk-58` y se resolvieron los 7 archivos en conflicto:
+  - `Button`: la sombra por variante (`style`) del rediseño y el `onPress` sin evento del SDK 58 (P-30), juntos.
+  - `login`: el rediseño completo, con `onSubmitEditing={() => void onSubmit()}` reaplicado.
+  - `package.json` / `package-lock.json`: SDK 58. Los paquetes que sumó el asistente pasan a sus versiones del 58 (`expo-image-picker`, `expo-image-manipulator`, `expo-document-picker` con `npx expo install`; `expo-speech-recognition` a `~58.0.1` a mano, ver P-28) y se alinean los parches del SDK (`react-native` 0.88.1, `react-native-safe-area-context` 5.11). `expo install --fix` sumó los plugins `expo-status-bar` y `expo-web-browser` en `app.json`.
+  - Documentación: las dos ramas habían usado D-22 y P-25/P-26. Las del SDK 58 se renumeran a **D-25**, **P-29** y **P-30**; la bitácora conserva las entradas de los dos lados.
+- Las dos entradas del asistente que decían "(pendiente de commit)" reciben su hash: las dos quedaron en `e568c30`.
+- Marco teórico (cap. 2) y referencias pasan al SDK 58; las menciones históricas (D-02, inicio del proyecto) quedan como estaban.
+
+**Decisiones.** D-25 (renumerada; se suma la nota de integración).
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.**
+- `npx tsc --noEmit` (sale con 0), `npx expo lint` y `npx expo-doctor` (20/20): sin errores. `npx expo install --check`: dependencias al día.
+- Web en modo simulado: sin sesión abre el login nuevo; Enter en la contraseña inicia sesión; el Inicio rediseñado carga; el asistente simulado responde "¿Qué familias tenemos?". Sin errores en consola ni en Metro.
+
+**Pendientes.**
+- Probar en el celular con Expo Go SDK 58. El dictado por voz no aparece en Expo Go (`expo-speech-recognition` es nativo): para probarlo hace falta un development build.
+- Los capítulos y el documento de la tesis pueden necesitar sumar D-21 a D-25 a la tabla de decisiones del anexo.
+
+**Archivos principales.** `package.json`, `package-lock.json`, `app.json`, `src/components/ui/Button.tsx`, `src/app/(auth)/login.tsx`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/tesis/bitacora.md`, `docs/tesis/capitulos/02-marco-teorico.md`, `docs/tesis/capitulos/09-referencias.md`

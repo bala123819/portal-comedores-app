@@ -58,9 +58,14 @@
         {
           "microphonePermission": "Usamos el micrófono sólo mientras dictás un mensaje para el asistente.",
           "speechRecognitionPermission": "Usamos el reconocimiento de voz para pasar a texto lo que le dictás al asistente. Lo revisás antes de enviarlo.",
-          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox", "com.google.android.tts"]
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.tts"
+          ]
         }
-      ]
+      ],
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": false,

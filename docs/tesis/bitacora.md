@@ -747,6 +747,36 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 
 ---
 
+## 5a6964e · chore: pasar a Expo SDK 58
+- **Fecha:** 2026-10-28 18:52 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Mantenimiento — actualización del SDK (rama `chore/sdk-58`)
+
+**Objetivo.** Volver a poder probar la app en el celular: Expo Go se actualizó al SDK 58 y no abre proyectos del SDK 57.
+
+**Qué se hizo.**
+- `npx expo install expo@^58.0.0 --fix` según la guía oficial de upgrade y la de migración de Expo Router 57 → 58. React Native 0.86 → 0.88, React 19.2 → 19.3, todos los paquetes `expo-*` a 58, `react-native-gesture-handler` 2 → 3, `eslint-config-expo` 58. `node_modules` y `package-lock.json` se regeneraron porque npm no resolvía el árbol viejo (ERESOLVE con `expo-symbols`).
+- Se buscaron en el código las APIs que el SDK 58 quita o cambia: no se usaba ninguna.
+- Guards de la raíz con `redirectTo` (P-29) y ajustes por los tipos estrictos de RN 0.88 (P-30).
+- Arquitectura y README con el SDK nuevo.
+
+**Decisiones.** D-25 (revierte el "quedarse en el SDK 57" del 2026-10-23).
+
+**Problemas y soluciones.** P-29 y P-30.
+
+**Verificación.**
+- `npx expo-doctor`: 20/20 checks. `npx expo install --check`: dependencias al día.
+- `npx tsc --noEmit` y `npx expo lint`: sin errores.
+- Web en modo simulado (`EXPO_PUBLIC_USE_MOCKS=true`, `MODULES_SCOPE=real`): el bundle compila; sin sesión abre el login; el login lleva al inicio con todos los datos; "Escribirle al Banco" y "Volver" funcionan; cerrar sesión vuelve al login. Sin errores en consola.
+
+**Pendientes.**
+- Probar en el celular con Expo Go SDK 58 (Android/iOS): no se pudo verificar desde la máquina de desarrollo.
+- En web, `react-native-safe-area-context` ya no da los márgenes del notch (Expo Router 58): en la PWA instalada en un iPhone podrían faltar márgenes arriba y abajo; si pasa, usar `env(safe-area-inset-*)`.
+- `npm audit` informa 8 vulnerabilidades (5 bajas, 3 altas) en dependencias de desarrollo/transitivas; no se revisaron.
+
+**Archivos principales.** `package.json`, `package-lock.json`, `src/app/_layout.tsx`, `src/components/ui/Button.tsx`, `src/components/ui/Input.tsx`, `src/components/ui/Query.tsx`, `src/app/(auth)/login.tsx`, `src/app/(app)/pedido/nuevo.tsx`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/tesis/arquitectura.md`, `README.md`
+
+---
+
 ## 30ab765 · style: rediseño visual del sistema de diseño y ancho completo en web
 - **Fecha:** 2026-11-09 20:21 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
 - **Etapa:** Diseño visual (rama `cambiosvisuales`)
@@ -870,7 +900,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 
 ---
 
-## (pendiente de commit) · feat(asistente): chat con el asistente de GoDubi dentro de la app
+## e568c30 · feat(asistente): chat con el asistente de GoDubi dentro de la app
 - **Fecha:** 2026-11-11 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
 - **Etapa:** Agentes / asistente (rama `cambiosvisuales`)
 
@@ -902,7 +932,7 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 
 ---
 
-## (pendiente de commit) · feat(asistente): dictado por voz en el chat
+## e568c30 · feat(asistente): dictado por voz en el chat
 - **Fecha:** 2026-11-11 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
 - **Etapa:** Agentes / asistente (rama `cambiosvisuales`)
 
@@ -925,3 +955,34 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Pendientes.** Generar un *development build* y probar con voz real en Android y en iOS (ruido de cocina, acentos, nombres propios). Si GoDubi acepta audio como adjunto, evaluar sumarlo.
 
 **Archivos principales.** `src/features/asistente/dictation.ts`, `src/components/asistente/Composer.tsx`, `app.json`, `package.json`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/asistente/README.md`, `docs/tesis/arquitectura.md`
+
+---
+
+## fb247a5 · Merge origin/main en chore/sdk-58: rediseño visual y asistente sobre el SDK 58
+- **Fecha:** 2026-11-12 18:44 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Integración — el SDK 58 (5a6964e) con el rediseño visual y el asistente de Martina Gonella (30ab765 … e568c30)
+
+**Objetivo.** Llevar el paso al SDK 58 a `main`, que mientras tanto había recibido el rediseño visual y el asistente, sin perder nada de ninguno de los dos lados.
+
+**Qué se hizo.**
+- Se trajo `origin/main` a la rama `chore/sdk-58` y se resolvieron los 7 archivos en conflicto:
+  - `Button`: la sombra por variante (`style`) del rediseño y el `onPress` sin evento del SDK 58 (P-30), juntos.
+  - `login`: el rediseño completo, con `onSubmitEditing={() => void onSubmit()}` reaplicado.
+  - `package.json` / `package-lock.json`: SDK 58. Los paquetes que sumó el asistente pasan a sus versiones del 58 (`expo-image-picker`, `expo-image-manipulator`, `expo-document-picker` con `npx expo install`; `expo-speech-recognition` a `~58.0.1` a mano, ver P-28) y se alinean los parches del SDK (`react-native` 0.88.1, `react-native-safe-area-context` 5.11). `expo install --fix` sumó los plugins `expo-status-bar` y `expo-web-browser` en `app.json`.
+  - Documentación: las dos ramas habían usado D-22 y P-25/P-26. Las del SDK 58 se renumeran a **D-25**, **P-29** y **P-30**; la bitácora conserva las entradas de los dos lados.
+- Las dos entradas del asistente que decían "(pendiente de commit)" reciben su hash: las dos quedaron en `e568c30`.
+- Marco teórico (cap. 2) y referencias pasan al SDK 58; las menciones históricas (D-02, inicio del proyecto) quedan como estaban.
+
+**Decisiones.** D-25 (renumerada; se suma la nota de integración).
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.**
+- `npx tsc --noEmit` (sale con 0), `npx expo lint` y `npx expo-doctor` (20/20): sin errores. `npx expo install --check`: dependencias al día.
+- Web en modo simulado: sin sesión abre el login nuevo; Enter en la contraseña inicia sesión; el Inicio rediseñado carga; el asistente simulado responde "¿Qué familias tenemos?". Sin errores en consola ni en Metro.
+
+**Pendientes.**
+- Probar en el celular con Expo Go SDK 58. El dictado por voz no aparece en Expo Go (`expo-speech-recognition` es nativo): para probarlo hace falta un development build.
+- Los capítulos y el documento de la tesis pueden necesitar sumar D-21 a D-25 a la tabla de decisiones del anexo.
+
+**Archivos principales.** `package.json`, `package-lock.json`, `app.json`, `src/components/ui/Button.tsx`, `src/app/(auth)/login.tsx`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/tesis/bitacora.md`, `docs/tesis/capitulos/02-marco-teorico.md`, `docs/tesis/capitulos/09-referencias.md`

@@ -143,3 +143,11 @@ Se suma un botón de micrófono a la barra del chat (`src/components/asistente/C
 - **Idioma:** `es-AR`. En iOS se elige el primero disponible entre es-AR, es-419, es-US, es-MX y es-ES. Se pasan palabras del dominio (comedor, merendero, Banco de Alimentos, lentejas…) como `contextualStrings` y se pone mayúscula al empezar cada oración.
 - **Modo continuo** (sigue escuchando en las pausas hasta que se toca "terminar"), salvo en Android 12 o anterior, que no lo soporta y corta al final de la frase.
 - Plugin en `app.json` con los textos de los permisos en español. Agrega `RECORD_AUDIO` en Android y `NSMicrophoneUsageDescription`/`NSSpeechRecognitionUsageDescription` en iOS. El `microphonePermission: false` de `expo-image-picker` queda igual: la cámara sigue sin grabar audio.
+
+### D-25 · Paso al Expo SDK 58 (2026-10-28)
+Se actualiza el proyecto del SDK 57 al 58 (React Native 0.86 → 0.88, React 19.2 → 19.3, Expo Router 58). Revierte lo decidido en el testing integral (2026-10-23, entrada 222f1f2) de quedarse en el SDK 57.
+- **Motivo:** Expo Go del celular se actualizó al SDK 58 y sólo abre proyectos de ese SDK, así que la app dejó de poder probarse en el teléfono.
+- **Cómo:** `npx expo install expo@^58.0.0 --fix`, siguiendo la guía oficial de upgrade y la de migración de Expo Router 57 → 58. `node_modules` y `package-lock.json` se regeneraron de cero porque npm no podía resolver el árbol viejo (ERESOLVE).
+- **Ajustes de código:** `redirectTo` en los guards de la raíz (P-29) y los tipos estrictos de React Native (P-30). El código no usaba ninguna de las APIs que se quitan (`initialRouteName`, `freezeOnBlur`, `InteractionManager`, `ImageBackground`, imports profundos de `react-native/Libraries`, `File.write`).
+- `react-native-gesture-handler` sube de versión mayor (2 → 3); la app no lo usa directamente.
+- **Al integrar con `main` (2026-11-12):** se renumeró de D-22 a D-25 (y P-25/P-26 a P-29/P-30), porque el rediseño visual y el asistente ya habían usado D-22–D-24 y P-25–P-28. Los paquetes que sumó el asistente pasan a sus versiones del SDK 58: `expo-image-picker`, `expo-image-manipulator` y `expo-document-picker` con `npx expo install`, y `expo-speech-recognition` a `~58.0.1` a mano (por lo explicado en P-28).

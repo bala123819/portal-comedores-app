@@ -33,6 +33,9 @@ export default function RootLayout() {
     if (status !== 'loading') void SplashScreen.hideAsync().catch(() => {});
   }, [status]);
 
+  // SDK 58: un guard que falla redirige (ya no quita la ruta). Sin `redirectTo` cae en `/(auth)`, que no existe.
+  const home = status === 'signedOut' ? '/login' : hasOrganization ? '/' : '/sin-organizacion';
+
   return (
     <SafeAreaProvider>
       <PersistQueryClientProvider
@@ -53,16 +56,16 @@ export default function RootLayout() {
                 contentStyle: { backgroundColor: colors.background },
               }}
             >
-              <Stack.Protected guard={status === 'signedIn' && hasOrganization}>
+              <Stack.Protected guard={status === 'signedIn' && hasOrganization} redirectTo={home}>
                 <Stack.Screen name="(app)" />
               </Stack.Protected>
-              <Stack.Protected guard={status === 'signedOut'}>
+              <Stack.Protected guard={status === 'signedOut'} redirectTo={home}>
                 <Stack.Screen name="(auth)" />
               </Stack.Protected>
-              <Stack.Protected guard={status === 'signedIn' && !hasOrganization}>
+              <Stack.Protected guard={status === 'signedIn' && !hasOrganization} redirectTo={home}>
                 <Stack.Screen name="sin-organizacion" />
               </Stack.Protected>
-              <Stack.Protected guard={__DEV__}>
+              <Stack.Protected guard={__DEV__} redirectTo={home}>
                 <Stack.Screen name="dev" />
               </Stack.Protected>
             </Stack>

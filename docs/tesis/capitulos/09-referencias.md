@@ -4,7 +4,7 @@ Banco de Alimentos. (2026a). *API de la app de organizaciones: guía para empeza
 
 Banco de Alimentos. (2026b). *API organizaciones (1/14 a 14/14)* [Serie de documentación técnica interna, publicada el 7 de octubre de 2026]. Copia parcial en `docs/bda/`.
 
-Expo. (2026). *Expo SDK 57 documentation*. https://docs.expo.dev/versions/v57.0.0/
+Expo. (2026). *Expo SDK 58 documentation*. https://docs.expo.dev/versions/v58.0.0/
 
 Expo. (2026). *Expo Router: Introduction*. https://docs.expo.dev/router/introduction/
 

@@ -25,7 +25,7 @@ Celular (Android/iOS) · Navegador (PWA)
 
 | Necesidad | Elección | Por qué |
 |---|---|---|
-| Android, iOS y web desde un código | Expo SDK 57 + React Native 0.86 + react-native-web | Framework recomendado por React Native; PWA sin código aparte |
+| Android, iOS y web desde un código | Expo SDK 58 + React Native 0.88 + react-native-web | Framework recomendado por React Native; PWA sin código aparte |
 | Navegación | Expo Router (rutas por archivos en `src/app/`) | Estándar de Expo; deep links y web automáticos |
 | Lenguaje | TypeScript estricto | Detecta errores de contrato con la API en compilación |
 | Estilos | NativeWind 4 (Tailwind) + tokens | Sistema de diseño único en todas las plataformas |

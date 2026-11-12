@@ -114,7 +114,7 @@ export default function LoginScreen() {
             autoComplete="current-password"
             textContentType="password"
             returnKeyType="go"
-            onSubmitEditing={onSubmit}
+            onSubmitEditing={() => void onSubmit()}
           />
         )}
       />

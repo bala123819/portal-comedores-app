@@ -45,7 +45,7 @@ documentación oficial de React Native recomienda para proyectos nuevos. Provee:
   lugar de editarse a mano;
 - servicios en la nube (EAS) para compilar, firmar y distribuir la aplicación.
 
-El proyecto utiliza **Expo SDK 57**, con React Native 0.86 y React 19.2.
+El proyecto utiliza **Expo SDK 58**, con React Native 0.88 y React 19.3. Empezó en el SDK 57 y se actualizó el 28/10 porque Expo Go sólo abre proyectos del SDK vigente (D-25).
 
 **Expo Router** es el sistema de navegación de Expo y se basa en el sistema de archivos (*file-based
 routing*): cada archivo dentro de `src/app/` es una pantalla, y la estructura de carpetas define las
@@ -166,7 +166,7 @@ En la web, el *service worker* complementa estos mecanismos almacenando el esque
 
 | Necesidad | Tecnología elegida | Motivo principal |
 |---|---|---|
-| Android, iOS y web desde un código | Expo SDK 57, React Native 0.86, react-native-web | Una base de código; recomendado por React Native |
+| Android, iOS y web desde un código | Expo SDK 58, React Native 0.88, react-native-web | Una base de código; recomendado por React Native |
 | Navegación | Expo Router | Rutas por archivos, enlaces profundos y web automáticos |
 | Lenguaje | TypeScript (estricto) | Detección temprana de errores de contrato |
 | Estilos | NativeWind 4 (Tailwind) y tokens | Sistema de diseño único en las tres plataformas |

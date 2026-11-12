@@ -44,8 +44,10 @@ const sizeClass: Record<Size, string> = {
   lg: 'min-h-14 px-6 rounded-2xl',
 };
 
-export interface ButtonProps extends Omit<PressableProps, 'children'> {
+export interface ButtonProps extends Omit<PressableProps, 'children' | 'onPress'> {
   title: string;
+  /** Sin el evento de toque: así acepta `handleSubmit(...)` de react-hook-form (tipos estrictos de RN 0.88) */
+  onPress?: () => unknown;
   variant?: ButtonVariant;
   size?: Size;
   icon?: LucideIcon;
@@ -65,6 +67,7 @@ export function Button({
   disabled,
   fullWidth,
   className,
+  onPress,
   style,
   ...props
 }: ButtonProps) {
@@ -87,6 +90,7 @@ export function Button({
       )}
       style={[!isDisabled && variantShadow[variant], typeof style === 'function' ? undefined : style]}
       {...props}
+      onPress={onPress ? () => void onPress() : undefined}
     >
       {loading ? (
         <ActivityIndicator color={iconColor[variant]} />

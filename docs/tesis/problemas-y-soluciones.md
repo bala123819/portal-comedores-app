@@ -171,3 +171,13 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 - **Síntoma:** al abrir el chat real se veía "Hola, soy el asistente del comedor (modo de prueba)…", el saludo del simulador.
 - **Causa:** la sesión del chat se guardaba con la misma clave en los dos modos. La app retomaba la sesión simulada guardada, mostraba su saludo y recién con el primer 403 `INVALID_CREDENTIAL` armaba una sesión real.
 - **Solución:** una clave por modo (`pc.assistant.session.<modo>`) y se borra la clave vieja sin modo. Verificado en web: aparece el saludo real de GoDubi.
+
+### P-33 · El avatar del asistente quedaba arriba de la burbuja, no al costado
+- **Síntoma:** en el chat rediseñado, el avatar aparecía encima de cada respuesta en lugar de a su izquierda.
+- **Causa:** NativeWind no le aplicaba `className` a `Animated.View` (el contenedor animado de cada fila), así que se perdía el `flex-row`.
+- **Solución:** `cssInterop(Animated.View, { className: 'style' })` en `src/components/asistente/motion.tsx`, el mecanismo de NativeWind para componentes de terceros. Además el avatar se alinea con el comienzo de la burbuja, para que se vea en respuestas largas.
+
+### P-34 · Avisos de React en web por props de accesibilidad de Android/iOS
+- **Síntoma:** en la consola, "React does not recognize the `accessibilityElementsHidden` / `importantForAccessibility` prop on a DOM element" al dibujar el logo y el avatar.
+- **Causa:** esas dos props son de iOS y Android; en web llegaban al `<svg>` o al `<div>` como atributos desconocidos.
+- **Solución:** se usa `aria-hidden`, que React Native admite en las tres plataformas, para ocultar lo decorativo (logo, avatar, círculo de la persona del Banco y el logo del login).

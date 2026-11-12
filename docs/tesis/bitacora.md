@@ -1017,3 +1017,32 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Probar en el celular con Expo Go: ahí va directo a la API, sin proxy.
 
 **Archivos principales.** `scripts/assistant-proxy.js`, `metro.config.js`, `src/services/assistant/index.ts`, `src/services/assistant/client.ts`, `src/lib/env.ts`, `src/features/asistente/attachments.ts`, `src/app/(app)/asistente.tsx`, `.env.example`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/asistente/README.md`, `docs/tesis/arquitectura.md`
+
+---
+
+## eb9576e · feat(asistente): rediseño del chat, avatar animado y logo del Banco
+- **Fecha:** 2026-11-12 19:59 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual — asistente (rama `feat/asistente-visual`)
+
+**Objetivo.** Que el chat del asistente se vea más lindo, más claro y más animado: scroll pegado a la derecha, avatar a la izquierda de las respuestas, barra para escribir minimalista, el avatar "Asistente Mermab" de la guía de diseño y el logo del Banco en las pantallas de marca.
+
+**Qué se hizo.**
+- Chat: lista a todo el ancho con la columna centrada; burbujas con sombras suaves; avatar a la izquierda de cada respuesta; "Pensando…" en verde suave con puntos animados; entrada animada de los mensajes.
+- `MermabAvatar`: la gota-hoja de la guía en SVG por capas, con respiración, brote que se mece, parpadeo y cuatro caras (reposo, pensando, hablando, contento). En el encabezado cambia según el estado de la conversación y festeja 2,5 s al terminar una respuesta.
+- `motion.tsx`: `Appear`, `TypingDots`, `Pulse` y `useReducedMotion`, con el `Animated` de React Native.
+- Bienvenida con avatar grande y sugerencias en tarjetas; `Composer` sin franja blanca, adjuntos en pastillas, envío con Enter en la compu y textarea de un renglón en web.
+- `BrandMark` (isotipo del Banco en SVG) en el login y el Inicio; `Header` con `leading` y `subtitleDot`.
+
+**Decisiones.** D-27.
+
+**Problemas y soluciones.** P-33 (className en `Animated.View`) y P-34 (props de accesibilidad nativas en web).
+
+**Verificación.**
+- `npx tsc --noEmit` (sale con 0) y `npx expo lint`: sin errores.
+- Web (app simulada, asistente real por el proxy), a 800 px y a 375 × 812: login con el logo en el panel de marca; Inicio con el logo en el encabezado; bienvenida del chat con el avatar y las cuatro sugerencias; scroll pegado al borde derecho; "¿Qué familias tenemos?" mostró el avatar pensando a la izquierda de "Pensando…" y después la respuesta real con el avatar a la izquierda. En la página no quedan atributos `accessibilityelementshidden`/`importantforaccessibility`. Se mandó 1 mensaje real.
+
+**Pendientes.**
+- Probar en el celular (Expo Go): animaciones con el driver nativo y el avatar en pantallas chicas.
+- Ícono de la app y favicon con el isotipo (hoy siguen los de la plantilla): hace falta exportar el SVG a PNG en los tamaños que pide Expo.
+
+**Archivos principales.** `src/app/(app)/asistente.tsx`, `src/components/asistente/ChatBubbles.tsx`, `src/components/asistente/Composer.tsx`, `src/components/asistente/MermabAvatar.tsx`, `src/components/asistente/motion.tsx`, `src/components/brand/BrandMark.tsx`, `src/components/ui/Layout.tsx`, `src/app/(auth)/login.tsx`, `src/app/(app)/(tabs)/index.tsx`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`

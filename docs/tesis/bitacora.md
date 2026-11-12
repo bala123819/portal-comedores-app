@@ -986,3 +986,34 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Los capítulos y el documento de la tesis pueden necesitar sumar D-21 a D-25 a la tabla de decisiones del anexo.
 
 **Archivos principales.** `package.json`, `package-lock.json`, `app.json`, `src/components/ui/Button.tsx`, `src/app/(auth)/login.tsx`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/tesis/bitacora.md`, `docs/tesis/capitulos/02-marco-teorico.md`, `docs/tesis/capitulos/09-referencias.md`
+
+---
+
+## bf71cc7 · feat(asistente): usar el asistente real también en la web, a través de un proxy
+- **Fecha:** 2026-11-12 19:00 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Asistente (sobre `main`)
+
+**Objetivo.** Que el chat use el asistente real de GoDubi en la compu y en el celular, sin caer en el simulador.
+
+**Qué se hizo.**
+- Se confirmó que la API sigue sin admitir CORS (`OPTIONS /bootstrap` → 404, sin `Access-Control-*`) y que desde un servidor responde.
+- Proxy en el servidor de `expo start` (`scripts/assistant-proxy.js`, registrado en `metro.config.js` con `server.enhanceMiddleware`): `/api-asistente/*` se reenvía a la API real con el mismo método, cabeceras, cuerpo y respuesta.
+- El modo por defecto pasa a ser el real en todas las plataformas; en web usa el proxy (`EXPO_PUBLIC_ASSISTANT_WEB_URL` permite otro). El simulador queda con `EXPO_PUBLIC_ASSISTANT_MODE=mock`.
+- La sesión del chat se guarda por modo (P-32). En web se controla el tope de 10 MB de las fotos. Se quita el aviso "no funciona desde el navegador".
+
+**Decisiones.** D-26.
+
+**Problemas y soluciones.** P-31 y P-32.
+
+**Verificación.**
+- `npx tsc --noEmit` (sale con 0) y `npx expo lint`: sin errores.
+- `curl` al proxy: devuelve las respuestas de la API real (400 de validación en `/bootstrap`, 403 `INVALID_CREDENTIAL` con un token falso).
+- Web (app en modo simulado, asistente real): `bootstrap` y `exchange` 201 por el proxy, conversación creada, saludo real de GoDubi.
+- Mensaje real "¿Qué familias tenemos?": el primer turno volvió del servidor con *"Se pausó al llegar a un límite de esta corrida (sin texto todavía)"*; al escribir "seguí" respondió con las 6 familias reales del tenant de pruebas, sus integrantes y condiciones especiales. Se mandaron 2 mensajes en total.
+
+**Pendientes.**
+- **Del lado de GoDubi:** el primer turno se cortó por "límite de esta corrida" ante una consulta simple. Avisarlo en la orden 1149 con el ejemplo.
+- La web publicada (`expo export`) no tiene el proxy: hace falta uno en el hosting o que GoDubi habilite CORS (P-31).
+- Probar en el celular con Expo Go: ahí va directo a la API, sin proxy.
+
+**Archivos principales.** `scripts/assistant-proxy.js`, `metro.config.js`, `src/services/assistant/index.ts`, `src/services/assistant/client.ts`, `src/lib/env.ts`, `src/features/asistente/attachments.ts`, `src/app/(app)/asistente.tsx`, `.env.example`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/asistente/README.md`, `docs/tesis/arquitectura.md`

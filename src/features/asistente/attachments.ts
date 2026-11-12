@@ -23,8 +23,11 @@ let counter = 0;
 const key = () => `att-${Date.now()}-${++counter}`;
 
 async function compress(asset: ImagePicker.ImagePickerAsset): Promise<string> {
-  // En web no hace falta (y el modo web usa el simulado).
-  if (Platform.OS === 'web') return asset.uri;
+  // En web se manda el archivo tal cual, así que el tope de 10 MB de la API se controla acá.
+  if (Platform.OS === 'web') {
+    if (asset.fileSize && asset.fileSize > MAX_BYTES) throw new Error('La foto es muy grande. El máximo es 10 MB.');
+    return asset.uri;
+  }
   const ctx = ImageManipulator.manipulate(asset.uri);
   const longest = Math.max(asset.width ?? 0, asset.height ?? 0);
   if (longest > MAX_SIDE) {

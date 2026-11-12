@@ -161,3 +161,13 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 - **Síntoma:** `tsc` daba 21 errores después del upgrade, casi todos por pasar `handleSubmit(...)` de react-hook-form directo a `onPress`.
 - **Causa:** RN 0.87 activa por defecto la "Strict TypeScript API": el evento de toque ya no es compatible con el `BaseSyntheticEvent` que espera `handleSubmit`, y los refs pasan a tipos de instancia (`TextInputInstance`).
 - **Solución:** `Button` declara `onPress?: () => unknown` y no le pasa el evento (como ya hacía `IconButton`), lo que arregla 17 de los errores de una vez. Además: `Ref<TextInputInstance>` en `Input`, `onRefresh={() => void query.refetch()}` en las listas y `onSubmitEditing={() => void onSubmit()}` en el login.
+
+### P-31 · El asistente real no se podía usar desde la web (CORS)
+- **Síntoma:** en la compu el chat siempre respondía lo mismo (las mismas 3 familias, 312 kg, el mismo guiso): era el simulador, porque en web la app no podía hablar con la API real (P-25).
+- **Causa:** `OPTIONS /bootstrap` en `webchat.godubi.com` da 404 sin cabeceras `Access-Control-*` (verificado de nuevo el 2026-11-12), así que el navegador bloquea las llamadas. Desde un servidor la API responde normal.
+- **Solución:** proxy en el servidor de desarrollo (`/api-asistente`, `scripts/assistant-proxy.js`) que reenvía los pedidos a la API real; para el navegador es el mismo origen (D-26). **Límite:** sólo existe con `expo start`. Para publicar la web hace falta un proxy equivalente en el hosting (y apuntar `EXPO_PUBLIC_ASSISTANT_WEB_URL` a él) o que GoDubi habilite CORS para ese dominio.
+
+### P-32 · Después de pasar al asistente real, la web mostraba el saludo del simulador
+- **Síntoma:** al abrir el chat real se veía "Hola, soy el asistente del comedor (modo de prueba)…", el saludo del simulador.
+- **Causa:** la sesión del chat se guardaba con la misma clave en los dos modos. La app retomaba la sesión simulada guardada, mostraba su saludo y recién con el primer 403 `INVALID_CREDENTIAL` armaba una sesión real.
+- **Solución:** una clave por modo (`pc.assistant.session.<modo>`) y se borra la clave vieja sin modo. Verificado en web: aparece el saludo real de GoDubi.

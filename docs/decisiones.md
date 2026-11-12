@@ -151,3 +151,12 @@ Se actualiza el proyecto del SDK 57 al 58 (React Native 0.86 → 0.88, React 19.
 - **Ajustes de código:** `redirectTo` en los guards de la raíz (P-29) y los tipos estrictos de React Native (P-30). El código no usaba ninguna de las APIs que se quitan (`initialRouteName`, `freezeOnBlur`, `InteractionManager`, `ImageBackground`, imports profundos de `react-native/Libraries`, `File.write`).
 - `react-native-gesture-handler` sube de versión mayor (2 → 3); la app no lo usa directamente.
 - **Al integrar con `main` (2026-11-12):** se renumeró de D-22 a D-25 (y P-25/P-26 a P-29/P-30), porque el rediseño visual y el asistente ya habían usado D-22–D-24 y P-25–P-28. Los paquetes que sumó el asistente pasan a sus versiones del SDK 58: `expo-image-picker`, `expo-image-manipulator` y `expo-document-picker` con `npx expo install`, y `expo-speech-recognition` a `~58.0.1` a mano (por lo explicado en P-28).
+
+### D-26 · El asistente real también en la web, a través de un proxy (2026-11-12)
+Hasta ahora, en web el chat usaba siempre el simulador (respuestas fijas por palabras clave), porque la API de GoDubi no admite CORS (P-25). Eso hacía que el asistente pareciera mucho peor de lo que es.
+- **Por defecto, el asistente real en todas las plataformas.** `EXPO_PUBLIC_ASSISTANT_MODE=mock` sigue disponible para trabajar sin red.
+- **En web, proxy propio:** la app llama a `/api-asistente/*` en el mismo servidor de `expo start`, y un middleware de Metro (`scripts/assistant-proxy.js`, registrado en `metro.config.js`) reenvía método, cabeceras, cuerpo (también el multipart de los adjuntos) y respuesta a `https://webchat.godubi.com/v1/webchat`. Para el navegador es el mismo origen, así que no hay CORS. No se descartó pedirle a GoDubi que habilite CORS; el proxy no depende de eso.
+- **`EXPO_PUBLIC_ASSISTANT_WEB_URL`** permite apuntar a otro proxy: un `expo export` estático no incluye el de Metro (P-31).
+- La sesión del chat se guarda por modo (`pc.assistant.session.http` / `.mock`), para que la del simulador no se reutilice contra la API real (P-32).
+- En web las fotos se mandan sin comprimir y se controla el tope de 10 MB de la API.
+- Se quita el aviso "El asistente real no funciona desde el navegador".

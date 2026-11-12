@@ -5,20 +5,19 @@ import { createMockFetch } from './mock';
 
 /**
  * Punto único de acceso al chat con el asistente.
- * - `EXPO_PUBLIC_ASSISTANT_MODE=http`: API real de GoDubi.
+ * - Por defecto (o `EXPO_PUBLIC_ASSISTANT_MODE=http`): API real de GoDubi, en el celular y en web.
  * - `EXPO_PUBLIC_ASSISTANT_MODE=mock`: simulado, sin red.
- * - Vacío: real en el celular y simulado en web, porque el navegador bloquea la API por CORS.
+ *
+ * En web el navegador bloquea la API por CORS, así que se pasa por el proxy del servidor de
+ * desarrollo (`/api-asistente`, scripts/assistant-proxy.js) o por `EXPO_PUBLIC_ASSISTANT_WEB_URL`.
  */
-const mode: 'http' | 'mock' =
-  env.assistantMode === 'mock' || env.assistantMode === 'http'
-    ? env.assistantMode
-    : Platform.OS === 'web'
-      ? 'mock'
-      : 'http';
+const mode: 'http' | 'mock' = env.assistantMode === 'mock' ? 'mock' : 'http';
+
+const baseUrl = Platform.OS === 'web' && mode === 'http' ? env.assistantWebUrl : env.assistantBaseUrl;
 
 export const assistant = createAssistantClient({
   mode,
-  baseUrl: env.assistantBaseUrl,
+  baseUrl,
   publicationId: env.assistantPublicationId,
   origin: env.assistantOrigin,
   fetch: mode === 'mock' ? createMockFetch(env.assistantBaseUrl) : (url, init) => fetch(url, init),

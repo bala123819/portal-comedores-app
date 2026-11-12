@@ -82,10 +82,14 @@ export function createAssistantClient(cfg: AssistantClientConfig): AssistantClie
     return data as T;
   }
 
+  // Una sesión por modo: la del simulado no sirve contra la API real (y mostraría su saludo).
+  const sessionKey = `${SESSION_KEY}.${cfg.mode}`;
+
   async function load() {
     if (loaded) return;
     loaded = true;
-    const raw = await storage.getSecure(SESSION_KEY);
+    void storage.removeSecure(SESSION_KEY).catch(() => {}); // la de antes, sin modo
+    const raw = await storage.getSecure(sessionKey);
     if (!raw) return;
     try {
       session = JSON.parse(raw) as AssistantSession;
@@ -96,8 +100,8 @@ export function createAssistantClient(cfg: AssistantClientConfig): AssistantClie
 
   async function save(s: AssistantSession | null) {
     session = s;
-    if (s) await storage.setSecure(SESSION_KEY, JSON.stringify(s));
-    else await storage.removeSecure(SESSION_KEY);
+    if (s) await storage.setSecure(sessionKey, JSON.stringify(s));
+    else await storage.removeSecure(sessionKey);
   }
 
   /** bootstrap + exchange. Ante AUTHORIZATION_CONTEXT_MISMATCH se repite desde el bootstrap una vez. */

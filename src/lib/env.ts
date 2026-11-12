@@ -12,10 +12,12 @@ export const env = {
   /**
    * Chat con el asistente (GoDubi webchat, docs/asistente/). Los tres datos son públicos: identifican
    * la publicación del asistente, no dan acceso por sí solos (la sesión se arma con PKCE).
-   * `assistantMode`: 'mock' | 'http' | '' (vacío = http en el celular, mock en web por CORS).
+   * `assistantMode`: 'mock' | 'http' | '' (vacío = http, el asistente real, en todas las plataformas).
    */
   assistantMode: (process.env.EXPO_PUBLIC_ASSISTANT_MODE || '').toLowerCase(),
   assistantBaseUrl: (process.env.EXPO_PUBLIC_ASSISTANT_BASE_URL || 'https://webchat.godubi.com/v1/webchat').replace(/\/$/, ''),
+  /** En web: proxy al asistente (la API no admite CORS). Por defecto, el de `expo start` (scripts/assistant-proxy.js). */
+  assistantWebUrl: (process.env.EXPO_PUBLIC_ASSISTANT_WEB_URL || '/api-asistente').replace(/\/$/, ''),
   assistantPublicationId: process.env.EXPO_PUBLIC_ASSISTANT_PUBLICATION_ID || '9806bc2a-7c76-4fe2-8d7a-79ae79544419',
   assistantOrigin: process.env.EXPO_PUBLIC_ASSISTANT_ORIGIN || 'https://app-organizaciones.mermab.com',
   /** Organización fija que atiende hoy el asistente: si la sesión de la app es de otra, se avisa. */

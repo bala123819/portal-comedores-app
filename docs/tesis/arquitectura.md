@@ -93,7 +93,8 @@ Pantalla /asistente ── useAssistantChat (TanStack Query: polling 1,5 s / 5 s
         │          ┌────────────┴────────────┐
         │          ▼                         ▼
         │   API real GoDubi webchat     fetch simulado (mock.ts)
-        │   (celular / emulador)        (web y pruebas sin red)
+        │   (celular directo; web por   (sólo con
+        │    el proxy /api-asistente)    ASSISTANT_MODE=mock)
         │
         └─ tarjeta "Confirmar" ─► el asistente guarda en /api/org/... ─► invalidación de consultas
                                   (mismo backend que los formularios)
@@ -107,7 +108,7 @@ opcional: sin él (Expo Go), el botón no aparece.
 - **Sesión propia del chat**, independiente del token de Mermab: PKCE (`bootstrap` + `exchange`), guardada en secure-store, se renueva sola un minuto antes de vencer o ante un 403 de sesión (un reintento), y se cierra con el logout de la app.
 - **Escrituras sólo con confirmación:** lo que el asistente quiere guardar llega como tarjeta (`approvals`). La decisión nunca se reintenta sola. Al confirmar, se refrescan las consultas de Familias, Pedidos o Avisos (`ACTION_INVALIDATES`).
 - **Convive con los formularios:** atajos "Hacerlo con el asistente" en alta de familia, pedido y mensaje al Banco, que abren el chat con texto precargado.
-- **Modo:** real en el celular y simulado en web (la API no admite CORS, P-25). El simulador es un `fetch` falso, así el modo de prueba ejercita el mismo cliente.
+- **Modo:** real en el celular y en web (D-26). Como la API no admite CORS (P-25), en web se pasa por el proxy `/api-asistente` del servidor de desarrollo (`scripts/assistant-proxy.js`, registrado en `metro.config.js`). El simulador (`EXPO_PUBLIC_ASSISTANT_MODE=mock`) es un `fetch` falso, así el modo de prueba ejercita el mismo cliente.
 
 **Proveedor anterior (`src/services/agents/`)**: lo sigue usando *Sugerir recetas*. Tiene la interfaz `AgentsProvider` con una implementación simulada (recetario local) y otra HTTP (`EXPO_PUBLIC_AGENTS_URL`), y manda sólo ids. Sus acciones propuestas sólo navegan.
 

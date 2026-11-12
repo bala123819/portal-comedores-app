@@ -57,7 +57,6 @@ export default function AsistenteScreen() {
 
   // La organización del asistente hoy es fija: si la app está en otra, lo guardado no se va a ver acá.
   const orgMismatch = chat.mode === 'http' && !!org?.name && org.name.trim() !== env.assistantOrgName;
-  const webBlocked = chat.mode === 'http' && Platform.OS === 'web';
 
   const subtitle = chat.paused
     ? 'Te atiende una persona del Banco'
@@ -85,14 +84,6 @@ export default function AsistenteScreen() {
         }
       />
       <OfflineBanner />
-      {webBlocked ? (
-        <Notice tone="warning" icon={TriangleAlert}>
-          <Text className="text-sm">
-            El asistente real no funciona desde el navegador (lo bloquea por seguridad). Probalo en el celular o usá el
-            modo de prueba.
-          </Text>
-        </Notice>
-      ) : null}
       {orgMismatch ? (
         <Notice tone="info" icon={Info}>
           <Text className="text-sm">

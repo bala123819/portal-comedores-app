@@ -153,8 +153,10 @@ EXPO_PUBLIC_ASSISTANT_ORIGIN=https://app-organizaciones.mermab.com
 EXPO_PUBLIC_ASSISTANT_ORG_NAME=Comedor Prueba Tesis API
 ```
 
-- **Vacío (por defecto):** API real en el celular y simulador en web. **Desde el navegador la API real no anda:
-  no responde al pedido previo de CORS** (P-25). Si se fuerza `http` en web, la pantalla lo avisa.
+- **Vacío o `http` (por defecto):** API real en el celular **y en web** (D-26). La API no responde al pedido previo
+  de CORS (P-25), así que en web la app le habla a `/api-asistente`, un proxy dentro del servidor de `expo start`
+  (`scripts/assistant-proxy.js`) que reenvía todo a la API real (P-31). `EXPO_PUBLIC_ASSISTANT_WEB_URL` permite
+  apuntar a otro proxy (por ejemplo, el de un hosting de producción).
 - **`mock`:** todo funciona sin red, con el mismo cliente (sesión, renovación, errores) contra un `fetch` falso.
 
 ### Escenarios del simulador (contrato § "Escenarios del mock")
@@ -188,8 +190,8 @@ EXPO_PUBLIC_ASSISTANT_ORG_NAME=Comedor Prueba Tesis API
 (`npx expo run:android` o `npx eas-cli@latest build --profile development`). En la compu funciona en Chrome con el
 simulador (pide permiso de micrófono).
 
-**En la compu, con el simulador:** `npx expo start --web` (o la configuración `web-mocks` de
-`.claude/launch.json`) e ir a `/asistente`.
+**En la compu:** `npx expo start --web` e ir a `/asistente`: usa el asistente real a través del proxy. Para el
+simulador, `EXPO_PUBLIC_ASSISTANT_MODE=mock`.
 
 **Prueba rápida de la API con `curl`:** al final de [asistente-contrato.ts](asistente-contrato.ts).
 

@@ -4,6 +4,7 @@ import { Send } from 'lucide-react-native';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Pressable, View } from 'react-native';
 import { z } from 'zod';
+import { AssistantShortcut } from '@/components/asistente/AssistantShortcut';
 import { interactionTypeIcons } from '@/components/interacciones/InteractionCard';
 import { Button, Card, Header, Input, Screen, SectionHeader, Text, TextArea, toast } from '@/components/ui';
 import { useCreateInteraction } from '@/features/interacciones/hooks';
@@ -128,6 +129,7 @@ export default function NuevaInteraccionScreen() {
       header={<Header title="Mensaje al Banco" back backFallback="/banco" />}
       footer={<Button title="Enviar al Banco" icon={Send} size="lg" fullWidth loading={create.isPending} onPress={onSubmit} />}
     >
+      <AssistantShortcut prefill="Quiero avisar al Banco que " hint="Contale qué pasó y el asistente prepara el aviso." />
       <Text tone="muted">
         El Banco recibe un aviso con tu mensaje. Acá vas a poder ver cuándo lo atiende.
       </Text>

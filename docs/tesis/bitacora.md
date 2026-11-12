@@ -756,12 +756,12 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Qué se hizo.**
 - `npx expo install expo@^58.0.0 --fix` según la guía oficial de upgrade y la de migración de Expo Router 57 → 58. React Native 0.86 → 0.88, React 19.2 → 19.3, todos los paquetes `expo-*` a 58, `react-native-gesture-handler` 2 → 3, `eslint-config-expo` 58. `node_modules` y `package-lock.json` se regeneraron porque npm no resolvía el árbol viejo (ERESOLVE con `expo-symbols`).
 - Se buscaron en el código las APIs que el SDK 58 quita o cambia: no se usaba ninguna.
-- Guards de la raíz con `redirectTo` (P-25) y ajustes por los tipos estrictos de RN 0.88 (P-26).
+- Guards de la raíz con `redirectTo` (P-29) y ajustes por los tipos estrictos de RN 0.88 (P-30).
 - Arquitectura y README con el SDK nuevo.
 
-**Decisiones.** D-22 (revierte el "quedarse en el SDK 57" del 2026-10-23).
+**Decisiones.** D-25 (revierte el "quedarse en el SDK 57" del 2026-10-23).
 
-**Problemas y soluciones.** P-25 y P-26.
+**Problemas y soluciones.** P-29 y P-30.
 
 **Verificación.**
 - `npx expo-doctor`: 20/20 checks. `npx expo install --check`: dependencias al día.
@@ -774,3 +774,184 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - `npm audit` informa 8 vulnerabilidades (5 bajas, 3 altas) en dependencias de desarrollo/transitivas; no se revisaron.
 
 **Archivos principales.** `package.json`, `package-lock.json`, `src/app/_layout.tsx`, `src/components/ui/Button.tsx`, `src/components/ui/Input.tsx`, `src/components/ui/Query.tsx`, `src/app/(auth)/login.tsx`, `src/app/(app)/pedido/nuevo.tsx`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/tesis/arquitectura.md`, `README.md`
+
+---
+
+## 30ab765 · style: rediseño visual del sistema de diseño y ancho completo en web
+- **Fecha:** 2026-11-09 20:21 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual (rama `cambiosvisuales`)
+
+**Objetivo.** En web, el contenido quedaba en una columna angosta de 720 px en el centro mientras la barra de pestañas ocupaba todo el ancho. Además, la interfaz se veía plana y el botón primario no llegaba al contraste mínimo de accesibilidad con texto blanco.
+
+**Qué se hizo.**
+- **Ancho completo:** `max-w-content` pasa a `100%`. Márgenes laterales responsive (16 / 32 / 48 px) en `Screen`, en el encabezado y en el pie; las listas de FlashList usan el hook nuevo `useContentPadding` (`src/lib/layout.ts`).
+- **Listas en 2 columnas** desde 1024 px en `InfiniteList`.
+- **Paleta:** primario `#2E845C` (antes `#3B9B6E`), neutros con tinte verde, `global.css` y `tokens.ts` sincronizados.
+- **Elevación y forma:** tokens `shadows` (`sm`, `md`, `lg`, `primary`, `bar`, `focus`) y radios más amplios. `Card`, `Button`, `ListItem`, `StatCard` e `Input` (anillo de foco) los usan; hover del borde en web.
+- **Barra de pestañas:** píldora detrás del ícono activo y sombra en lugar de la línea superior.
+- **Chips:** el seleccionado pasa a verde suave (`bg-accent`) para no competir con el botón primario.
+- **Tarjeta de cupo:** los kg disponibles en grande, "% usado" y Corresponde / Recibido / En curso en tres columnas.
+- **Tarjeta de pedido:** chevron y separador antes de la fecha del pedido.
+
+**Decisiones.** D-22.
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.** `npx tsc --noEmit` y `npx expo lint`: sin errores. Bundle web compilado sin errores con el servidor de Expo (`--clear`, porque el cambio de `tailwind.config.js` no se aplica en caliente).
+
+**Pendientes.** Recorrer las pantallas en un celular real y en web a 375 × 812 para confirmar márgenes y sombras en Android.
+
+**Archivos principales.** `src/global.css`, `src/theme/tokens.ts`, `tailwind.config.js`, `src/lib/layout.ts`, `src/components/ui/{Button,Card,Chip,Data,Input,Layout,ListItem,Query,Text}.tsx`, `src/components/pedidos/{QuotaCard,DistributionCard}.tsx`, `src/app/(app)/(tabs)/_layout.tsx`, `src/app/(app)/(tabs)/recetas.tsx`, `src/app/(app)/pedido/nuevo.tsx`
+
+---
+
+## 947326a · docs(tesis): agregar capítulos, figuras y documento de la tesis
+- **Fecha:** 2026-11-09 20:21 · **Autoría:** Martina Gonella
+- **Etapa:** Documentación de la tesis
+
+**Objetivo.** Versionar el documento de la tesis junto con el código.
+
+**Qué se hizo.**
+- Capítulos en Markdown (`docs/tesis/capitulos/00-indice.md` a `09-referencias.md`).
+- 13 figuras en `docs/tesis/capitulos/figuras/`.
+- Documento armado en Word (`Tesis-Portal-Comedores.docx` y `Tesis-Portal-Comedores-v2.docx`).
+
+**Decisiones.** Ninguna.
+
+**Problemas y soluciones.** Ninguno.
+
+**Verificación.** No aplica (sólo documentación).
+
+**Pendientes.** Ninguno.
+
+**Archivos principales.** `docs/tesis/capitulos/*`, `docs/tesis/capitulos/figuras/*`, `docs/tesis/Tesis-Portal-Comedores.docx`, `docs/tesis/Tesis-Portal-Comedores-v2.docx`
+
+---
+
+## ffb0808 · style: encabezado de bienvenida en Inicio y pulido de listas
+- **Fecha:** 2026-11-09 20:23 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual (rama `cambiosvisuales`)
+
+**Objetivo.** Dar identidad al Inicio y hacer más reconocibles las listas.
+
+**Qué se hizo.**
+- **Inicio:** encabezado verde (`HomeHero`) con el saludo, la campana de avisos y la tarjeta de la organización (nombre, estado y dirección). Reemplaza al `Header` y a la tarjeta de organización del cuerpo; tocarla sigue llevando a `/organizacion`.
+- **Accesos rápidos** en grilla: 2 columnas en pantallas anchas, una en el celular.
+- **Familias:** avatar con iniciales en lugar del mismo ícono para todas, y chevron.
+- **Recetas y "Más":** chevron en las tarjetas; el perfil de "Más" con avatar grande.
+- `NotificationBell` acepta `color` y `className` para usarse sobre fondos de color.
+
+**Decisiones.** D-22.
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.** `npx tsc --noEmit` y `npx expo lint`: sin errores. Bundle web compilado sin errores.
+
+**Pendientes.** Ver en un celular real cómo queda el encabezado con el área segura (notch).
+
+**Archivos principales.** `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/familias.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/components/recetas/RecipeCard.tsx`, `src/components/notificaciones/NotificationBell.tsx`
+
+---
+
+## be1e8ba · style(login): panel de marca en pantallas anchas y encabezado verde en el celular
+- **Fecha:** 2026-11-09 20:39 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual (rama `cambiosvisuales`)
+
+**Objetivo.** Con el ancho completo, el formulario del login quedaba estirado en la compu. Además, es la primera pantalla que ve el usuario y no comunicaba para qué sirve la app.
+
+**Qué se hizo.**
+- **Pantallas anchas (≥ 1024 px):** panel verde a la izquierda (`BrandPanel`) con el logo, un título, una bajada y tres puntos (pedidos, familias, alimentación); el formulario a la derecha con un ancho máximo cómodo (`max-w-md`).
+- **Celular:** encabezado verde con el logo en una tarjeta blanca y el formulario en una tarjeta superpuesta (`-mt-10`).
+- Título "Ingresá a tu cuenta", error con ícono y borde, y un separador "¿Necesitás ayuda?" antes del WhatsApp.
+- La lógica del formulario no cambia: validación con zod, credenciales incorrectas, errores por campo, WhatsApp y aviso de modo de prueba.
+
+**Decisiones.** D-22.
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.** `npx tsc --noEmit` y `npx expo lint`: sin errores. Bundle web compilado sin errores.
+
+**Pendientes.** Probar el ingreso real en el celular con el teclado abierto (KeyboardAvoidingView en iOS).
+
+**Archivos principales.** `src/app/(auth)/login.tsx`
+
+---
+
+## ab9bfd8 · style(inicio): panel verde rectangular que se desplaza con el contenido
+- **Fecha:** 2026-11-09 20:44 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Diseño visual (rama `cambiosvisuales`)
+
+**Objetivo.** Ajuste pedido sobre el encabezado de bienvenida de ffb0808: que no quede fijo arriba y que sea un rectángulo, sin las esquinas inferiores redondeadas.
+
+**Qué se hizo.**
+- `Screen` suma la prop `hero`: un bloque a todo el ancho al principio del scroll, sin los márgenes del contenido. Con `hero`, el contenido va en un `View` con las mismas clases de siempre.
+- El Inicio pasa `HomeHero` por `hero` en lugar de `header`, así se desplaza con el resto. Se quitan `rounded-b-3xl` y la sombra verde.
+- Sólo queda fija una franja verde del alto del área segura superior (barra de estado del celular), para que el contenido no pase por debajo de la hora y la batería. En web mide 0.
+
+**Decisiones.** D-22 (ajuste del encabezado del Inicio).
+
+**Problemas y soluciones.** Ninguno nuevo.
+
+**Verificación.** `npx tsc --noEmit` y `npx expo lint`: sin errores. Bundle web compilado sin errores.
+
+**Pendientes.** Confirmar en un celular con notch que la franja de la barra de estado se ve bien al desplazar.
+
+**Archivos principales.** `src/components/ui/Layout.tsx`, `src/app/(app)/(tabs)/index.tsx`
+
+---
+
+## (pendiente de commit) · feat(asistente): chat con el asistente de GoDubi dentro de la app
+- **Fecha:** 2026-11-11 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Agentes / asistente (rama `cambiosvisuales`)
+
+**Objetivo.** Conectar la app al asistente del comedor según la guía definitiva que publicó GoDubi el 11/11 en la orden 1149 (contrato v2). El chat va **dentro de la app** (no por WhatsApp), y la carga de datos tiene que poder hacerse **tanto por el chat como por los formularios**.
+
+**Qué se hizo.**
+- **Contrato:** se bajó el adjunto del post a `docs/asistente/asistente-contrato.ts` (el SHA-256 coincide con el publicado) y se pasó a tipos en `src/services/assistant/types.ts`.
+- **Cliente** (`src/services/assistant/client.ts`): sesión con PKCE (`bootstrap` + `exchange`) guardada en secure-store y separada del token de Mermab; renovación silenciosa un minuto antes de vencer o ante 403 de sesión, con un reintento; conversaciones, mensajes, adjuntos multipart y tarjetas. Errores con código y mensajes en lenguaje simple (`errors.ts`). PKCE con base64 propio (`pkce.ts`).
+- **Simulador** (`mock.ts`): `fetch` falso con los 12 escenarios del contrato (respuesta que crece, foto, failed + reintento, TURN_BUSY, operador, sesión vencida, 429, sin red, tarjetas confirmada / rechazada / vencida, logout). En web se usa por defecto.
+- **Hook `useAssistantChat`** (`src/features/asistente/hooks.ts`): retoma o crea la conversación; hace polling de 1,5 s / 5 s (cortado en segundo plano y sin red); acumula el historial y carga los mensajes anteriores; manda un mensaje a la vez con `clientMessageId` reutilizado al reintentar; reintenta solo al volver la conexión; abre una conversación nueva si la anterior se cerró y avisa al llegar al límite; maneja las tarjetas (botones bloqueados al primer toque, nunca reintenta la decisión) e invalida Familias, Pedidos o Avisos según `ACTION_INVALIDATES`.
+- **Pantalla `/asistente` reescrita:** bienvenida con sugerencias, burbujas con markdown (renderizador propio), "Escribiendo…" mientras crece la respuesta, mensajes de la persona del Banco con otro estilo, tarjetas de confirmación con datos en lenguaje humano y contador, adjuntos (cámara, galería, PDF; hasta 4), conversación nueva y avisos (sin red, CORS en web, organización distinta, operador, límite).
+- **Chat y formularios conviven:** atajo "Hacerlo con el asistente" en *Registrar familia*, *Hacer un pedido* y *Mensaje al Banco*, que abre el chat con texto precargado sin enviarlo. Nutrición abre el chat con "Tengo una duda de nutrición: ". La tarjeta del Inicio cambia su bajada.
+- **Logout:** `signOut` también cierra la sesión del chat.
+- **Dependencias:** `expo-image-picker`, `expo-image-manipulator` y `expo-document-picker` (con `npx expo install`), y el plugin de image picker en `app.json`. Variables `EXPO_PUBLIC_ASSISTANT_*` en `src/lib/env.ts` y `.env.example`.
+- **Documentación:** `docs/asistente/README.md` (guía completa), D-23, P-25 a P-27, arquitectura §4.6 e índice de `docs/tesis/README.md`.
+
+**Decisiones.** D-23.
+
+**Problemas y soluciones.** P-25 (CORS en web), P-26 (`Buffer` en RN para PKCE), P-27 (reglas del React Compiler en el hook).
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores.
+- API real (`curl` y Node): bootstrap y exchange 201; `GET /conversations` 200; token inválido → 403 `INVALID_CREDENTIAL`; reusar `bootstrapId` → 403 `AUTHORIZATION_CONTEXT_MISMATCH`; logout 201 y después → 403 `SESSION_EXPIRED`. El servidor acepta el PKCE de `pkce.ts`. No se mandaron mensajes reales, para no gastar el cupo.
+- Navegador (Chrome con Playwright, web en modo simulado, 420×900): todos los escenarios del simulador y los tres atajos, sin errores en la consola. Detalle en `docs/asistente/README.md` §6.
+
+**Pendientes.** Probar en el celular con la API real (adjuntos reales, forma real del `input` de las tarjetas) y grabar el video de cierre que pide la guía. Identificación con el login de Mermab cuando GoDubi la habilite. Decidir si *Sugerir recetas* pasa al asistente nuevo.
+
+**Archivos principales.** `src/services/assistant/*`, `src/features/asistente/*`, `src/components/asistente/*`, `src/app/(app)/asistente.tsx`, `src/features/auth/store.ts`, `src/app/(app)/familia/nueva.tsx`, `src/app/(app)/pedido/nuevo.tsx`, `src/app/(app)/banco/nueva.tsx`, `src/lib/env.ts`, `app.json`, `.env.example`, `docs/asistente/*`
+
+---
+
+## (pendiente de commit) · feat(asistente): dictado por voz en el chat
+- **Fecha:** 2026-11-11 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Agentes / asistente (rama `cambiosvisuales`)
+
+**Objetivo.** Poder hablarle al asistente en vez de escribir. Lo piensan sobre todo para quienes escriben con dificultad o tienen las manos ocupadas en la cocina. El texto tiene que poder revisarse antes de enviarlo.
+
+**Qué se hizo.**
+- **Hook `useDictation`** (`src/features/asistente/dictation.ts`): reconocimiento de voz con `expo-speech-recognition`, con resultados parciales en vivo, modo continuo (salvo en Android 12 o anterior), español rioplatense con alternativas en iOS, palabras del dominio como `contextualStrings`, mayúscula al empezar cada oración y errores con mensajes simples. El módulo nativo se carga de forma opcional (`requireOptionalNativeModule`): en Expo Go o Firefox el botón no aparece.
+- **Composer:** botón de micrófono al lado de Enviar. Mientras escucha: cuadrado rojo para terminar, barra bordeada de rojo y bloqueada, y el aviso "Te escucho…". Lo dictado se suma a lo ya escrito. Enviar queda deshabilitado hasta terminar: **nunca se envía solo**.
+- **Dependencia:** `expo-speech-recognition@~57.1.1` y su plugin en `app.json`, con los textos de los permisos en español (`RECORD_AUDIO` y los permisos de micrófono y reconocimiento de voz de iOS).
+- **Documentación:** D-24, P-28, `docs/asistente/README.md` (§3.6, §5, §6 y §7) y arquitectura §4.6.
+
+**Decisiones.** D-24 (voz a texto en el celular, revisión antes de enviar; se descartan por ahora la lectura en voz alta y el audio como adjunto).
+
+**Problemas y soluciones.** P-28 (`expo install` instaló la versión del SDK 58).
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores. `npx expo config --type introspect`: permisos generados en Android e iOS. `npx expo-doctor`: el único chequeo que falla es por versiones de otros paquetes del SDK 57 que ya estaban desactualizadas, no por este.
+- Navegador (Chrome con Playwright, web en modo simulado, 420×900) con una `webkitSpeechRecognition` falsa: texto en vivo, texto final en la barra sin enviarse, vuelta al micrófono y envío manual. Sin errores en la consola.
+
+**Pendientes.** Generar un *development build* y probar con voz real en Android y en iOS (ruido de cocina, acentos, nombres propios). Si GoDubi acepta audio como adjunto, evaluar sumarlo.
+
+**Archivos principales.** `src/features/asistente/dictation.ts`, `src/components/asistente/Composer.tsx`, `app.json`, `package.json`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/asistente/README.md`, `docs/tesis/arquitectura.md`

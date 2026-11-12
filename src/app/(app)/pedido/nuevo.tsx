@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { ArrowRight, PackageSearch, Search } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
+import { AssistantShortcut } from '@/components/asistente/AssistantShortcut';
 import { CatalogItem } from '@/components/pedidos/CatalogItem';
 import {
   Button,
@@ -21,6 +22,7 @@ import { cartKg, cartLines, useCart } from '@/features/pedidos/cart';
 import { useCatalog } from '@/features/pedidos/hooks';
 import { ORDER_RULES, type CatalogProduct } from '@/features/pedidos/types';
 import { formatNumber } from '@/lib/format';
+import { useContentPadding } from '@/lib/layout';
 import { colors } from '@/theme/tokens';
 
 /**
@@ -40,6 +42,7 @@ export default function NuevoPedidoScreen() {
   const query = useCatalog({ search });
   const lines = useCart((s) => s.lines);
   const setQuantity = useCart((s) => s.setQuantity);
+  const contentPadding = useContentPadding();
 
   const products = flattenPages(query.data);
   // Categorías a partir de lo cargado: la API no tiene un listado de categorías para este rol.
@@ -61,6 +64,7 @@ export default function NuevoPedidoScreen() {
 
   const header = (
     <View className="gap-3 pb-3">
+      <AssistantShortcut prefill="Necesitamos hacer un pedido de " hint="Contale qué necesitan y para cuándo, y el asistente arma el pedido." />
       <Text tone="muted">
         Elegí los productos y la cantidad. El Banco revisa el pedido y decide las cantidades al
         aprobarlo.
@@ -162,7 +166,7 @@ export default function NuevoPedidoScreen() {
         ListHeaderComponent={header}
         ListEmptyComponent={listEmpty}
         ItemSeparatorComponent={() => <View className="h-3" />}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 16, paddingHorizontal: contentPadding, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
         onEndReachedThreshold={0.4}
         onEndReached={() => {

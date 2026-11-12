@@ -22,6 +22,7 @@ Documentos relacionados (fuera de esta carpeta):
 - `docs/mapa-pantallas.md` — propuesta original de navegación.
 - `docs/agentes-contrato.md` — contrato entre la app y los agentes de IA.
 - `docs/godubi/` — documentación de GoDubi (plataforma de agentes) y su análisis.
+- `docs/asistente/` — **chat con el asistente dentro de la app**: guía de implementación (README) y contrato v2 de GoDubi.
 - `docs/agentes/` — diseño de cada agente (persona, instrucciones, conocimiento, casos de prueba).
 - `docs/comunicaciones/` — mensajes enviados al Banco y otros actores (registro de la coordinación).
 

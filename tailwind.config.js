@@ -26,9 +26,10 @@ module.exports = {
       borderRadius: {
         sm: '6px',
         md: '8px',
-        lg: '10px',
-        DEFAULT: '10px',
-        xl: '14px',
+        lg: '12px',
+        DEFAULT: '12px',
+        xl: '16px',
+        '2xl': '20px',
         full: '9999px',
       },
       fontSize: {
@@ -40,7 +41,8 @@ module.exports = {
         '2xl': ['24px', '32px'],
         '3xl': ['30px', '38px'],
       },
-      maxWidth: { content: '720px' },
+      // Ancho completo: el contenido acompaña a la barra de navegación inferior.
+      maxWidth: { content: '100%' },
     },
   },
   plugins: [],

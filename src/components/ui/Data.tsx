@@ -1,7 +1,7 @@
 import { Check, X, type LucideIcon } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { cn } from '@/lib/cn';
-import { colors, toneColor, type Tone } from '@/theme/tokens';
+import { colors, shadows, toneColor, type Tone } from '@/theme/tokens';
 import { Text } from './Text';
 
 export function StatCard({
@@ -19,17 +19,20 @@ export function StatCard({
 }) {
   return (
     <View
-      className={cn('min-w-36 flex-1 gap-2 rounded-xl border border-border bg-card p-4', className)}
+      className={cn('min-w-40 flex-1 gap-3 rounded-2xl border border-border/70 bg-card p-4', className)}
+      style={shadows.md}
       accessible
       accessibilityLabel={`${label}: ${value}`}
     >
       {Icon ? (
-        <View className="h-10 w-10 items-center justify-center rounded-full bg-accent">
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-accent">
           <Icon size={20} color={toneColor[tone]} />
         </View>
       ) : null}
-      <Text variant="title">{value}</Text>
-      <Text variant="caption">{label}</Text>
+      <View className="gap-0.5">
+        <Text variant="title">{value}</Text>
+        <Text variant="caption">{label}</Text>
+      </View>
     </View>
   );
 }
@@ -60,7 +63,7 @@ export function ProgressBar({
   const pct = Math.max(0, Math.min(1, value)) * 100;
   return (
     <View
-      className={cn('h-3 w-full overflow-hidden rounded-full bg-muted', className)}
+      className={cn('h-2.5 w-full overflow-hidden rounded-full bg-muted', className)}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(pct) }}
     >

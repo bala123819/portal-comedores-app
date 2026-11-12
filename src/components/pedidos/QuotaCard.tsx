@@ -44,29 +44,39 @@ export function QuotaCard({
   const over = remaining < 0;
   const ratio = quota.monthly_quota_kg > 0 ? used / quota.monthly_quota_kg : 0;
 
+  const pct = Math.round(Math.min(1, ratio) * 100);
+
   return (
-    <Card className="gap-3" accessibilityLabel={`Cupo de ${monthName(quota.month)}`}>
-      <View className="flex-row items-center gap-3">
-        <View className="h-10 w-10 items-center justify-center rounded-full bg-accent">
-          <Scale size={20} color={colors.accentForeground} />
+    <Card className="gap-4" accessibilityLabel={`Cupo de ${monthName(quota.month)}`}>
+      <View className="flex-row items-start gap-3">
+        <View className="h-11 w-11 items-center justify-center rounded-xl bg-accent">
+          <Scale size={22} color={colors.accentForeground} />
         </View>
-        <View className="flex-1">
-          <Text variant="caption">Cupo de {monthName(quota.month)}</Text>
-          <Text variant="heading">
-            {over
-              ? `Te pasás por ${formatNumber(-remaining)} kg`
-              : `Te quedan ${formatNumber(remaining)} kg`}
+        <View className="flex-1 gap-0.5">
+          <Text variant="caption" className="font-semibold uppercase tracking-wide">
+            Cupo de {monthName(quota.month)}
           </Text>
+          {over ? (
+            <Text variant="title" tone="destructive">
+              Te pasás por {formatNumber(-remaining)} kg
+            </Text>
+          ) : (
+            <View className="flex-row flex-wrap items-baseline gap-x-2">
+              <Text variant="title">{formatNumber(remaining)} kg</Text>
+              <Text tone="muted">disponibles</Text>
+            </View>
+          )}
+        </View>
+        <View className="rounded-full bg-muted px-2.5 py-1">
+          <Text className="text-xs font-bold text-muted-foreground">{pct} % usado</Text>
         </View>
       </View>
       <ProgressBar value={ratio} tone={over ? 'warning' : ratio > 0.85 ? 'warning' : 'primary'} />
       {compact ? null : (
-        <View className="flex-row flex-wrap gap-x-4 gap-y-1">
-          <Text variant="caption">Corresponde: {formatNumber(quota.monthly_quota_kg)} kg</Text>
-          <Text variant="caption">Recibido: {formatNumber(quota.delivered_kg)} kg</Text>
-          <Text variant="caption">
-            Pedido en curso: {formatNumber(quota.requested_in_progress_kg + extraKg)} kg
-          </Text>
+        <View className="flex-row gap-2">
+          <QuotaStat label="Corresponde" value={quota.monthly_quota_kg} />
+          <QuotaStat label="Recibido" value={quota.delivered_kg} />
+          <QuotaStat label="En curso" value={quota.requested_in_progress_kg + extraKg} />
         </View>
       )}
       {!quota.enforced && over ? (
@@ -75,5 +85,18 @@ export function QuotaCard({
         </Text>
       ) : null}
     </Card>
+  );
+}
+
+function QuotaStat({ label, value }: { label: string; value: number }) {
+  return (
+    <View
+      className="flex-1 gap-0.5 rounded-xl bg-muted px-3 py-2.5"
+      accessible
+      accessibilityLabel={`${label}: ${formatNumber(value)} kilos`}
+    >
+      <Text variant="caption">{label}</Text>
+      <Text variant="label">{formatNumber(value)} kg</Text>
+    </View>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '@/lib/cn';
 import { goBack } from '@/lib/navigation';
-import { colors } from '@/theme/tokens';
+import { colors, shadows } from '@/theme/tokens';
 import { IconButton } from './Button';
 import { OfflineBanner } from './States';
 import { Text } from './Text';
@@ -29,8 +29,8 @@ export interface HeaderProps {
 export function Header({ title, subtitle, back, backFallback = '/', right }: HeaderProps) {
   const insets = useSafeAreaInsets();
   return (
-    <View className="border-b border-border bg-background" style={{ paddingTop: insets.top }}>
-      <View className="min-h-14 w-full max-w-content flex-row items-center gap-1 self-center px-2">
+    <View className="border-b border-border/60 bg-card" style={{ paddingTop: insets.top }}>
+      <View className="min-h-16 w-full max-w-content flex-row items-center gap-1 self-center px-2 md:px-6 lg:px-10">
         {back ? (
           <IconButton
             icon={ArrowLeft}
@@ -41,7 +41,7 @@ export function Header({ title, subtitle, back, backFallback = '/', right }: Hea
           <View className="w-2" />
         )}
         <View className="flex-1 py-2">
-          <Text variant="heading" numberOfLines={1} accessibilityRole="header">
+          <Text variant="heading" className="text-xl" numberOfLines={1} accessibilityRole="header">
             {title}
           </Text>
           {subtitle ? (
@@ -65,6 +65,8 @@ export interface ScreenProps extends Omit<ScrollViewProps, 'children'> {
   onRefresh?: () => void;
   footer?: ReactNode;
   contentClassName?: string;
+  /** Bloque a todo el ancho al principio del scroll (se desplaza con el contenido, sin márgenes) */
+  hero?: ReactNode;
 }
 
 /**
@@ -79,9 +81,14 @@ export function Screen({
   onRefresh,
   footer,
   contentClassName,
+  hero,
   ...props
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const contentClasses = cn(
+    'w-full max-w-content self-center gap-4 p-4 pb-8 md:px-8 lg:px-12',
+    contentClassName,
+  );
   return (
     <View className="flex-1 bg-background">
       {header}
@@ -93,7 +100,7 @@ export function Screen({
         {scroll ? (
           <ScrollView
             className="flex-1"
-            contentContainerClassName={cn('w-full max-w-content self-center gap-4 p-4 pb-8', contentClassName)}
+            contentContainerClassName={hero ? 'w-full' : contentClasses}
             keyboardShouldPersistTaps="handled"
             refreshControl={
               onRefresh ? (
@@ -107,7 +114,14 @@ export function Screen({
             }
             {...props}
           >
-            {children}
+            {hero ? (
+              <>
+                {hero}
+                <View className={contentClasses}>{children}</View>
+              </>
+            ) : (
+              children
+            )}
           </ScrollView>
         ) : (
           <View className={cn('w-full max-w-content flex-1 self-center', contentClassName)}>
@@ -116,10 +130,10 @@ export function Screen({
         )}
         {footer ? (
           <View
-            className="border-t border-border bg-background"
-            style={{ paddingBottom: header ? Math.max(insets.bottom, 12) : 12 }}
+            className="border-t border-border/60 bg-card"
+            style={{ ...shadows.bar, paddingBottom: header ? Math.max(insets.bottom, 12) : 12 }}
           >
-            <View className="w-full max-w-content gap-2 self-center px-4 pt-3">{footer}</View>
+            <View className="w-full max-w-content gap-2 self-center px-4 pt-3 md:px-8 lg:px-12">{footer}</View>
           </View>
         ) : null}
       </KeyboardAvoidingView>
@@ -129,7 +143,7 @@ export function Screen({
 
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
-    <View className="mt-2 flex-row items-center justify-between">
+    <View className="mt-3 flex-row items-center justify-between">
       <Text variant="heading" accessibilityRole="header">
         {title}
       </Text>

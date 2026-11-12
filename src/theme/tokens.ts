@@ -3,23 +3,23 @@
  * (íconos, StatusBar, navegación, gráficos). Deben coincidir con `src/global.css`.
  */
 export const colors = {
-  primary: '#3B9B6E',
+  primary: '#2E845C',
   primaryForeground: '#FFFFFF',
-  accent: '#EBF4F0',
-  accentForeground: '#2A6F4F',
-  success: '#34B277',
+  accent: '#E7F3EE',
+  accentForeground: '#216344',
+  success: '#2E9E6A',
   warning: '#F9A91F',
   info: '#2B8CEE',
-  destructive: '#D74242',
-  background: '#FDFDFC',
+  destructive: '#D43535',
+  background: '#F6F9F7',
   foreground: '#1D212B',
   // Derivados
-  muted: '#F4F3F0',
-  mutedForeground: '#5C6370',
+  muted: '#EFF3F0',
+  mutedForeground: '#555F6D',
   card: '#FFFFFF',
-  border: '#E3E1DC',
-  input: '#D6D3CC',
-  ring: '#3B9B6E',
+  border: '#E0E6E2',
+  input: '#C7D1CA',
+  ring: '#2E845C',
 } as const;
 
 export type ColorToken = keyof typeof colors;
@@ -27,9 +27,23 @@ export type ColorToken = keyof typeof colors;
 export const radius = {
   sm: 6,
   md: 8,
-  lg: 10,
-  xl: 14,
+  lg: 12,
+  xl: 16,
+  '2xl': 20,
   full: 9999,
+} as const;
+
+/**
+ * Elevación suave (sombras con tinte verde oscuro, no negro puro).
+ * `boxShadow` funciona en web, iOS y Android (RN ≥ 0.76, nueva arquitectura).
+ */
+export const shadows = {
+  sm: { boxShadow: '0px 1px 2px rgba(18, 48, 34, 0.05), 0px 1px 3px rgba(18, 48, 34, 0.04)' },
+  md: { boxShadow: '0px 4px 16px rgba(18, 48, 34, 0.06), 0px 1px 3px rgba(18, 48, 34, 0.05)' },
+  lg: { boxShadow: '0px 12px 32px rgba(18, 48, 34, 0.10), 0px 2px 6px rgba(18, 48, 34, 0.06)' },
+  primary: { boxShadow: '0px 6px 16px rgba(46, 132, 92, 0.28), 0px 1px 3px rgba(46, 132, 92, 0.20)' },
+  bar: { boxShadow: '0px -4px 20px rgba(18, 48, 34, 0.06)' },
+  focus: { boxShadow: '0px 0px 0px 3px rgba(46, 132, 92, 0.18)' },
 } as const;
 
 export const spacing = {
@@ -38,8 +52,8 @@ export const spacing = {
 } as const;
 
 export const layout = {
-  /** Ancho máximo del contenido en web / tablet */
-  maxContentWidth: 720,
+  /** Ancho a partir del cual las listas pasan a 2 columnas */
+  twoColumnsFrom: 1024,
 } as const;
 
 export type Tone = 'primary' | 'accent' | 'success' | 'warning' | 'info' | 'destructive' | 'muted';

@@ -1,9 +1,10 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import type { UseInfiniteQueryResult, UseQueryResult, InfiniteData } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';
-import { ActivityIndicator, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, useWindowDimensions, View } from 'react-native';
+import { useContentPadding } from '@/lib/layout';
 import type { Page } from '@/services/api/types';
-import { colors } from '@/theme/tokens';
+import { colors, layout } from '@/theme/tokens';
 import { SkeletonList } from './Skeleton';
 import { EmptyState, ErrorState } from './States';
 
@@ -54,6 +55,11 @@ export function InfiniteList<T extends { id: string }>({
   emptyAction?: { label: string; onPress: () => void };
 }) {
   const items = flattenPages(query.data);
+  const contentPadding = useContentPadding();
+  // En pantallas anchas las tarjetas van en 2 columnas para no quedar estiradas.
+  const { width } = useWindowDimensions();
+  const columns = width >= layout.twoColumnsFrom ? 2 : 1;
+  const gutter = 6;
 
   const listEmpty = query.isPending ? (
     <SkeletonList />
@@ -70,13 +76,25 @@ export function InfiniteList<T extends { id: string }>({
 
   return (
     <FlashList
+      key={columns}
       data={items}
-      renderItem={renderItem}
+      numColumns={columns}
+      renderItem={
+        columns > 1
+          ? (info) => <View style={{ paddingHorizontal: gutter }}>{renderItem(info)}</View>
+          : renderItem
+      }
       keyExtractor={(item) => item.id}
-      ListHeaderComponent={header}
+      ListHeaderComponent={
+        header && columns > 1 ? <View style={{ paddingHorizontal: gutter }}>{header}</View> : header
+      }
       ListEmptyComponent={listEmpty}
       ItemSeparatorComponent={() => <View className="h-3" />}
-      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      contentContainerStyle={{
+        padding: 16,
+        paddingHorizontal: columns > 1 ? contentPadding - gutter : contentPadding,
+        paddingBottom: 32,
+      }}
       onEndReachedThreshold={0.4}
       onEndReached={() => {
         if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();

@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
-import { Search, UserPlus, Users } from 'lucide-react-native';
+import { ChevronRight, Search, UserPlus } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { DemographicsSummary } from '@/components/familias/DemographicsSummary';
 import { NotificationBell } from '@/components/notificaciones/NotificationBell';
-import { Button, Card, Chip, Header, InfiniteList, Input, OfflineBanner, Text } from '@/components/ui';
+import { Avatar, Button, Card, Chip, Header, InfiniteList, Input, OfflineBanner, Text } from '@/components/ui';
 import { useDemographics, useFamilies } from '@/features/familias/hooks';
 import type { FamilyStatus } from '@/features/familias/types';
 import { features } from '@/lib/features';
@@ -55,9 +55,7 @@ export default function FamiliasScreen() {
             const members = item.total_members ?? item.members?.length ?? null;
             return (
               <Card onPress={() => router.push({ pathname: '/familia/[id]', params: { id: item.id } })} className="flex-row items-center gap-3">
-                <View className="h-11 w-11 items-center justify-center rounded-full bg-accent">
-                  <Users size={22} color={colors.accentForeground} />
-                </View>
+                <Avatar name={item.name} />
                 <View className="flex-1">
                   <Text variant="label">{item.name}</Text>
                   <Text variant="caption">
@@ -72,6 +70,7 @@ export default function FamiliasScreen() {
                   </Text>
                   {item.head_of_household ? <Text variant="caption">Referente: {item.head_of_household.full_name}</Text> : null}
                 </View>
+                <ChevronRight size={20} color={colors.mutedForeground} />
               </Card>
             );
           }}

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import {
   Bell,
   ChefHat,
+  ChevronRight,
   MapPin,
   MessageSquare,
   MessagesSquare,
@@ -13,7 +14,8 @@ import {
   Truck,
   Users,
 } from 'lucide-react-native';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DemographicsSummary } from '@/components/familias/DemographicsSummary';
 import { CoverageTotal, groupName } from '@/components/nutricion/CoverageBars';
 import { MermaCard } from '@/components/mermas/MermaCard';
@@ -22,11 +24,9 @@ import { DistributionCard } from '@/components/pedidos/DistributionCard';
 import { QuotaCard } from '@/components/pedidos/QuotaCard';
 import { AssignmentCard } from '@/components/retiros/AssignmentCard';
 import {
-  Badge,
   Button,
   Card,
   flattenPages,
-  Header,
   ListItem,
   Screen,
   SectionHeader,
@@ -37,7 +37,6 @@ import {
 } from '@/components/ui';
 import { useAssignments } from '@/features/asignaciones/hooks';
 import { useSession } from '@/features/auth/store';
-import { displayName } from '@/features/auth/types';
 import { useDemographics } from '@/features/familias/hooks';
 import { useInteractionsSummary } from '@/features/interacciones/hooks';
 import { useAvailableMermas } from '@/features/mermas/hooks';
@@ -51,6 +50,7 @@ import { formatNumber, parseDate } from '@/lib/format';
 import { label, organizationStatusLabels } from '@/lib/labels';
 import { isOpenAssignment } from '@/lib/status';
 import { colors } from '@/theme/tokens';
+import type { Organization } from '@/features/org/types';
 
 function greeting() {
   const h = new Date().getHours();
@@ -181,6 +181,78 @@ function NutricionSection() {
   );
 }
 
+/**
+ * Encabezado de bienvenida: saludo + organización sobre el verde institucional.
+ * Reemplaza al Header genérico y a la tarjeta de organización (mismo destino: /organizacion).
+ */
+function HomeHero({
+  title,
+  org,
+  loading,
+}: {
+  title: string;
+  org: Organization | undefined;
+  loading: boolean;
+}) {
+  return (
+    <View className="bg-primary">
+      <View className="w-full gap-4 px-4 pb-5 pt-3 md:px-8 lg:px-12">
+        <View className="flex-row items-center gap-2">
+          <View className="flex-1">
+            <Text className="text-sm font-semibold text-primary-foreground/80">
+              Portal Comedores
+            </Text>
+            <Text
+              variant="title"
+              className="text-primary-foreground"
+              numberOfLines={1}
+              accessibilityRole="header"
+            >
+              {title}
+            </Text>
+          </View>
+          <NotificationBell color={colors.primaryForeground} className="active:bg-white/15" />
+        </View>
+
+        {loading ? (
+          <View className="h-20 w-full rounded-2xl bg-white/15" />
+        ) : org ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${org.name}. Ver datos de la organización`}
+            onPress={() => router.push('/organizacion')}
+            className="flex-row items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 active:bg-white/20 web:hover:bg-white/15"
+          >
+            <View className="flex-1 gap-1.5">
+              <View className="flex-row flex-wrap items-center gap-2">
+                <Text variant="heading" className="flex-shrink text-primary-foreground">
+                  {org.name}
+                </Text>
+                {org.status ? (
+                  <View className="rounded-full bg-white/20 px-2.5 py-0.5">
+                    <Text className="text-xs font-bold text-primary-foreground">
+                      {label(organizationStatusLabels, org.status)}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+              {org.address?.full_address ? (
+                <View className="flex-row items-center gap-1.5">
+                  <MapPin size={15} color={colors.primaryForeground} />
+                  <Text className="flex-1 text-sm text-primary-foreground/90" numberOfLines={1}>
+                    {org.address.full_address}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+            <ChevronRight size={20} color={colors.primaryForeground} />
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const me = useSession((s) => s.me);
   const profile = useOrgProfile();
@@ -189,6 +261,7 @@ export default function HomeScreen() {
   const unread = useUnreadCount();
   const interactions = useInteractionsSummary();
   const qc = useQueryClient();
+  const insets = useSafeAreaInsets();
   const org = profile.data;
   const impacto = stats.data?.impacto;
 
@@ -205,11 +278,13 @@ export default function HomeScreen() {
 
   return (
     <Screen
-      header={
-        <Header
+      // Sólo la franja de la barra de estado queda fija (en web mide 0); el panel se desplaza.
+      header={<View className="bg-primary" style={{ height: insets.top }} />}
+      hero={
+        <HomeHero
           title={`${greeting()}${me?.first_name ? `, ${me.first_name}` : ''}`}
-          subtitle={org?.name ?? displayName(me)}
-          right={<NotificationBell />}
+          org={org}
+          loading={profile.isPending}
         />
       }
       refreshing={refreshing}
@@ -221,28 +296,6 @@ export default function HomeScreen() {
           <Text className="flex-1">
             {unread.data === 1 ? 'Tenés 1 aviso sin leer' : `Tenés ${unread.data} avisos sin leer`}
           </Text>
-        </Card>
-      ) : null}
-
-      {/* Organización */}
-      {profile.isPending ? (
-        <Skeleton className="h-28 w-full rounded-xl" />
-      ) : org ? (
-        <Card onPress={() => router.push('/organizacion')} className="gap-2">
-          <View className="flex-row flex-wrap items-center gap-2">
-            <Text variant="heading" className="flex-1">
-              {org.name}
-            </Text>
-            {org.status ? (
-              <Badge label={label(organizationStatusLabels, org.status)} tone={org.status === 'aprobada' ? 'success' : 'warning'} size="sm" />
-            ) : null}
-          </View>
-          {org.address?.full_address ? (
-            <View className="flex-row items-center gap-2">
-              <MapPin size={16} color={colors.mutedForeground} />
-              <Text className="flex-1 text-sm">{org.address.full_address}</Text>
-            </View>
-          ) : null}
         </Card>
       ) : null}
 
@@ -287,9 +340,10 @@ export default function HomeScreen() {
       ) : null}
 
       <SectionHeader title="Accesos rápidos" />
-      <View className="gap-2">
-        <ListItem icon={ChefHat} title="¿Qué cocino hoy?" subtitle="Recetas para la cantidad de personas que asisten" onPress={() => router.push('/sugerir-recetas')} />
+      <View className="flex-row flex-wrap gap-2">
+        <ListItem className="min-w-72 flex-1 basis-[45%]" icon={ChefHat} title="¿Qué cocino hoy?" subtitle="Recetas para la cantidad de personas que asisten" onPress={() => router.push('/sugerir-recetas')} />
         <ListItem
+          className="min-w-72 flex-1 basis-[45%]"
           icon={MessagesSquare}
           title="Escribirle al Banco"
           subtitle={
@@ -299,8 +353,8 @@ export default function HomeScreen() {
           }
           onPress={() => router.push('/banco')}
         />
-        <ListItem icon={Sparkles} title="Asistente" subtitle="Preguntá sobre recetas o nutrición" onPress={() => router.push('/asistente')} />
-        <ListItem icon={MessageSquare} title="Ayuda" subtitle="Contacto y preguntas frecuentes" onPress={() => router.push('/ayuda')} />
+        <ListItem className="min-w-72 flex-1 basis-[45%]" icon={Sparkles} title="Asistente" subtitle="Pedidos, familias, avisos y recetas, hablando" onPress={() => router.push('/asistente')} />
+        <ListItem className="min-w-72 flex-1 basis-[45%]" icon={MessageSquare} title="Ayuda" subtitle="Contacto y preguntas frecuentes" onPress={() => router.push('/ayuda')} />
       </View>
     </Screen>
   );

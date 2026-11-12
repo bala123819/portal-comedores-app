@@ -6,12 +6,14 @@ import { ScrollView, View } from 'react-native';
 import { RecipeCard } from '@/components/recetas/RecipeCard';
 import { Button, Chip, EmptyState, Header, Input, SkeletonList } from '@/components/ui';
 import { useCategorias, useRecetas } from '@/features/recetas/hooks';
+import { useContentPadding } from '@/lib/layout';
 
 export default function RecetasScreen() {
   const [search, setSearch] = useState('');
   const [categoria, setCategoria] = useState<string | null>(null);
   const recetas = useRecetas({ search, categoria });
   const categorias = useCategorias();
+  const contentPadding = useContentPadding();
 
   return (
     <View className="flex-1 bg-background">
@@ -20,7 +22,7 @@ export default function RecetasScreen() {
         <FlashList
           data={recetas.data ?? []}
           keyExtractor={(r) => r.id}
-          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          contentContainerStyle={{ padding: 16, paddingHorizontal: contentPadding, paddingBottom: 32 }}
           ItemSeparatorComponent={() => <View className="h-3" />}
           ListHeaderComponent={
             <View className="gap-3 pb-3">

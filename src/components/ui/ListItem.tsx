@@ -2,7 +2,7 @@ import { ChevronRight, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { cn } from '@/lib/cn';
-import { colors, toneColor, type Tone } from '@/theme/tokens';
+import { colors, shadows, toneColor, type Tone } from '@/theme/tokens';
 import { Text } from './Text';
 
 export interface ListItemProps {
@@ -29,7 +29,7 @@ export function ListItem({
   const content = (
     <>
       {Icon ? (
-        <View className="h-11 w-11 items-center justify-center rounded-full bg-accent">
+        <View className="h-11 w-11 items-center justify-center rounded-xl bg-accent">
           <Icon size={22} color={toneColor[iconTone]} />
         </View>
       ) : null}
@@ -47,18 +47,24 @@ export function ListItem({
       {chevron ? <ChevronRight size={20} color={colors.mutedForeground} /> : null}
     </>
   );
-  const classes = cn('min-h-14 flex-row items-center gap-3 rounded-xl bg-card px-3 py-3', className);
+  const classes = cn(
+    'min-h-14 flex-row items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-3',
+    className,
+  );
   return onPress ? (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
       onPress={onPress}
-      className={cn(classes, 'active:bg-muted')}
+      className={cn(classes, 'active:bg-muted web:hover:border-primary/30')}
+      style={shadows.sm}
     >
       {content}
     </Pressable>
   ) : (
-    <View className={classes}>{content}</View>
+    <View className={classes} style={shadows.sm}>
+      {content}
+    </View>
   );
 }
 

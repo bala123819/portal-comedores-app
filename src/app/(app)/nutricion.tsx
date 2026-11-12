@@ -247,7 +247,7 @@ export default function NutricionScreen() {
         title="Preguntarle al asistente nutricional"
         icon={Sparkles}
         variant="secondary"
-        onPress={() => router.push({ pathname: '/asistente', params: { topic: 'nutricion' } })}
+        onPress={() => router.push({ pathname: '/asistente', params: { prefill: 'Tengo una duda de nutrición: ' } })}
       />
     </Screen>
   );

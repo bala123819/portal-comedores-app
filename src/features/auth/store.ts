@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiConfig } from '@/services/api/client';
 import { authApi, orgApi } from '@/services/api/endpoints';
 import { isApiError } from '@/services/api/errors';
+import { assistant } from '@/services/assistant';
 import { queryClient, clearPersistedCache } from '@/services/query-client';
 import { storage, STORAGE_KEYS } from '@/services/storage';
 import type { Organization } from '@/features/org/types';
@@ -105,6 +106,8 @@ export const useSession = create<SessionState>((set, get) => ({
         // si falla (sin red / token vencido) igual cerramos localmente
       }
     }
+    // La sesión del chat con el asistente es aparte (docs/asistente): se cierra y se borra también.
+    await assistant.logout();
     apiConfig.setToken(null);
     await storage.removeSecure(STORAGE_KEYS.token);
     await storage.remove(STORAGE_KEYS.tokenIssuedAt);

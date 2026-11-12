@@ -24,9 +24,21 @@ export interface HeaderProps {
   /** Ruta a la que volver si no hay historial (web / deep link) */
   backFallback?: string;
   right?: ReactNode;
+  /** Algo antes del título (por ejemplo, el avatar del asistente) */
+  leading?: ReactNode;
+  /** Color de un puntito de estado antes del subtítulo ("en línea") */
+  subtitleDot?: string;
 }
 
-export function Header({ title, subtitle, back, backFallback = '/', right }: HeaderProps) {
+export function Header({
+  title,
+  subtitle,
+  back,
+  backFallback = '/',
+  right,
+  leading,
+  subtitleDot,
+}: HeaderProps) {
   const insets = useSafeAreaInsets();
   return (
     <View className="border-b border-border/60 bg-card" style={{ paddingTop: insets.top }}>
@@ -40,14 +52,20 @@ export function Header({ title, subtitle, back, backFallback = '/', right }: Hea
         ) : (
           <View className="w-2" />
         )}
+        {leading ? <View className="mr-2">{leading}</View> : null}
         <View className="flex-1 py-2">
           <Text variant="heading" className="text-xl" numberOfLines={1} accessibilityRole="header">
             {title}
           </Text>
           {subtitle ? (
-            <Text variant="caption" numberOfLines={1}>
-              {subtitle}
-            </Text>
+            <View className="flex-row items-center gap-1.5">
+              {subtitleDot ? (
+                <View className="h-2 w-2 rounded-full" style={{ backgroundColor: subtitleDot }} />
+              ) : null}
+              <Text variant="caption" numberOfLines={1} className="flex-shrink">
+                {subtitle}
+              </Text>
+            </View>
           ) : null}
         </View>
         {right ? <View className="flex-row items-center">{right}</View> : null}
@@ -133,7 +151,9 @@ export function Screen({
             className="border-t border-border/60 bg-card"
             style={{ ...shadows.bar, paddingBottom: header ? Math.max(insets.bottom, 12) : 12 }}
           >
-            <View className="w-full max-w-content gap-2 self-center px-4 pt-3 md:px-8 lg:px-12">{footer}</View>
+            <View className="w-full max-w-content gap-2 self-center px-4 pt-3 md:px-8 lg:px-12">
+              {footer}
+            </View>
           </View>
         ) : null}
       </KeyboardAvoidingView>

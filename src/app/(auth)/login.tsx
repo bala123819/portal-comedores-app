@@ -1,14 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  CircleAlert,
-  Lock,
-  LogIn,
-  Mail,
-  Salad,
-  ShoppingCart,
-  Sprout,
-  Users,
-} from 'lucide-react-native';
+import { CircleAlert, Lock, LogIn, Mail, Salad, ShoppingCart, Users } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
@@ -21,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import { WhatsAppButton } from '@/components/agentes/WhatsAppButton';
+import { BrandMark } from '@/components/brand/BrandMark';
 import { Button, Card, Input, OfflineBanner, Text } from '@/components/ui';
 import { useSession } from '@/features/auth/store';
 import { env } from '@/lib/env';
@@ -217,16 +209,19 @@ function Logo() {
     <View
       className="h-20 w-20 items-center justify-center rounded-3xl bg-card"
       style={shadows.lg}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
+      aria-hidden
     >
-      <Sprout size={40} color={colors.primary} />
+      <BrandMark size={56} />
     </View>
   );
 }
 
 const highlights = [
-  { icon: ShoppingCart, title: 'Pedidos de mercadería', text: 'Catálogo del Banco y cupo del mes.' },
+  {
+    icon: ShoppingCart,
+    title: 'Pedidos de mercadería',
+    text: 'Catálogo del Banco y cupo del mes.',
+  },
   { icon: Users, title: 'Familias asistidas', text: 'Quiénes asisten y cuántas personas son.' },
   { icon: Salad, title: 'Alimentación y recetas', text: 'Ideas para cocinar con lo que tenés.' },
 ];
@@ -236,8 +231,11 @@ function BrandPanel() {
   return (
     <View className="flex-1 justify-between bg-primary p-12">
       <View className="flex-row items-center gap-3">
-        <View className="h-11 w-11 items-center justify-center rounded-2xl bg-card">
-          <Sprout size={24} color={colors.primary} />
+        <View
+          className="h-12 w-12 items-center justify-center rounded-2xl bg-card"
+          style={shadows.md}
+        >
+          <BrandMark size={36} />
         </View>
         <Text variant="heading" className="text-primary-foreground">
           Portal Comedores

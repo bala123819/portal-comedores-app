@@ -16,6 +16,7 @@ import {
 } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BrandMark } from '@/components/brand/BrandMark';
 import { DemographicsSummary } from '@/components/familias/DemographicsSummary';
 import { CoverageTotal, groupName } from '@/components/nutricion/CoverageBars';
 import { MermaCard } from '@/components/mermas/MermaCard';
@@ -65,7 +66,8 @@ function MermasSection() {
     .filter((a) => isOpenAssignment(String(a.status)))
     .sort(
       (a, b) =>
-        (parseDate(a.scheduled_pickup_date)?.getTime() ?? 0) - (parseDate(b.scheduled_pickup_date)?.getTime() ?? 0),
+        (parseDate(a.scheduled_pickup_date)?.getTime() ?? 0) -
+        (parseDate(b.scheduled_pickup_date)?.getTime() ?? 0),
     );
   const toConfirm = open.filter((a) => a.status === 'asignada');
   const next = open[0];
@@ -76,7 +78,9 @@ function MermasSection() {
       {toConfirm.length ? (
         <Card tone="warning" onPress={() => router.push('/retiros')} className="gap-1">
           <Text variant="label">
-            {toConfirm.length === 1 ? 'Tenés 1 retiro para confirmar' : `Tenés ${toConfirm.length} retiros para confirmar`}
+            {toConfirm.length === 1
+              ? 'Tenés 1 retiro para confirmar'
+              : `Tenés ${toConfirm.length} retiros para confirmar`}
           </Text>
           <Text className="text-sm">Confirmá si pueden ir, así el Banco organiza la entrega.</Text>
         </Card>
@@ -85,7 +89,10 @@ function MermasSection() {
       {assignments.isPending ? (
         <SkeletonList count={1} />
       ) : next ? (
-        <AssignmentCard assignment={next} onPress={() => router.push({ pathname: '/retiro/[id]', params: { id: next.id } })} />
+        <AssignmentCard
+          assignment={next}
+          onPress={() => router.push({ pathname: '/retiro/[id]', params: { id: next.id } })}
+        />
       ) : (
         <Card>
           <Text tone="muted">No tenés retiros pendientes.</Text>
@@ -93,13 +100,24 @@ function MermasSection() {
       )}
       <SectionHeader
         title="Nuevos alimentos"
-        action={<Button title="Ver todos" variant="ghost" size="sm" onPress={() => router.push('/disponibles')} />}
+        action={
+          <Button
+            title="Ver todos"
+            variant="ghost"
+            size="sm"
+            onPress={() => router.push('/disponibles')}
+          />
+        }
       />
       {mermas.isPending ? (
         <SkeletonList count={2} />
       ) : nuevas.length ? (
         nuevas.map((m) => (
-          <MermaCard key={m.id} merma={m} onPress={() => router.push({ pathname: '/merma/[id]', params: { id: m.id } })} />
+          <MermaCard
+            key={m.id}
+            merma={m}
+            onPress={() => router.push({ pathname: '/merma/[id]', params: { id: m.id } })}
+          />
         ))
       ) : (
         <Card>
@@ -122,25 +140,48 @@ function PedidosSection() {
     <>
       <SectionHeader
         title="Pedidos de mercadería"
-        action={<Button title="Ver pedidos" variant="ghost" size="sm" onPress={() => router.push('/mercaderia')} />}
+        action={
+          <Button
+            title="Ver pedidos"
+            variant="ghost"
+            size="sm"
+            onPress={() => router.push('/mercaderia')}
+          />
+        }
       />
       {ready.length ? (
         <Card tone="accent" onPress={() => router.push('/mercaderia')} className="gap-1">
           <Text variant="label">
-            {ready.length === 1 ? 'Tenés 1 pedido listo para retirar' : `Tenés ${ready.length} pedidos listos para retirar`}
+            {ready.length === 1
+              ? 'Tenés 1 pedido listo para retirar'
+              : `Tenés ${ready.length} pedidos listos para retirar`}
           </Text>
-          <Text className="text-sm">Ya pueden ir a buscarlo. Descargá el remito desde el pedido.</Text>
+          <Text className="text-sm">
+            Ya pueden ir a buscarlo. Descargá el remito desde el pedido.
+          </Text>
         </Card>
       ) : null}
-      {quota.data ? <QuotaCard quota={quota.data} compact /> : quota.isPending ? <Skeleton className="h-24 w-full rounded-xl" /> : null}
+      {quota.data ? (
+        <QuotaCard quota={quota.data} compact />
+      ) : quota.isPending ? (
+        <Skeleton className="h-24 w-full rounded-xl" />
+      ) : null}
       {open.isPending ? (
         <SkeletonList count={1} />
       ) : next ? (
-        <DistributionCard distribution={next} onPress={() => router.push({ pathname: '/pedido/[id]', params: { id: next.id } })} />
+        <DistributionCard
+          distribution={next}
+          onPress={() => router.push({ pathname: '/pedido/[id]', params: { id: next.id } })}
+        />
       ) : (
         <Card className="gap-3">
           <Text tone="muted">No tenés pedidos en curso.</Text>
-          <Button title="Hacer un pedido" icon={ShoppingCart} variant="secondary" onPress={() => router.push('/pedido/nuevo')} />
+          <Button
+            title="Hacer un pedido"
+            icon={ShoppingCart}
+            variant="secondary"
+            onPress={() => router.push('/pedido/nuevo')}
+          />
         </Card>
       )}
     </>
@@ -163,14 +204,29 @@ function NutricionSection() {
     <>
       <SectionHeader
         title="Alimentación de este mes"
-        action={<Button title="Ver panel" variant="ghost" size="sm" onPress={() => router.push('/nutricion')} />}
+        action={
+          <Button
+            title="Ver panel"
+            variant="ghost"
+            size="sm"
+            onPress={() => router.push('/nutricion')}
+          />
+        }
       />
       {data ? (
-        <Card onPress={() => router.push('/nutricion')} className="gap-3" accessibilityLabel="Ver el panel nutricional">
+        <Card
+          onPress={() => router.push('/nutricion')}
+          className="gap-3"
+          accessibilityLabel="Ver el panel nutricional"
+        >
           <CoverageTotal data={data} />
           {missing.length ? (
             <Text className="text-sm">
-              Lo que más falta: {missing.map((g) => `${groupName(g).toLowerCase()} (${formatNumber(g.coverage_pct, 0)} %)`).join(' y ')}.
+              Lo que más falta:{' '}
+              {missing
+                .map((g) => `${groupName(g).toLowerCase()} (${formatNumber(g.coverage_pct, 0)} %)`)
+                .join(' y ')}
+              .
             </Text>
           ) : null}
         </Card>
@@ -197,7 +253,10 @@ function HomeHero({
   return (
     <View className="bg-primary">
       <View className="w-full gap-4 px-4 pb-5 pt-3 md:px-8 lg:px-12">
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center gap-3">
+          <View className="rounded-xl bg-white/15 p-1">
+            <BrandMark size={40} inverted />
+          </View>
           <View className="flex-1">
             <Text className="text-sm font-semibold text-primary-foreground/80">
               Portal Comedores
@@ -291,7 +350,11 @@ export default function HomeScreen() {
       onRefresh={onRefresh}
     >
       {unread.data ? (
-        <Card tone="accent" onPress={() => router.push('/notificaciones')} className="flex-row items-center gap-3">
+        <Card
+          tone="accent"
+          onPress={() => router.push('/notificaciones')}
+          className="flex-row items-center gap-3"
+        >
           <Bell size={22} color={colors.accentForeground} />
           <Text className="flex-1">
             {unread.data === 1 ? 'Tenés 1 aviso sin leer' : `Tenés ${unread.data} avisos sin leer`}
@@ -309,15 +372,31 @@ export default function HomeScreen() {
       ) : (
         <View className="flex-row flex-wrap gap-3">
           {org?.total_beneficiaries != null ? (
-            <StatCard label="Personas asistidas" value={formatNumber(org.total_beneficiaries)} icon={Users} />
+            <StatCard
+              label="Personas asistidas"
+              value={formatNumber(org.total_beneficiaries)}
+              icon={Users}
+            />
           ) : null}
           {org?.monthly_quota_kg != null ? (
-            <StatCard label="Cuota mensual" value={`${formatNumber(org.monthly_quota_kg)} kg`} icon={Scale} />
+            <StatCard
+              label="Cuota mensual"
+              value={`${formatNumber(org.monthly_quota_kg)} kg`}
+              icon={Scale}
+            />
           ) : null}
           {impacto ? (
             <>
-              <StatCard label="Kilos recibidos" value={`${formatNumber(impacto.total_kg_recibidos)} kg`} icon={Package} />
-              <StatCard label="Entregas recibidas" value={formatNumber(impacto.total_distribuciones)} icon={Truck} />
+              <StatCard
+                label="Kilos recibidos"
+                value={`${formatNumber(impacto.total_kg_recibidos)} kg`}
+                icon={Package}
+              />
+              <StatCard
+                label="Entregas recibidas"
+                value={formatNumber(impacto.total_distribuciones)}
+                icon={Truck}
+              />
             </>
           ) : null}
         </View>
@@ -333,7 +412,14 @@ export default function HomeScreen() {
         <>
           <SectionHeader
             title="Familias"
-            action={<Button title="Ver familias" variant="ghost" size="sm" onPress={() => router.push('/familias')} />}
+            action={
+              <Button
+                title="Ver familias"
+                variant="ghost"
+                size="sm"
+                onPress={() => router.push('/familias')}
+              />
+            }
           />
           <DemographicsSummary data={demographics.data} compact />
         </>
@@ -341,7 +427,13 @@ export default function HomeScreen() {
 
       <SectionHeader title="Accesos rápidos" />
       <View className="flex-row flex-wrap gap-2">
-        <ListItem className="min-w-72 flex-1 basis-[45%]" icon={ChefHat} title="¿Qué cocino hoy?" subtitle="Recetas para la cantidad de personas que asisten" onPress={() => router.push('/sugerir-recetas')} />
+        <ListItem
+          className="min-w-72 flex-1 basis-[45%]"
+          icon={ChefHat}
+          title="¿Qué cocino hoy?"
+          subtitle="Recetas para la cantidad de personas que asisten"
+          onPress={() => router.push('/sugerir-recetas')}
+        />
         <ListItem
           className="min-w-72 flex-1 basis-[45%]"
           icon={MessagesSquare}
@@ -353,8 +445,20 @@ export default function HomeScreen() {
           }
           onPress={() => router.push('/banco')}
         />
-        <ListItem className="min-w-72 flex-1 basis-[45%]" icon={Sparkles} title="Asistente" subtitle="Pedidos, familias, avisos y recetas, hablando" onPress={() => router.push('/asistente')} />
-        <ListItem className="min-w-72 flex-1 basis-[45%]" icon={MessageSquare} title="Ayuda" subtitle="Contacto y preguntas frecuentes" onPress={() => router.push('/ayuda')} />
+        <ListItem
+          className="min-w-72 flex-1 basis-[45%]"
+          icon={Sparkles}
+          title="Asistente"
+          subtitle="Pedidos, familias, avisos y recetas, hablando"
+          onPress={() => router.push('/asistente')}
+        />
+        <ListItem
+          className="min-w-72 flex-1 basis-[45%]"
+          icon={MessageSquare}
+          title="Ayuda"
+          subtitle="Contacto y preguntas frecuentes"
+          onPress={() => router.push('/ayuda')}
+        />
       </View>
     </Screen>
   );

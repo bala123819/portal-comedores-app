@@ -160,3 +160,13 @@ Hasta ahora, en web el chat usaba siempre el simulador (respuestas fijas por pal
 - La sesión del chat se guarda por modo (`pc.assistant.session.http` / `.mock`), para que la del simulador no se reutilice contra la API real (P-32).
 - En web las fotos se mandan sin comprimir y se controla el tope de 10 MB de la API.
 - Se quita el aviso "El asistente real no funciona desde el navegador".
+
+### D-27 · Rediseño del chat del asistente, avatar animado y logo del Banco (2026-11-12)
+Pasada visual sobre el chat (`/asistente`) a pedido del equipo, siguiendo la guía "Avatar animado del agente — App Mermab" y el isotipo del Banco publicado en GoDubi (orden 1149).
+- **Lista a todo el ancho:** la barra de scroll queda pegada al borde derecho y el contenido se centra por dentro (columna `max-w-3xl`). Antes la lista vivía dentro de la columna y el scroll quedaba en el medio de la pantalla.
+- **"Asistente Mermab":** la gota-hoja de la guía, dibujada en SVG por capas (`MermabAvatar`): respira, mece el brote, parpadea y tiene cuatro caras: reposo, pensando (mira hacia arriba, burbujitas), hablando (mientras llega la respuesta) y contento (un momento al terminar, en el encabezado). Va a la izquierda de cada respuesta, a la altura de su comienzo, en el encabezado y grande en la bienvenida.
+- **Animaciones con el `Animated` de React Native** (`src/components/asistente/motion.tsx`): entrada suave de los mensajes, tres puntos de "escribiendo" y el avatar. Andan igual en web, Expo Go y un build, sin dependencias nativas nuevas. Con "reducir movimiento" del sistema, todo queda quieto.
+- **Bienvenida:** avatar grande, "¿En qué te ayudo hoy?" y cuatro sugerencias como tarjetas con ícono (en dos columnas en pantallas anchas).
+- **Barra para escribir minimalista:** sin franja blanca ni sombra; el campo es una píldora blanca con adjuntar, dictar y un botón de enviar redondo que se pinta de verde cuando hay texto. Las opciones de adjuntar son pastillas suaves (no botones blancos con borde). En la compu, Enter envía y Shift+Enter hace un salto de línea.
+- **Encabezado:** "Asistente Mermab" con el avatar y el estado con un punto verde (En línea / Pensando… / Escribiendo…). `Header` suma dos props opcionales (`leading`, `subtitleDot`) que no cambian las demás pantallas.
+- **Logo del Banco (`BrandMark`):** el isotipo en SVG reemplaza al ícono genérico de brote en el login (celular y panel de marca) y se suma al encabezado del Inicio, en versión blanca sobre el verde.

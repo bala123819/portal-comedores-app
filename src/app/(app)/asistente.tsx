@@ -1,17 +1,30 @@
 import { useLocalSearchParams } from 'expo-router';
-import { Headset, Info, MessageSquarePlus, TriangleAlert } from 'lucide-react-native';
-import { useRef } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, View } from 'react-native';
+import {
+  ChefHat,
+  Headset,
+  Info,
+  Megaphone,
+  MessageSquarePlus,
+  Scale,
+  TriangleAlert,
+  Users,
+  type LucideIcon,
+} from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { ApprovalCard } from '@/components/asistente/ApprovalCard';
-import { AssistantBubble, OutgoingView, TurnView } from '@/components/asistente/ChatBubbles';
+import { AssistantAvatar, OutgoingView, TurnView } from '@/components/asistente/ChatBubbles';
 import { Composer } from '@/components/asistente/Composer';
+import { Appear, TypingDots } from '@/components/asistente/motion';
+import { MermabAvatar, type AvatarMood } from '@/components/asistente/MermabAvatar';
 import { WhatsAppButton } from '@/components/agentes/WhatsAppButton';
-import { Button, Chip, EmptyState, Header, IconButton, OfflineBanner, Text } from '@/components/ui';
+import { Button, EmptyState, Header, IconButton, OfflineBanner, Text } from '@/components/ui';
 import { useAssistantChat, type OutgoingMessage } from '@/features/asistente/hooks';
 import { useSession } from '@/features/auth/store';
+import { cn } from '@/lib/cn';
 import { env } from '@/lib/env';
 import { assistantErrorMessage, type ChatTurn } from '@/services/assistant';
-import { colors } from '@/theme/tokens';
+import { colors, shadows } from '@/theme/tokens';
 
 /**
  * Chat con el asistente del comedor (GoDubi). Un solo chat: consultas, pedidos, familias, avisos
@@ -20,19 +33,89 @@ import { colors } from '@/theme/tokens';
  *
  * Parámetro `prefill`: texto precargado (sin enviar), para los atajos "Hacerlo con el asistente".
  */
-const SUGGESTIONS = [
-  '¿Qué familias tenemos?',
-  '¿Cuántos kilos recibimos este mes?',
-  'Receta para 40 personas con arroz y lentejas',
-  'Quiero avisar al Banco que se nos rompió la heladera',
+const SUGGESTIONS: { icon: LucideIcon; title: string; text: string }[] = [
+  { icon: Users, title: 'Familias', text: '¿Qué familias tenemos?' },
+  { icon: Scale, title: 'Lo recibido', text: '¿Cuántos kilos recibimos este mes?' },
+  { icon: ChefHat, title: 'Cocina', text: 'Receta para 40 personas con arroz y lentejas' },
+  {
+    icon: Megaphone,
+    title: 'Avisar al Banco',
+    text: 'Quiero avisar al Banco que se nos rompió la heladera',
+  },
 ];
+
+/** Columna del chat: centrada y con ancho de lectura, dentro de una lista que ocupa toda la pantalla. */
+const COLUMN = 'w-full max-w-3xl self-center';
 
 type Row = { kind: 'turn'; turn: ChatTurn } | { kind: 'out'; item: OutgoingMessage };
 
-function Notice({ tone, icon: Icon, children }: { tone: 'info' | 'warning'; icon: typeof Info; children: React.ReactNode }) {
+function Suggestion({
+  icon: Icon,
+  title,
+  text,
+  delay,
+  onPress,
+}: (typeof SUGGESTIONS)[number] & { delay: number; onPress: () => void }) {
+  return (
+    <Appear delay={delay} className="w-full md:w-[49%]">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={text}
+        onPress={onPress}
+        className="min-h-20 flex-row items-center gap-3 rounded-2xl border border-border/60 bg-card p-4 active:opacity-80 web:hover:border-primary/40"
+        style={shadows.sm}
+      >
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-accent">
+          <Icon size={20} color={colors.accentForeground} />
+        </View>
+        <View className="flex-1 gap-0.5">
+          <Text variant="label" className="text-sm text-accent-foreground">
+            {title}
+          </Text>
+          <Text className="text-[15px] leading-5">{text}</Text>
+        </View>
+      </Pressable>
+    </Appear>
+  );
+}
+
+/** Conversación vacía: saludo grande y sugerencias tocables. */
+function Welcome({ text, onPick }: { text: string; onPick: (s: string) => void }) {
+  return (
+    <View className="gap-6 pb-2 pt-4 md:pt-10">
+      <Appear className="items-center gap-3">
+        <AssistantAvatar size={84} />
+        <Text variant="heading" className="text-center text-2xl">
+          ¿En qué te ayudo hoy?
+        </Text>
+        <Text tone="muted" className="max-w-lg text-center leading-6">
+          {text}
+        </Text>
+      </Appear>
+      <View className="flex-row flex-wrap justify-between gap-y-3">
+        {SUGGESTIONS.map((s, i) => (
+          <Suggestion key={s.text} {...s} delay={120 + i * 70} onPress={() => onPick(s.text)} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function Notice({
+  tone,
+  icon: Icon,
+  children,
+}: {
+  tone: 'info' | 'warning';
+  icon: typeof Info;
+  children: React.ReactNode;
+}) {
   return (
     <View
-      className={tone === 'info' ? 'mx-4 mt-2 flex-row items-start gap-2 rounded-lg bg-info/10 px-3 py-2' : 'mx-4 mt-2 flex-row items-start gap-2 rounded-lg bg-warning/15 px-3 py-2'}
+      className={cn(
+        'mt-2 flex-row items-start gap-2 rounded-xl px-3 py-2',
+        tone === 'info' ? 'bg-info/10' : 'bg-warning/15',
+      )}
       accessibilityRole="alert"
     >
       <Icon size={18} color={tone === 'info' ? colors.info : colors.foreground} />
@@ -56,13 +139,40 @@ export default function AsistenteScreen() {
   const welcome = chat.session?.welcome ?? 'Hola, soy el asistente del comedor. ¿En qué te ayudo?';
 
   // La organización del asistente hoy es fija: si la app está en otra, lo guardado no se va a ver acá.
-  const orgMismatch = chat.mode === 'http' && !!org?.name && org.name.trim() !== env.assistantOrgName;
+  const orgMismatch =
+    chat.mode === 'http' && !!org?.name && org.name.trim() !== env.assistantOrgName;
+
+  // Cara del avatar de arriba: piensa, "habla" mientras llega la respuesta y festeja un momento al terminar.
+  const last = chat.turns[chat.turns.length - 1];
+  const talking = last?.status === 'running' && !!last.response;
+  const [celebrate, setCelebrate] = useState(false);
+  const wasBusy = useRef(false);
+  useEffect(() => {
+    if (wasBusy.current && !chat.busy) {
+      setCelebrate(true);
+      const t = setTimeout(() => setCelebrate(false), 2500);
+      wasBusy.current = false;
+      return () => clearTimeout(t);
+    }
+    wasBusy.current = chat.busy;
+  }, [chat.busy]);
+  const mood: AvatarMood = talking
+    ? 'talking'
+    : chat.busy
+      ? 'thinking'
+      : celebrate
+        ? 'happy'
+        : 'idle';
 
   const subtitle = chat.paused
     ? 'Te atiende una persona del Banco'
     : chat.mode === 'mock'
       ? 'Modo de prueba (simulado)'
-      : undefined;
+      : talking
+        ? 'Escribiendo…'
+        : chat.busy
+          ? 'Pensando…'
+          : 'En línea';
 
   async function loadOlder() {
     keepPosition.current = true;
@@ -73,33 +183,51 @@ export default function AsistenteScreen() {
   return (
     <View className="flex-1 bg-background">
       <Header
-        title="Asistente"
+        title="Asistente Mermab"
         subtitle={subtitle}
+        subtitleDot={chat.mode === 'http' && !chat.paused ? '#34B277' : undefined}
+        leading={
+          <View className="h-11 w-11 items-center justify-center rounded-full bg-accent">
+            <MermabAvatar size={30} mood={mood} shadow={false} />
+          </View>
+        }
         back
         backFallback="/"
         right={
           chat.conversationId ? (
-            <IconButton icon={MessageSquarePlus} label="Empezar una conversación nueva" onPress={() => void chat.newConversation()} />
+            <IconButton
+              icon={MessageSquarePlus}
+              label="Empezar una conversación nueva"
+              onPress={() => void chat.newConversation()}
+            />
           ) : null
         }
       />
       <OfflineBanner />
-      {orgMismatch ? (
-        <Notice tone="info" icon={Info}>
-          <Text className="text-sm">
-            Por ahora el asistente atiende a <Text className="text-sm font-semibold">{env.assistantOrgName}</Text>. Lo
-            que guarde no va a aparecer en {org?.name}.
-          </Text>
-        </Notice>
-      ) : null}
-      {chat.paused ? (
-        <Notice tone="info" icon={Headset}>
-          <Text className="text-sm">Una persona del Banco tomó la conversación y te va a responder por acá.</Text>
-        </Notice>
-      ) : null}
+      <View className={cn(COLUMN, 'px-4')}>
+        {orgMismatch ? (
+          <Notice tone="info" icon={Info}>
+            <Text className="text-sm">
+              Por ahora el asistente atiende a{' '}
+              <Text className="text-sm font-semibold">{env.assistantOrgName}</Text>. Lo que guarde
+              no va a aparecer en {org?.name}.
+            </Text>
+          </Notice>
+        ) : null}
+        {chat.paused ? (
+          <Notice tone="info" icon={Headset}>
+            <Text className="text-sm">
+              Una persona del Banco tomó la conversación y te va a responder por acá.
+            </Text>
+          </Notice>
+        ) : null}
+      </View>
 
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View className="w-full max-w-3xl flex-1 self-center">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View className="w-full flex-1">
           {chat.startError ? (
             <EmptyState
               icon={TriangleAlert}
@@ -109,16 +237,20 @@ export default function AsistenteScreen() {
               onAction={chat.retryStart}
             />
           ) : chat.starting || chat.loadingHistory ? (
-            <View className="flex-1 items-center justify-center gap-3">
-              <ActivityIndicator color={colors.primary} />
-              <Text variant="caption">Conectando con el asistente…</Text>
+            <View className="flex-1 items-center justify-center gap-4">
+              <AssistantAvatar size={72} mood="thinking" />
+              <View className="items-center gap-2">
+                <TypingDots color={colors.primary} />
+                <Text variant="caption">Conectando con el asistente…</Text>
+              </View>
             </View>
           ) : (
             <FlatList
               ref={listRef}
               data={rows}
               keyExtractor={(r) => (r.kind === 'turn' ? r.turn.id : r.item.clientMessageId)}
-              contentContainerClassName="gap-4 p-4"
+              className="flex-1"
+              contentContainerClassName={cn(COLUMN, 'gap-5 px-4 pb-6 pt-4')}
               keyboardShouldPersistTaps="handled"
               onContentSizeChange={() => {
                 if (!keepPosition.current) listRef.current?.scrollToEnd({ animated: true });
@@ -134,24 +266,16 @@ export default function AsistenteScreen() {
                       onPress={() => void loadOlder()}
                     />
                   ) : null}
-                  {empty ? (
-                    <View className="gap-3">
-                      <AssistantBubble markdown={welcome} />
-                      <Text variant="caption" className="pl-1">
-                        Probá con:
-                      </Text>
-                      <View className="flex-row flex-wrap gap-2">
-                        {SUGGESTIONS.map((s) => (
-                          <Chip key={s} label={s} onPress={() => chat.send(s)} />
-                        ))}
-                      </View>
-                    </View>
-                  ) : null}
+                  {empty ? <Welcome text={welcome} onPick={(s) => chat.send(s)} /> : null}
                 </View>
               }
               renderItem={({ item: r }) =>
                 r.kind === 'turn' ? (
-                  <TurnView turn={r.turn} onRetry={(t) => void chat.retryTurn(t)} retrying={chat.retryingTurn === r.turn.id} />
+                  <TurnView
+                    turn={r.turn}
+                    onRetry={(t) => void chat.retryTurn(t)}
+                    retrying={chat.retryingTurn === r.turn.id}
+                  />
                 ) : (
                   <OutgoingView item={r.item} onRetry={chat.retryOutgoing} />
                 )
@@ -168,7 +292,9 @@ export default function AsistenteScreen() {
                   ))}
                   {chat.limitReached ? (
                     <Notice tone="warning" icon={TriangleAlert}>
-                      <Text className="text-sm">Esta conversación llegó a su límite de mensajes.</Text>
+                      <Text className="text-sm">
+                        Esta conversación llegó a su límite de mensajes.
+                      </Text>
                       <Button
                         title="Empezar una conversación nueva"
                         size="sm"
@@ -178,7 +304,15 @@ export default function AsistenteScreen() {
                       />
                     </Notice>
                   ) : null}
-                  {empty ? <WhatsAppButton context={{ kind: 'general' }} title="Prefiero hablar por WhatsApp" variant="secondary" /> : null}
+                  {empty ? (
+                    <Appear delay={450}>
+                      <WhatsAppButton
+                        context={{ kind: 'general' }}
+                        title="Prefiero hablar por WhatsApp"
+                        variant="outline"
+                      />
+                    </Appear>
+                  ) : null}
                 </View>
               }
             />

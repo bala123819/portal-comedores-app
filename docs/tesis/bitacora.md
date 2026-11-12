@@ -867,3 +867,61 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 **Pendientes.** Confirmar en un celular con notch que la franja de la barra de estado se ve bien al desplazar.
 
 **Archivos principales.** `src/components/ui/Layout.tsx`, `src/app/(app)/(tabs)/index.tsx`
+
+---
+
+## (pendiente de commit) · feat(asistente): chat con el asistente de GoDubi dentro de la app
+- **Fecha:** 2026-11-11 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Agentes / asistente (rama `cambiosvisuales`)
+
+**Objetivo.** Conectar la app al asistente del comedor según la guía definitiva que publicó GoDubi el 11/11 en la orden 1149 (contrato v2). El chat va **dentro de la app** (no por WhatsApp), y la carga de datos tiene que poder hacerse **tanto por el chat como por los formularios**.
+
+**Qué se hizo.**
+- **Contrato:** se bajó el adjunto del post a `docs/asistente/asistente-contrato.ts` (el SHA-256 coincide con el publicado) y se pasó a tipos en `src/services/assistant/types.ts`.
+- **Cliente** (`src/services/assistant/client.ts`): sesión con PKCE (`bootstrap` + `exchange`) guardada en secure-store y separada del token de Mermab; renovación silenciosa un minuto antes de vencer o ante 403 de sesión, con un reintento; conversaciones, mensajes, adjuntos multipart y tarjetas. Errores con código y mensajes en lenguaje simple (`errors.ts`). PKCE con base64 propio (`pkce.ts`).
+- **Simulador** (`mock.ts`): `fetch` falso con los 12 escenarios del contrato (respuesta que crece, foto, failed + reintento, TURN_BUSY, operador, sesión vencida, 429, sin red, tarjetas confirmada / rechazada / vencida, logout). En web se usa por defecto.
+- **Hook `useAssistantChat`** (`src/features/asistente/hooks.ts`): retoma o crea la conversación; hace polling de 1,5 s / 5 s (cortado en segundo plano y sin red); acumula el historial y carga los mensajes anteriores; manda un mensaje a la vez con `clientMessageId` reutilizado al reintentar; reintenta solo al volver la conexión; abre una conversación nueva si la anterior se cerró y avisa al llegar al límite; maneja las tarjetas (botones bloqueados al primer toque, nunca reintenta la decisión) e invalida Familias, Pedidos o Avisos según `ACTION_INVALIDATES`.
+- **Pantalla `/asistente` reescrita:** bienvenida con sugerencias, burbujas con markdown (renderizador propio), "Escribiendo…" mientras crece la respuesta, mensajes de la persona del Banco con otro estilo, tarjetas de confirmación con datos en lenguaje humano y contador, adjuntos (cámara, galería, PDF; hasta 4), conversación nueva y avisos (sin red, CORS en web, organización distinta, operador, límite).
+- **Chat y formularios conviven:** atajo "Hacerlo con el asistente" en *Registrar familia*, *Hacer un pedido* y *Mensaje al Banco*, que abre el chat con texto precargado sin enviarlo. Nutrición abre el chat con "Tengo una duda de nutrición: ". La tarjeta del Inicio cambia su bajada.
+- **Logout:** `signOut` también cierra la sesión del chat.
+- **Dependencias:** `expo-image-picker`, `expo-image-manipulator` y `expo-document-picker` (con `npx expo install`), y el plugin de image picker en `app.json`. Variables `EXPO_PUBLIC_ASSISTANT_*` en `src/lib/env.ts` y `.env.example`.
+- **Documentación:** `docs/asistente/README.md` (guía completa), D-23, P-25 a P-27, arquitectura §4.6 e índice de `docs/tesis/README.md`.
+
+**Decisiones.** D-23.
+
+**Problemas y soluciones.** P-25 (CORS en web), P-26 (`Buffer` en RN para PKCE), P-27 (reglas del React Compiler en el hook).
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores.
+- API real (`curl` y Node): bootstrap y exchange 201; `GET /conversations` 200; token inválido → 403 `INVALID_CREDENTIAL`; reusar `bootstrapId` → 403 `AUTHORIZATION_CONTEXT_MISMATCH`; logout 201 y después → 403 `SESSION_EXPIRED`. El servidor acepta el PKCE de `pkce.ts`. No se mandaron mensajes reales, para no gastar el cupo.
+- Navegador (Chrome con Playwright, web en modo simulado, 420×900): todos los escenarios del simulador y los tres atajos, sin errores en la consola. Detalle en `docs/asistente/README.md` §6.
+
+**Pendientes.** Probar en el celular con la API real (adjuntos reales, forma real del `input` de las tarjetas) y grabar el video de cierre que pide la guía. Identificación con el login de Mermab cuando GoDubi la habilite. Decidir si *Sugerir recetas* pasa al asistente nuevo.
+
+**Archivos principales.** `src/services/assistant/*`, `src/features/asistente/*`, `src/components/asistente/*`, `src/app/(app)/asistente.tsx`, `src/features/auth/store.ts`, `src/app/(app)/familia/nueva.tsx`, `src/app/(app)/pedido/nuevo.tsx`, `src/app/(app)/banco/nueva.tsx`, `src/lib/env.ts`, `app.json`, `.env.example`, `docs/asistente/*`
+
+---
+
+## (pendiente de commit) · feat(asistente): dictado por voz en el chat
+- **Fecha:** 2026-11-11 · **Autoría:** Martina Gonella (+ asistencia de IA: Claude Code)
+- **Etapa:** Agentes / asistente (rama `cambiosvisuales`)
+
+**Objetivo.** Poder hablarle al asistente en vez de escribir. Lo piensan sobre todo para quienes escriben con dificultad o tienen las manos ocupadas en la cocina. El texto tiene que poder revisarse antes de enviarlo.
+
+**Qué se hizo.**
+- **Hook `useDictation`** (`src/features/asistente/dictation.ts`): reconocimiento de voz con `expo-speech-recognition`, con resultados parciales en vivo, modo continuo (salvo en Android 12 o anterior), español rioplatense con alternativas en iOS, palabras del dominio como `contextualStrings`, mayúscula al empezar cada oración y errores con mensajes simples. El módulo nativo se carga de forma opcional (`requireOptionalNativeModule`): en Expo Go o Firefox el botón no aparece.
+- **Composer:** botón de micrófono al lado de Enviar. Mientras escucha: cuadrado rojo para terminar, barra bordeada de rojo y bloqueada, y el aviso "Te escucho…". Lo dictado se suma a lo ya escrito. Enviar queda deshabilitado hasta terminar: **nunca se envía solo**.
+- **Dependencia:** `expo-speech-recognition@~57.1.1` y su plugin en `app.json`, con los textos de los permisos en español (`RECORD_AUDIO` y los permisos de micrófono y reconocimiento de voz de iOS).
+- **Documentación:** D-24, P-28, `docs/asistente/README.md` (§3.6, §5, §6 y §7) y arquitectura §4.6.
+
+**Decisiones.** D-24 (voz a texto en el celular, revisión antes de enviar; se descartan por ahora la lectura en voz alta y el audio como adjunto).
+
+**Problemas y soluciones.** P-28 (`expo install` instaló la versión del SDK 58).
+
+**Verificación.**
+- `npx tsc --noEmit` y `npx expo lint`: sin errores. `npx expo config --type introspect`: permisos generados en Android e iOS. `npx expo-doctor`: el único chequeo que falla es por versiones de otros paquetes del SDK 57 que ya estaban desactualizadas, no por este.
+- Navegador (Chrome con Playwright, web en modo simulado, 420×900) con una `webkitSpeechRecognition` falsa: texto en vivo, texto final en la barra sin enviarse, vuelta al micrófono y envío manual. Sin errores en la consola.
+
+**Pendientes.** Generar un *development build* y probar con voz real en Android y en iOS (ruido de cocina, acentos, nombres propios). Si GoDubi acepta audio como adjunto, evaluar sumarlo.
+
+**Archivos principales.** `src/features/asistente/dictation.ts`, `src/components/asistente/Composer.tsx`, `app.json`, `package.json`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`, `docs/asistente/README.md`, `docs/tesis/arquitectura.md`

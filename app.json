@@ -44,6 +44,22 @@
         {
           "locationWhenInUsePermission": "Usamos tu ubicación solo para guardar la dirección de la organización."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Usamos tus fotos sólo para mandárselas al asistente (por ejemplo, la alacena o la heladera).",
+          "cameraPermission": "Usamos la cámara sólo para sacar fotos que le mandás al asistente.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Usamos el micrófono sólo mientras dictás un mensaje para el asistente.",
+          "speechRecognitionPermission": "Usamos el reconocimiento de voz para pasar a texto lo que le dictás al asistente. Lo revisás antes de enviarlo.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox", "com.google.android.tts"]
+        }
       ]
     ],
     "experiments": {

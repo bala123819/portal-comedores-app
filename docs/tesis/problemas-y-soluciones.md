@@ -133,3 +133,21 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 - **Síntoma:** con `31/02/2030` la persona se guardaba y aparecía con "-4 años" (en modo simulado; no se probó qué hace el servidor real, para no cargar datos falsos).
 - **Causa:** el formulario sólo controlaba el formato dd/mm/aaaa.
 - **Solución:** `birthDateError` en `src/features/familias/form.ts` controla que la fecha exista, que no sea futura y que no tenga más de 120 años. Lo usan el alta de familia, el alta de miembro y la edición de miembro.
+
+### P-25 · El asistente real no funciona desde el navegador (CORS)
+- **Síntoma:** en Expo web, los pedidos a `https://webchat.godubi.com/v1/webchat` fallan sin respuesta.
+- **Causa:** la API no responde al pedido previo de CORS: `OPTIONS /bootstrap` con `Origin: http://localhost:3000` da 404 sin cabeceras `Access-Control-*`. Lo confirma la guía de GoDubi ("desde Expo web no anda").
+- **Solución:** en web el chat usa el simulador por defecto (`src/services/assistant/index.ts`). Si se fuerza el modo real en web, la pantalla muestra un aviso. Las pruebas con la API real se hacen en el celular o un emulador.
+
+### P-26 · `Buffer` no existe en React Native (PKCE del contrato)
+- **Síntoma:** el ejemplo de PKCE del contrato usa `Buffer.from(...).toString('base64')`, que en React Native no existe.
+- **Solución:** `bytesToBase64` propio en `src/services/assistant/pkce.ts`. Se comprobó que da lo mismo que `Buffer` para 0 a 69 bytes y que el servidor real acepta el `verifier`/`challenge` así armado (bootstrap 201, exchange 201).
+
+### P-27 · Reglas del React Compiler en el hook del chat
+- **Síntoma:** `npx expo lint` marcó dos errores en `useAssistantChat`: una función que se llamaba a sí misma dentro de `useCallback` (`react-hooks/immutability`) y un `setState` dentro de un efecto para copiar el resultado de la consulta (`react-hooks/set-state-in-effect`).
+- **Solución:** el reintento al cerrarse la conversación pasa a ser un bucle de dos vueltas en lugar de recursión. El historial acumulado (turnos, cursor del historial y `paused`) vive en los datos de la propia consulta: el `queryFn` suma lo nuevo a lo que ya había y "ver anteriores" usa `setQueryData`. Sin estado duplicado ni efectos.
+
+### P-28 · `npx expo install` instaló la versión del SDK siguiente de `expo-speech-recognition`
+- **Síntoma:** `npx expo install expo-speech-recognition` dejó `^58.0.1` en `package.json`, que es la versión para el SDK 58. El proyecto está en el SDK 57.
+- **Causa:** `expo install` sólo elige la versión compatible para los paquetes que figuran en la lista del SDK (`bundledNativeModules`). Este paquete es de la comunidad y no está en esa lista, así que instala `latest`. La librería publica una versión por SDK (`57.x` para el SDK 57).
+- **Solución:** fijarla a mano con `npm install expo-speech-recognition@~57.1.1`. Con un paquete de terceros conviene revisar sus `dist-tags` o su README antes de confiar en `expo install`.

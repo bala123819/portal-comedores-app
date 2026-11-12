@@ -353,7 +353,7 @@ export default function HomeScreen() {
           }
           onPress={() => router.push('/banco')}
         />
-        <ListItem className="min-w-72 flex-1 basis-[45%]" icon={Sparkles} title="Asistente" subtitle="Preguntá sobre recetas o nutrición" onPress={() => router.push('/asistente')} />
+        <ListItem className="min-w-72 flex-1 basis-[45%]" icon={Sparkles} title="Asistente" subtitle="Pedidos, familias, avisos y recetas, hablando" onPress={() => router.push('/asistente')} />
         <ListItem className="min-w-72 flex-1 basis-[45%]" icon={MessageSquare} title="Ayuda" subtitle="Contacto y preguntas frecuentes" onPress={() => router.push('/ayuda')} />
       </View>
     </Screen>

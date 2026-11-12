@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { ArrowRight, PackageSearch, Search } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
+import { AssistantShortcut } from '@/components/asistente/AssistantShortcut';
 import { CatalogItem } from '@/components/pedidos/CatalogItem';
 import {
   Button,
@@ -63,6 +64,7 @@ export default function NuevoPedidoScreen() {
 
   const header = (
     <View className="gap-3 pb-3">
+      <AssistantShortcut prefill="Necesitamos hacer un pedido de " hint="Contale qué necesitan y para cuándo, y el asistente arma el pedido." />
       <Text tone="muted">
         Elegí los productos y la cantidad. El Banco revisa el pedido y decide las cantidades al
         aprobarlo.

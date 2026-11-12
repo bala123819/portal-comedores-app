@@ -4,6 +4,7 @@ import { Save, Trash2, UserPlus } from 'lucide-react-native';
 import { useFieldArray, useForm, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { View } from 'react-native';
 import { z } from 'zod';
+import { AssistantShortcut } from '@/components/asistente/AssistantShortcut';
 import { FamilyFields } from '@/components/familias/FamilyFields';
 import { MemberFields } from '@/components/familias/MemberFields';
 import { Button, Card, Header, IconButton, Screen, SectionHeader, Text } from '@/components/ui';
@@ -68,6 +69,10 @@ export default function NuevaFamiliaScreen() {
       header={<Header title="Registrar familia" back backFallback="/familias" />}
       footer={<Button title="Guardar familia" icon={Save} size="lg" fullWidth loading={create.isPending} onPress={onSubmit} />}
     >
+      <AssistantShortcut
+        prefill="Llegó una familia nueva: "
+        hint="Contale quiénes son y el asistente arma el alta."
+      />
       <Card className="gap-3">
         <FamilyFields control={anyControl} cfg={cfg} types={types.data} typesLoading={types.isPending} />
       </Card>

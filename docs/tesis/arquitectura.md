@@ -46,7 +46,7 @@ Ver también `docs/decisiones.md`.
 | Pantallas | `src/app/` | Rutas: `(auth)` login, `(app)/(tabs)` pestañas, `(app)/*` pantallas apiladas, `dev/` herramientas |
 | Componentes | `src/components/ui/`, `src/components/<dominio>/` | Librería propia (4 estados: carga, vacío, error, datos) y componentes de dominio |
 | Módulos | `src/features/<modulo>/` | Hooks de React Query, tipos y lógica por módulo (auth, org, familias, notificaciones, interacciones…) |
-| Servicios | `src/services/` | Cliente HTTP, endpoints, errores, idempotencia, storage, red, push, descargas, agentes |
+| Servicios | `src/services/` | Cliente HTTP, endpoints, errores, idempotencia, storage, red, push, descargas, agentes, **asistente (chat GoDubi)** |
 | Utilidades | `src/lib/` | Etiquetas (enums → texto), estados, formatos, recetas, WhatsApp, **módulos activos** |
 | Simulación | `src/mocks/` | API falsa con las formas reales |
 | Datos locales | `src/data/recetas/` | Recetario (generado) |
@@ -80,11 +80,38 @@ Ver también `docs/decisiones.md`.
 - `EXPO_PUBLIC_USE_MOCKS=true`: el cliente responde con una API falsa (misma forma que la real, incluidos sus bugs conocidos).
 - `EXPO_PUBLIC_MODULES_SCOPE=real`: los mocks muestran sólo lo que existe hoy en el backend.
 
-### 4.6 Agentes de IA y WhatsApp
-- Interfaz única `AgentsProvider` (`sendMessage`, `suggestRecipes`, `askNutrition`) con dos implementaciones: simulada (recetario local) y HTTP (`EXPO_PUBLIC_AGENTS_URL`).
-- Se envía sólo contexto mínimo (ids), nunca el token del usuario.
-- Las acciones que propone un agente sólo **navegan** a la pantalla correspondiente; el usuario confirma.
-- WhatsApp: `wa.me/<número>` con mensaje prearmado según desde dónde se abre.
+### 4.6 Asistente de IA, agentes y WhatsApp
+**Chat con el asistente (`src/services/assistant/`, `src/features/asistente/`, `/asistente`)**: guía y contrato de GoDubi del 2026-11-11. Detalle en `docs/asistente/README.md` (D-23).
+
+```
+Pantalla /asistente ── useAssistantChat (TanStack Query: polling 1,5 s / 5 s)
+        │                       │
+        │                       ▼
+        │              AssistantClient (client.ts)
+        │        sesión PKCE · renovación silenciosa · errores
+        │                       │ fetch
+        │          ┌────────────┴────────────┐
+        │          ▼                         ▼
+        │   API real GoDubi webchat     fetch simulado (mock.ts)
+        │   (celular / emulador)        (web y pruebas sin red)
+        │
+        └─ tarjeta "Confirmar" ─► el asistente guarda en /api/org/... ─► invalidación de consultas
+                                  (mismo backend que los formularios)
+```
+
+**Dictado por voz (D-24):** `useDictation` (`src/features/asistente/dictation.ts`) pasa la voz a texto en el
+celular con el reconocedor del sistema (`expo-speech-recognition`) y lo deja en la barra del Composer. Al
+asistente sólo le llega texto, así que el contrato con GoDubi no cambia. El módulo nativo se carga de forma
+opcional: sin él (Expo Go), el botón no aparece.
+
+- **Sesión propia del chat**, independiente del token de Mermab: PKCE (`bootstrap` + `exchange`), guardada en secure-store, se renueva sola un minuto antes de vencer o ante un 403 de sesión (un reintento), y se cierra con el logout de la app.
+- **Escrituras sólo con confirmación:** lo que el asistente quiere guardar llega como tarjeta (`approvals`). La decisión nunca se reintenta sola. Al confirmar, se refrescan las consultas de Familias, Pedidos o Avisos (`ACTION_INVALIDATES`).
+- **Convive con los formularios:** atajos "Hacerlo con el asistente" en alta de familia, pedido y mensaje al Banco, que abren el chat con texto precargado.
+- **Modo:** real en el celular y simulado en web (la API no admite CORS, P-25). El simulador es un `fetch` falso, así el modo de prueba ejercita el mismo cliente.
+
+**Proveedor anterior (`src/services/agents/`)**: lo sigue usando *Sugerir recetas*. Tiene la interfaz `AgentsProvider` con una implementación simulada (recetario local) y otra HTTP (`EXPO_PUBLIC_AGENTS_URL`), y manda sólo ids. Sus acciones propuestas sólo navegan.
+
+**WhatsApp:** `wa.me/<número>` con mensaje prearmado según desde dónde se abre. Queda como alternativa también en el chat vacío.
 
 ### 4.7 Comunicación con el Banco (`src/features/interacciones/`)
 - La organización deja un suceso, una solicitud, una consulta o un reclamo (`POST /org/interactions`, con `Idempotency-Key`); al Banco le llega un aviso.

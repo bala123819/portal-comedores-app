@@ -1,48 +1,57 @@
 import { Stack } from 'expo-router';
+import { View } from 'react-native';
+import { AgentFab } from '@/components/asistente/AgentFab';
 import { features } from '@/lib/features';
 import { colors } from '@/theme/tokens';
 
 /**
  * Las pantallas de módulos que el backend no ofrece hoy (docs/bda 1/6 §6) quedan protegidas:
  * no se pueden abrir ni por URL mientras su módulo esté apagado (ver src/lib/features.ts).
+ *
+ * Encima de todas las pantallas va el botón flotante del asistente (AgentFab).
  */
 export default function AppLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Protected guard={features.mermas}>
-        <Stack.Screen name="merma/[id]" />
-        <Stack.Screen name="postular/[id]" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="postulacion/[id]" />
-        <Stack.Screen name="retiro/[id]/index" />
-        <Stack.Screen name="retiro/[id]/quien-retira" />
-        <Stack.Screen name="retiro/[id]/completar" />
-      </Stack.Protected>
-      <Stack.Protected guard={features.pedidos}>
-        <Stack.Screen name="pedido/nuevo" />
-        <Stack.Screen name="pedido/confirmar" />
-        <Stack.Screen name="pedido/[id]" />
-      </Stack.Protected>
-      <Stack.Protected guard={features.familiasAlta}>
-        <Stack.Screen name="familia/nueva" />
-        <Stack.Screen name="familia/[id]/editar" />
-        <Stack.Screen name="familia/[id]/miembro/nuevo" />
-        <Stack.Screen name="familia/[id]/miembro/[memberId]" />
-      </Stack.Protected>
-      <Stack.Protected guard={features.contactos}>
-        <Stack.Screen name="contactos/index" />
-        <Stack.Screen name="contactos/nuevo" />
-        <Stack.Screen name="contactos/[id]" />
-      </Stack.Protected>
-      <Stack.Protected guard={features.programas}>
-        <Stack.Screen name="jornadas" />
-      </Stack.Protected>
-      <Stack.Protected guard={features.recibido}>
-        <Stack.Screen name="recibido" />
-      </Stack.Protected>
-      <Stack.Protected guard={features.documentacion}>
-        <Stack.Screen name="documentacion" />
-      </Stack.Protected>
-    </Stack>
+    <View style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Protected guard={features.mermas}>
+          <Stack.Screen name="merma/[id]" />
+          <Stack.Screen name="postular/[id]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="postulacion/[id]" />
+          <Stack.Screen name="retiro/[id]/index" />
+          <Stack.Screen name="retiro/[id]/quien-retira" />
+          <Stack.Screen name="retiro/[id]/completar" />
+        </Stack.Protected>
+        <Stack.Protected guard={features.pedidos}>
+          <Stack.Screen name="pedido/nuevo" />
+          <Stack.Screen name="pedido/confirmar" />
+          <Stack.Screen name="pedido/[id]" />
+        </Stack.Protected>
+        <Stack.Protected guard={features.familiasAlta}>
+          <Stack.Screen name="familia/nueva" />
+          <Stack.Screen name="familia/[id]/editar" />
+          <Stack.Screen name="familia/[id]/miembro/nuevo" />
+          <Stack.Screen name="familia/[id]/miembro/[memberId]" />
+        </Stack.Protected>
+        <Stack.Protected guard={features.contactos}>
+          <Stack.Screen name="contactos/index" />
+          <Stack.Screen name="contactos/nuevo" />
+          <Stack.Screen name="contactos/[id]" />
+        </Stack.Protected>
+        <Stack.Protected guard={features.programas}>
+          <Stack.Screen name="jornadas" />
+        </Stack.Protected>
+        <Stack.Protected guard={features.recibido}>
+          <Stack.Screen name="recibido" />
+        </Stack.Protected>
+        <Stack.Protected guard={features.documentacion}>
+          <Stack.Screen name="documentacion" />
+        </Stack.Protected>
+      </Stack>
+      <AgentFab />
+    </View>
   );
 }

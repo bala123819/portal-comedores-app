@@ -1,8 +1,19 @@
-import { BadgeCheck, CheckCircle2, CircleAlert, Clock, Download, FileSignature, FileText } from 'lucide-react-native';
+import {
+  BadgeCheck,
+  CheckCircle2,
+  CircleAlert,
+  Clock,
+  Download,
+  FileSignature,
+  FileText,
+  Send,
+  Upload,
+} from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 import {
   Badge,
+  BottomSheet,
   Button,
   Card,
   ErrorState,
@@ -14,9 +25,15 @@ import {
   toast,
 } from '@/components/ui';
 import { useDocuments, useRequirements, useSocialData } from '@/features/documentacion/hooks';
+import { useCreateInteraction } from '@/features/interacciones/hooks';
 import type { DocumentRequirement, OrganizationDocument, SocialData } from '@/features/org/types';
 import { formatDate } from '@/lib/format';
-import { label, orgDocumentTypeLabels, requirementStatusLabels, socialDataLabels } from '@/lib/labels';
+import {
+  label,
+  orgDocumentTypeLabels,
+  requirementStatusLabels,
+  socialDataLabels,
+} from '@/lib/labels';
 import { orgApi } from '@/services/api/endpoints';
 import { humanMessage, isApiError } from '@/services/api/errors';
 import { downloadAndOpen } from '@/services/download';
@@ -25,8 +42,10 @@ import { colors, type Tone } from '@/theme/tokens';
 /** `status` de `/org/requirements` llega en inglés (`missing`); se aceptan también los nombres en español */
 function requirementTone(status?: string | null): { tone: Tone; icon: typeof Clock } {
   if (!status) return { tone: 'muted', icon: Clock };
-  if (/aprob|present|vigente|verif|approv|upload|submit|ok/.test(status)) return { tone: 'success', icon: CheckCircle2 };
-  if (/venc|rechaz|falt|miss|expir|reject/.test(status)) return { tone: 'destructive', icon: CircleAlert };
+  if (/aprob|present|vigente|verif|approv|upload|submit|ok/.test(status))
+    return { tone: 'success', icon: CheckCircle2 };
+  if (/venc|rechaz|falt|miss|expir|reject/.test(status))
+    return { tone: 'destructive', icon: CircleAlert };
   return { tone: 'warning', icon: Clock };
 }
 
@@ -48,21 +67,29 @@ function fileName(d: OrganizationDocument): string {
   return /\.\w{2,4}$/.test(base) || d.mime_type !== 'application/pdf' ? base : `${base}.pdf`;
 }
 
-const byOrder = (a: DocumentRequirement, b: DocumentRequirement) => (a.sort_order ?? 0) - (b.sort_order ?? 0);
+const byOrder = (a: DocumentRequirement, b: DocumentRequirement) =>
+  (a.sort_order ?? 0) - (b.sort_order ?? 0);
 
 const yesNo = (v?: boolean | null) => (v == null ? null : v ? 'Sí' : 'No');
 
 function socialRows(d: SocialData | undefined): [string, string][] {
   const f = d?.fields;
   if (!f) return [];
-  const list = (v?: string[] | null) => (v?.length ? v.map((x) => label(socialDataLabels, x)).join(', ') : null);
+  const list = (v?: string[] | null) =>
+    v?.length ? v.map((x) => label(socialDataLabels, x)).join(', ') : null;
   // Los booleanos sólo se muestran en `true`: en una ficha sin relevar llegan todos en `false`
   const yes = (v?: boolean | null) => (v ? yesNo(v) : null);
   const rows: [string, string | null | undefined][] = [
     ['Nombre de fantasía', f.fantasy_name],
     ['Año de fundación', f.founding_year ? String(f.founding_year) : null],
-    ['Personería jurídica', f.has_legal_status ? ['Sí', f.legal_status_type].filter(Boolean).join(' · ') : null],
-    ['Entrega viandas', f.delivers_viandas ? ['Sí', f.viandas_notes].filter(Boolean).join(' · ') : null],
+    [
+      'Personería jurídica',
+      f.has_legal_status ? ['Sí', f.legal_status_type].filter(Boolean).join(' · ') : null,
+    ],
+    [
+      'Entrega viandas',
+      f.delivers_viandas ? ['Sí', f.viandas_notes].filter(Boolean).join(' · ') : null,
+    ],
     ['Genera ingresos propios', yes(f.generates_own_income)],
     ['Fuentes de ingreso', list(f.income_methods)],
     ['Agua', f.water_source ? label(socialDataLabels, f.water_source) : null],
@@ -96,10 +123,35 @@ export default function DocumentacionScreen() {
     }
   };
 
+  // La API de organizaciones no permite subir documentos (POST /org/documents → 405, G-21). Mientras
+  // tanto, desde una hoja en esta misma pantalla se le avisa al Banco (solicitud) con un toque.
+  const [presenting, setPresenting] = useState<string | null>(null);
+  const [notified, setNotified] = useState<Set<string>>(() => new Set());
+  const notify = useCreateInteraction();
+
+  function avisar(papel: string) {
+    notify.mutate(
+      {
+        interaction_type: 'solicitud',
+        title: `Quiero presentar: ${papel}`.slice(0, 255),
+        notes: `Tenemos listo el papel "${papel}" para presentar. ¿Cómo se lo hacemos llegar?`,
+      },
+      {
+        onSuccess: () => {
+          setNotified((s) => new Set(s).add(papel));
+          setPresenting(null);
+        },
+        onError: (e) => toast.error(humanMessage(e)),
+      },
+    );
+  }
+
   const rows = socialRows(social.data);
   const termsAcceptedAt = social.data?.fields?.terms_accepted_at;
   const reqs = [...(requirements.data ?? [])].sort(byOrder);
-  const missing = reqs.filter((r) => r.is_required && requirementTone(r.status).tone === 'destructive').length;
+  const missing = reqs.filter(
+    (r) => r.is_required && requirementTone(r.status).tone === 'destructive',
+  ).length;
 
   return (
     <Screen
@@ -121,8 +173,11 @@ export default function DocumentacionScreen() {
           {missing ? (
             <Card tone="warning">
               <Text className="text-sm">
-                {missing === 1 ? 'Falta presentar 1 papel obligatorio.' : `Faltan presentar ${missing} papeles obligatorios.`} Los papeles se
-                entregan al Banco de Alimentos; cuando los cargue, aparecen acá.
+                {missing === 1
+                  ? 'Falta presentar 1 papel obligatorio.'
+                  : `Faltan presentar ${missing} papeles obligatorios.`}{' '}
+                Por ahora los archivos no se pueden subir desde la app: tocá «Cómo presentarlo» y le
+                avisamos al Banco. Cuando lo cargue, aparece acá.
               </Text>
             </Card>
           ) : null}
@@ -130,14 +185,44 @@ export default function DocumentacionScreen() {
             const t = requirementTone(r.status);
             return (
               <Card key={r.id ?? `${r.document_type}-${i}`} className="gap-2">
-                <Text variant="label">{r.label || label(orgDocumentTypeLabels, r.document_type)}</Text>
+                <Text variant="label">
+                  {r.label || label(orgDocumentTypeLabels, r.document_type)}
+                </Text>
                 <View className="flex-row flex-wrap gap-2">
-                  <Badge label={r.status ? label(requirementStatusLabels, r.status) : 'Sin estado'} tone={t.tone} icon={t.icon} size="sm" />
+                  <Badge
+                    label={r.status ? label(requirementStatusLabels, r.status) : 'Sin estado'}
+                    tone={t.tone}
+                    icon={t.icon}
+                    size="sm"
+                  />
                   {r.is_required ? <Badge label="Obligatorio" tone="muted" size="sm" /> : null}
                   {r.has_expiration ? <Badge label="Vence" tone="muted" size="sm" /> : null}
                 </View>
-                {r.document?.expires_at ? <Text variant="caption">Vence el {formatDate(r.document.expires_at)}</Text> : null}
+                {r.document?.expires_at ? (
+                  <Text variant="caption">Vence el {formatDate(r.document.expires_at)}</Text>
+                ) : null}
                 {r.notes ? <Text variant="caption">{r.notes}</Text> : null}
+                {t.tone === 'destructive' ? (
+                  notified.has(r.label || label(orgDocumentTypeLabels, r.document_type)) ? (
+                    <Badge
+                      label="Le avisaste al Banco"
+                      tone="success"
+                      icon={CheckCircle2}
+                      size="sm"
+                    />
+                  ) : (
+                    <Button
+                      title="Cómo presentarlo"
+                      icon={Upload}
+                      size="sm"
+                      variant="outline"
+                      className="mt-1 self-start"
+                      onPress={() =>
+                        setPresenting(r.label || label(orgDocumentTypeLabels, r.document_type))
+                      }
+                    />
+                  )
+                ) : null}
               </Card>
             );
           })}
@@ -163,11 +248,19 @@ export default function DocumentacionScreen() {
                     {d.document_name || label(orgDocumentTypeLabels, d.document_type)}
                   </Text>
                 </View>
-                <Badge label={b.label} tone={b.tone} icon={b.icon} size="sm" className="self-start" />
+                <Badge
+                  label={b.label}
+                  tone={b.tone}
+                  icon={b.icon}
+                  size="sm"
+                  className="self-start"
+                />
                 <Text variant="caption">
                   {[
                     label(orgDocumentTypeLabels, d.document_type),
-                    d.expires_at ? `${d.is_expired ? 'Venció' : 'Vence'} el ${formatDate(d.expires_at)}` : null,
+                    d.expires_at
+                      ? `${d.is_expired ? 'Venció' : 'Vence'} el ${formatDate(d.expires_at)}`
+                      : null,
                     fileSize(d.file_size),
                   ]
                     .filter(Boolean)
@@ -217,11 +310,51 @@ export default function DocumentacionScreen() {
               <Text>{v}</Text>
             </View>
           ))}
-          <Text variant="caption">La ficha la completa el Banco en la visita. Para corregir algo, comunicate con el Banco.</Text>
+          <Text variant="caption">
+            La ficha la completa el Banco en la visita. Para corregir algo, comunicate con el Banco.
+          </Text>
         </Card>
       ) : (
         <Text tone="muted">El Banco todavía no cargó la ficha social de la organización.</Text>
       )}
+
+      <BottomSheet
+        visible={!!presenting}
+        onClose={() => setPresenting(null)}
+        title={presenting ? `Presentar: ${presenting}` : undefined}
+        footer={
+          <View className="gap-2">
+            <Button
+              title="Avisar al Banco que lo tengo listo"
+              icon={Send}
+              size="lg"
+              fullWidth
+              loading={notify.isPending}
+              onPress={() => presenting && avisar(presenting)}
+            />
+            <Button
+              title="Ahora no"
+              variant="ghost"
+              fullWidth
+              onPress={() => setPresenting(null)}
+            />
+          </View>
+        }
+      >
+        <View className="gap-4 pb-2">
+          <View className="flex-row items-start gap-3 rounded-2xl bg-muted p-4">
+            <Upload size={20} color={colors.mutedForeground} />
+            <Text className="flex-1 leading-6">
+              Todavía no se pueden subir archivos desde la app: el Banco tiene que habilitarlo.
+            </Text>
+          </View>
+          <Text className="leading-6">
+            Mientras tanto, le avisamos al Banco que tenés este papel listo y te responde cómo
+            hacérselo llegar (por mail, por WhatsApp o en persona). La respuesta la ves en
+            Comunicación con el Banco.
+          </Text>
+        </View>
+      </BottomSheet>
     </Screen>
   );
 }

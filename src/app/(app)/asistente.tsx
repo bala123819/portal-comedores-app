@@ -2,6 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import {
   ChefHat,
   Headset,
+  History,
   Info,
   Megaphone,
   MessageSquarePlus,
@@ -14,11 +15,13 @@ import { useEffect, useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { ApprovalCard } from '@/components/asistente/ApprovalCard';
 import { AssistantAvatar, OutgoingView, TurnView } from '@/components/asistente/ChatBubbles';
+import { ChatHistorySheet, ReadOnlyConversation } from '@/components/asistente/ChatHistory';
 import { Composer } from '@/components/asistente/Composer';
 import { Appear, TypingDots } from '@/components/asistente/motion';
 import { MermabAvatar, type AvatarMood } from '@/components/asistente/MermabAvatar';
 import { WhatsAppButton } from '@/components/agentes/WhatsAppButton';
 import { Button, EmptyState, Header, IconButton, OfflineBanner, Text } from '@/components/ui';
+import { loadHistory, type SavedConversation } from '@/features/asistente/history';
 import { useAssistantChat, type OutgoingMessage } from '@/features/asistente/hooks';
 import { useSession } from '@/features/auth/store';
 import { cn } from '@/lib/cn';
@@ -129,6 +132,25 @@ export default function AsistenteScreen() {
   const org = useSession((s) => s.organization);
   const chat = useAssistantChat();
   const listRef = useRef<FlatList<Row>>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [saved, setSaved] = useState<SavedConversation[]>([]);
+  const [viewing, setViewing] = useState<SavedConversation | null>(null);
+
+  async function openHistory() {
+    setSaved(await loadHistory());
+    setHistoryOpen(true);
+  }
+
+  function pickSaved(c: SavedConversation) {
+    setHistoryOpen(false);
+    setViewing(c.id === chat.conversationId ? null : c);
+  }
+
+  async function startNew() {
+    setHistoryOpen(false);
+    setViewing(null);
+    await chat.newConversation();
+  }
   const keepPosition = useRef(false);
 
   const rows: Row[] = [
@@ -194,13 +216,22 @@ export default function AsistenteScreen() {
         back
         backFallback="/"
         right={
-          chat.conversationId ? (
-            <IconButton
-              icon={MessageSquarePlus}
-              label="Empezar una conversación nueva"
-              onPress={() => void chat.newConversation()}
-            />
-          ) : null
+          <>
+            {chat.mode === 'http' ? (
+              <IconButton
+                icon={History}
+                label="Chats anteriores"
+                onPress={() => void openHistory()}
+              />
+            ) : null}
+            {chat.conversationId ? (
+              <IconButton
+                icon={MessageSquarePlus}
+                label="Empezar una conversación nueva"
+                onPress={() => void startNew()}
+              />
+            ) : null}
+          </>
         }
       />
       <OfflineBanner />
@@ -227,107 +258,120 @@ export default function AsistenteScreen() {
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View className="w-full flex-1">
-          {chat.startError ? (
-            <EmptyState
-              icon={TriangleAlert}
-              title="No pudimos conectar con el asistente"
-              message={assistantErrorMessage(chat.startError)}
-              actionLabel="Reintentar"
-              onAction={chat.retryStart}
-            />
-          ) : chat.starting || chat.loadingHistory ? (
-            <View className="flex-1 items-center justify-center gap-4">
-              <AssistantAvatar size={72} mood="thinking" />
-              <View className="items-center gap-2">
-                <TypingDots color={colors.primary} />
-                <Text variant="caption">Conectando con el asistente…</Text>
+        {viewing ? (
+          <ReadOnlyConversation conversation={viewing} onBack={() => setViewing(null)} />
+        ) : (
+          <View className="w-full flex-1">
+            {chat.startError ? (
+              <EmptyState
+                icon={TriangleAlert}
+                title="No pudimos conectar con el asistente"
+                message={assistantErrorMessage(chat.startError)}
+                actionLabel="Reintentar"
+                onAction={chat.retryStart}
+              />
+            ) : chat.starting || chat.loadingHistory ? (
+              <View className="flex-1 items-center justify-center gap-4">
+                <AssistantAvatar size={72} mood="thinking" />
+                <View className="items-center gap-2">
+                  <TypingDots color={colors.primary} />
+                  <Text variant="caption">Conectando con el asistente…</Text>
+                </View>
               </View>
-            </View>
-          ) : (
-            <FlatList
-              ref={listRef}
-              data={rows}
-              keyExtractor={(r) => (r.kind === 'turn' ? r.turn.id : r.item.clientMessageId)}
-              className="flex-1"
-              contentContainerClassName={cn(COLUMN, 'gap-5 px-4 pb-6 pt-4')}
-              keyboardShouldPersistTaps="handled"
-              onContentSizeChange={() => {
-                if (!keepPosition.current) listRef.current?.scrollToEnd({ animated: true });
-              }}
-              ListHeaderComponent={
-                <View className="gap-4">
-                  {chat.hasOlder ? (
-                    <Button
-                      title="Ver mensajes anteriores"
-                      variant="ghost"
-                      size="sm"
-                      loading={chat.loadingOlder}
-                      onPress={() => void loadOlder()}
-                    />
-                  ) : null}
-                  {empty ? <Welcome text={welcome} onPick={(s) => chat.send(s)} /> : null}
-                </View>
-              }
-              renderItem={({ item: r }) =>
-                r.kind === 'turn' ? (
-                  <TurnView
-                    turn={r.turn}
-                    onRetry={(t) => void chat.retryTurn(t)}
-                    retrying={chat.retryingTurn === r.turn.id}
-                  />
-                ) : (
-                  <OutgoingView item={r.item} onRetry={chat.retryOutgoing} />
-                )
-              }
-              ListFooterComponent={
-                <View className="gap-3">
-                  {chat.approvals.map((a) => (
-                    <ApprovalCard
-                      key={a.id}
-                      approval={a}
-                      deciding={!!chat.deciding[a.id]}
-                      onDecide={(approve) => void chat.decide(a, approve)}
-                    />
-                  ))}
-                  {chat.limitReached ? (
-                    <Notice tone="warning" icon={TriangleAlert}>
-                      <Text className="text-sm">
-                        Esta conversación llegó a su límite de mensajes.
-                      </Text>
+            ) : (
+              <FlatList
+                ref={listRef}
+                data={rows}
+                keyExtractor={(r) => (r.kind === 'turn' ? r.turn.id : r.item.clientMessageId)}
+                className="flex-1"
+                contentContainerClassName={cn(COLUMN, 'gap-5 px-4 pb-6 pt-4')}
+                keyboardShouldPersistTaps="handled"
+                onContentSizeChange={() => {
+                  if (!keepPosition.current) listRef.current?.scrollToEnd({ animated: true });
+                }}
+                ListHeaderComponent={
+                  <View className="gap-4">
+                    {chat.hasOlder ? (
                       <Button
-                        title="Empezar una conversación nueva"
+                        title="Ver mensajes anteriores"
+                        variant="ghost"
                         size="sm"
-                        variant="outline"
-                        className="mt-2 self-start"
-                        onPress={() => void chat.newConversation()}
+                        loading={chat.loadingOlder}
+                        onPress={() => void loadOlder()}
                       />
-                    </Notice>
-                  ) : null}
-                  {empty ? (
-                    <Appear delay={450}>
-                      <WhatsAppButton
-                        context={{ kind: 'general' }}
-                        title="Prefiero hablar por WhatsApp"
-                        variant="outline"
+                    ) : null}
+                    {empty ? <Welcome text={welcome} onPick={(s) => chat.send(s)} /> : null}
+                  </View>
+                }
+                renderItem={({ item: r }) =>
+                  r.kind === 'turn' ? (
+                    <TurnView
+                      turn={r.turn}
+                      onRetry={(t) => void chat.retryTurn(t)}
+                      retrying={chat.retryingTurn === r.turn.id}
+                    />
+                  ) : (
+                    <OutgoingView item={r.item} onRetry={chat.retryOutgoing} />
+                  )
+                }
+                ListFooterComponent={
+                  <View className="gap-3">
+                    {chat.approvals.map((a) => (
+                      <ApprovalCard
+                        key={a.id}
+                        approval={a}
+                        deciding={!!chat.deciding[a.id]}
+                        onDecide={(approve) => void chat.decide(a, approve)}
                       />
-                    </Appear>
-                  ) : null}
-                </View>
-              }
-            />
-          )}
+                    ))}
+                    {chat.limitReached ? (
+                      <Notice tone="warning" icon={TriangleAlert}>
+                        <Text className="text-sm">
+                          Esta conversación llegó a su límite de mensajes.
+                        </Text>
+                        <Button
+                          title="Empezar una conversación nueva"
+                          size="sm"
+                          variant="outline"
+                          className="mt-2 self-start"
+                          onPress={() => void startNew()}
+                        />
+                      </Notice>
+                    ) : null}
+                    {empty ? (
+                      <Appear delay={450}>
+                        <WhatsAppButton
+                          context={{ kind: 'general' }}
+                          title="Prefiero hablar por WhatsApp"
+                          variant="outline"
+                        />
+                      </Appear>
+                    ) : null}
+                  </View>
+                }
+              />
+            )}
 
-          <Composer
-            key={params.prefill ?? 'chat'}
-            initialText={params.prefill ?? ''}
-            disabled={!chat.conversationId || chat.limitReached}
-            busy={chat.busy}
-            attachmentsAllowed={chat.session?.attachmentsAllowed ?? false}
-            onSend={chat.send}
-          />
-        </View>
+            <Composer
+              key={params.prefill ?? 'chat'}
+              initialText={params.prefill ?? ''}
+              disabled={!chat.conversationId || chat.limitReached}
+              busy={chat.busy}
+              attachmentsAllowed={chat.session?.attachmentsAllowed ?? false}
+              onSend={chat.send}
+            />
+          </View>
+        )}
       </KeyboardAvoidingView>
+
+      <ChatHistorySheet
+        visible={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        conversations={saved}
+        currentId={chat.conversationId}
+        onPick={pickSaved}
+        onNew={() => void startNew()}
+      />
     </View>
   );
 }

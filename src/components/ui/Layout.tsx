@@ -104,7 +104,8 @@ export function Screen({
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const contentClasses = cn(
-    'w-full max-w-content self-center gap-4 p-4 pb-8 md:px-8 lg:px-12',
+    // pb-28: deja lugar al botón flotante del asistente (AgentFab) al final de cada pantalla
+    'w-full max-w-content self-center gap-4 p-4 pb-28 md:px-8 lg:px-12',
     contentClassName,
   );
   return (

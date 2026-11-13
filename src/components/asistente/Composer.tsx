@@ -70,7 +70,6 @@ export function Composer({
   const [text, setText] = useState(initialText);
   const [attachments, setAttachments] = useState<LocalAttachment[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [picking, setPicking] = useState(false);
   const [focused, setFocused] = useState(false);
   // Texto que había en la barra al empezar a dictar: lo dictado se agrega a continuación.
   const baseText = useRef('');
@@ -84,14 +83,11 @@ export function Composer({
 
   async function add(fn: () => Promise<LocalAttachment | null>) {
     setMenuOpen(false);
-    setPicking(true);
     try {
       const a = await fn();
       if (a) setAttachments((all) => [...all, a].slice(0, MAX_ATTACHMENTS));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'No pudimos abrir el archivo.');
-    } finally {
-      setPicking(false);
     }
   }
 
@@ -191,8 +187,10 @@ export function Composer({
             <IconButton
               icon={menuOpen ? X : Paperclip}
               label={menuOpen ? 'Cerrar adjuntos' : 'Adjuntar foto o PDF'}
-              color={full || picking ? colors.input : colors.mutedForeground}
-              onPress={full || picking ? undefined : () => setMenuOpen((o) => !o)}
+              color={full ? colors.input : colors.mutedForeground}
+              // No se bloquea mientras el selector está abierto: si la persona lo cierra sin elegir, algunos
+              // navegadores no avisan la cancelación y el clip quedaba deshabilitado para siempre (P-38).
+              onPress={full ? undefined : () => setMenuOpen((o) => !o)}
             />
           ) : null}
           <TextInput
@@ -250,11 +248,12 @@ export function Composer({
             onPress={submit}
             className={cn(
               'h-12 w-12 items-center justify-center rounded-full',
-              canSend ? 'bg-primary active:opacity-80' : 'bg-muted',
+              'bg-primary',
+              canSend ? 'active:opacity-80' : 'opacity-60',
             )}
             style={canSend ? shadows.primary : undefined}
           >
-            <Send size={20} color={canSend ? colors.primaryForeground : colors.mutedForeground} />
+            <Send size={20} color={colors.primaryForeground} />
           </Pressable>
         </View>
         {Platform.OS === 'web' ? (

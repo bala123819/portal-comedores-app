@@ -93,7 +93,7 @@ export function InfiniteList<T extends { id: string }>({
       contentContainerStyle={{
         padding: 16,
         paddingHorizontal: columns > 1 ? contentPadding - gutter : contentPadding,
-        paddingBottom: 32,
+        paddingBottom: 112, // lugar para el botón flotante del asistente
       }}
       onEndReachedThreshold={0.4}
       onEndReached={() => {

@@ -1,6 +1,6 @@
-import { Platform } from 'react-native';
 import { storage } from '@/services/storage';
 import { AssistantError, is } from './errors';
+import { toFilePart } from './filePart';
 import { createPkcePair } from './pkce';
 import type {
   AssistantClient,
@@ -60,7 +60,12 @@ export function createAssistantClient(cfg: AssistantClientConfig): AssistantClie
     const timer = setTimeout(() => ctrl.abort(), opts.timeout ?? TIMEOUT_MS);
     let res: Response;
     try {
-      res = await cfg.fetch(`${cfg.baseUrl}${path}`, { method, headers, body, signal: ctrl.signal });
+      res = await cfg.fetch(`${cfg.baseUrl}${path}`, {
+        method,
+        headers,
+        body,
+        signal: ctrl.signal,
+      });
     } catch {
       // Sin red, tiempo agotado o (en web) bloqueo por CORS: no hay respuesta que leer.
       throw new AssistantError(0, 'NETWORK');
@@ -77,7 +82,11 @@ export function createAssistantClient(cfg: AssistantClientConfig): AssistantClie
     if (!res.ok) {
       const code = (data as { message?: unknown } | null)?.message;
       const retryAfter = Number(res.headers.get('retry-after')) || undefined;
-      throw new AssistantError(res.status, typeof code === 'string' ? code : `HTTP_${res.status}`, retryAfter);
+      throw new AssistantError(
+        res.status,
+        typeof code === 'string' ? code : `HTTP_${res.status}`,
+        retryAfter,
+      );
     }
     return data as T;
   }
@@ -133,7 +142,8 @@ export function createAssistantClient(cfg: AssistantClientConfig): AssistantClie
 
   async function ensureSession(): Promise<AssistantSession> {
     await load();
-    if (session && new Date(session.expiresAt).getTime() - RENEW_BEFORE_MS > Date.now()) return session;
+    if (session && new Date(session.expiresAt).getTime() - RENEW_BEFORE_MS > Date.now())
+      return session;
     return startSession();
   }
 
@@ -168,9 +178,20 @@ export function createAssistantClient(cfg: AssistantClientConfig): AssistantClie
       }
     },
 
-    listConversations: () => authed((token) => call<Conversation[]>('GET', '/conversations', { token })),
+    listConversations: () =>
+      authed((token) => call<Conversation[]>('GET', '/conversations', { token })),
 
-    createConversation: () => authed((token) => call<Conversation>('POST', '/conversations', { token })),
+    // La API admite UNA conversación nueva por sesión: la segunda da 500 (verificado el 2026-11-12, P-35).
+    // Para "empezar una conversación nueva" se abre una sesión nueva y se crea ahí.
+    createConversation: async () => {
+      try {
+        return await authed((token) => call<Conversation>('POST', '/conversations', { token }));
+      } catch (e) {
+        if (!(e instanceof AssistantError) || e.status < 500) throw e;
+        const fresh = await startSession();
+        return call<Conversation>('POST', '/conversations', { token: fresh.token });
+      }
+    },
 
     getMessages: (id, before) =>
       authed((token) =>
@@ -183,20 +204,18 @@ export function createAssistantClient(cfg: AssistantClientConfig): AssistantClie
 
     sendMessage: (id, body) =>
       authed((token) =>
-        call<SendMessageResponse>('POST', `/conversations/${encodeURIComponent(id)}/messages`, { token, json: body }),
+        call<SendMessageResponse>('POST', `/conversations/${encodeURIComponent(id)}/messages`, {
+          token,
+          json: body,
+        }),
       ),
 
     uploadAttachment: (id, file) =>
       authed(async (token) => {
         // Se arma de nuevo en cada intento: un FormData ya enviado no se puede reutilizar.
         const form = new FormData();
-        if (Platform.OS === 'web') {
-          const blob = await (await fetch(file.uri)).blob();
-          form.append('file', blob, file.name);
-        } else {
-          // React Native acepta { uri, name, type } como archivo del multipart.
-          form.append('file', file as unknown as Blob);
-        }
+        // Blob en web; File de expo-file-system en el celular (filePart.ts, P-37)
+        form.append('file', await toFilePart(file), file.name);
         return call<Attachment>('POST', `/conversations/${encodeURIComponent(id)}/attachments`, {
           token,
           form,
@@ -205,14 +224,22 @@ export function createAssistantClient(cfg: AssistantClientConfig): AssistantClie
       }),
 
     listApprovals: (id) =>
-      authed((token) => call<PendingApproval[]>('GET', `/conversations/${encodeURIComponent(id)}/approvals`, { token })),
+      authed((token) =>
+        call<PendingApproval[]>('GET', `/conversations/${encodeURIComponent(id)}/approvals`, {
+          token,
+        }),
+      ),
 
     decideApproval: (id, approvalId, d) =>
       authed((token) =>
-        call<ApprovalDecisionResponse>('POST', `/conversations/${encodeURIComponent(id)}/approvals/${encodeURIComponent(approvalId)}`, {
-          token,
-          json: d,
-        }),
+        call<ApprovalDecisionResponse>(
+          'POST',
+          `/conversations/${encodeURIComponent(id)}/approvals/${encodeURIComponent(approvalId)}`,
+          {
+            token,
+            json: d,
+          },
+        ),
       ),
   };
   return client;

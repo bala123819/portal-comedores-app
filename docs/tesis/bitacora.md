@@ -1046,3 +1046,54 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Ícono de la app y favicon con el isotipo (hoy siguen los de la plantilla): hace falta exportar el SVG a PNG en los tamaños que pide Expo.
 
 **Archivos principales.** `src/app/(app)/asistente.tsx`, `src/components/asistente/ChatBubbles.tsx`, `src/components/asistente/Composer.tsx`, `src/components/asistente/MermabAvatar.tsx`, `src/components/asistente/motion.tsx`, `src/components/brand/BrandMark.tsx`, `src/components/ui/Layout.tsx`, `src/app/(auth)/login.tsx`, `src/app/(app)/(tabs)/index.tsx`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`
+
+---
+
+## 3e93e7a · feat(asistente): botón flotante, historial de chats y arreglo de fotos en el celular
+- **Fecha:** 2026-11-13 11:51 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Asistente y ajustes de diseño después de probar la app (rama `feat/agente-flotante`)
+
+**Objetivo.** Resolver la lista de pedidos del equipo:
+- botón de enviar en verde;
+- pestañas que se veían cortadas y logo del tamaño del texto;
+- asistente siempre a mano con un botón flotante, en lugar de los accesos del Inicio y la pestaña de Recetas;
+- historial de chats y el error al crear un chat nuevo;
+- subir los papeles faltantes en Documentación;
+- fotos que no se mandaban desde el celular.
+
+**Qué se hizo.**
+- `AgentFab` en `(app)/_layout.tsx`: círculo verde con el avatar, aro animado y "¿Te ayudo?" en pantallas anchas. Se oculta en el chat y en los formularios. Su hoja es corta, con un desplegable de lo que puede y no puede hacer. `Screen` y las listas suman espacio abajo.
+- Pestañas con `tabBarLabelPosition: 'below-icon'`; Recetas fuera de la barra (en "Más"); sin "¿Qué cocino hoy?" ni "Asistente" en el Inicio; logo del Inicio de 52 px; botón de enviar siempre verde.
+- Chat: historial en el dispositivo (`features/asistente/history.ts`, `ChatHistory.tsx`) con lectura de chats anteriores; chat nuevo con sesión nueva ante el 500; recuperación ante el 404 de una sesión renovada; historial borrado al cerrar sesión.
+- Documentación: "Cómo presentarlo" abre una hoja que avisa al Banco con un toque (la API no deja subir archivos).
+- Fotos en el celular: `filePart.ts` / `filePart.web.ts` (File de expo-file-system / Blob). El clip ya no se traba al cancelar la galería.
+
+**Decisiones.** D-28.
+
+**Problemas y soluciones.** P-35 (500 al crear la segunda conversación), P-36 (sin historial entre sesiones), P-37 (fotos en el celular con `expo/fetch`), P-38 (clip trabado). Faltantes: G-21 (subir documentos) y G-22 (asistente).
+
+**Verificación.**
+- `npx tsc --noEmit` (sale con 0) y `npx expo lint`: sin errores.
+- API (Node, sin mandar mensajes salvo donde se indica):
+  - `POST /org/documents` → 405 y `POST /organizations/{id}/documents` → 404, probados sin archivo;
+  - segunda `POST /conversations` → 500;
+  - sesión nueva: `GET /conversations` → `[]` y mensajes de una conversación anterior → 404;
+  - adjuntos de 1, 3 y 6 MB → 201, directo y por el proxy;
+  - una foto con mensaje → el agente la describió (1 mensaje).
+- Convertidor real de `expo/fetch`: `{ uri, name, type }` → "Unsupported FormDataPart implementation"; un objeto con `bytes()` → multipart correcto.
+- Web (app simulada, asistente real por el proxy):
+  - Inicio con el logo del alto del texto, pestañas sin cortes, sin Recetas y con el botón flotante;
+  - la hoja del asistente y su acceso al chat;
+  - chat nuevo (500 → sesión nueva → 201), historial y lectura de un chat anterior;
+  - foto adjuntada y enviada (201) con el selector de web.
+- Documentación: la primera versión ("Presentar este papel" → formulario de mensaje) se probó en web. La hoja "Cómo presentarlo", el desplegable del asistente y el nuevo aspecto del botón flotante pasaron typecheck y lint, pero la prueba en el navegador se interrumpió antes de verlos.
+
+**Pendientes.**
+- **Probar en el celular (Expo Go):**
+  - mandar una foto de la alacena (P-37);
+  - el botón flotante y su hoja;
+  - "Cómo presentarlo" en Documentación.
+- Pedir al Banco `POST /org/documents` (G-21), y a GoDubi varias conversaciones por sesión y una identidad estable (G-22).
+- Pedir al Banco más productos en el catálogo de prueba (mensaje redactado, sin publicar).
+
+**Archivos principales.** `src/components/asistente/AgentFab.tsx`, `src/components/asistente/ChatHistory.tsx`, `src/features/asistente/history.ts`, `src/features/asistente/hooks.ts`, `src/services/assistant/client.ts`, `src/services/assistant/filePart.ts`, `src/services/assistant/filePart.web.ts`, `src/components/asistente/Composer.tsx`, `src/app/(app)/_layout.tsx`, `src/app/(app)/asistente.tsx`, `src/app/(app)/documentacion.tsx`, `src/app/(app)/(tabs)/_layout.tsx`, `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/components/ui/Layout.tsx`, `src/components/ui/Query.tsx`, `src/features/auth/store.ts`, `docs/api-gaps.md`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`

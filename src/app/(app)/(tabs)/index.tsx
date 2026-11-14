@@ -2,7 +2,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import {
   Bell,
-  ChefHat,
   ChevronRight,
   MapPin,
   MessageSquare,
@@ -10,7 +9,6 @@ import {
   Package,
   Scale,
   ShoppingCart,
-  Sparkles,
   Truck,
   Users,
 } from 'lucide-react-native';
@@ -254,9 +252,8 @@ function HomeHero({
     <View className="bg-primary">
       <View className="w-full gap-4 px-4 pb-5 pt-3 md:px-8 lg:px-12">
         <View className="flex-row items-center gap-3">
-          <View className="rounded-xl bg-white/15 p-1">
-            <BrandMark size={40} inverted />
-          </View>
+          {/* Mismo alto que las dos líneas de texto: text-sm (20) + text-2xl (32) */}
+          <BrandMark size={52} inverted />
           <View className="flex-1">
             <Text className="text-sm font-semibold text-primary-foreground/80">
               Portal Comedores
@@ -429,13 +426,6 @@ export default function HomeScreen() {
       <View className="flex-row flex-wrap gap-2">
         <ListItem
           className="min-w-72 flex-1 basis-[45%]"
-          icon={ChefHat}
-          title="¿Qué cocino hoy?"
-          subtitle="Recetas para la cantidad de personas que asisten"
-          onPress={() => router.push('/sugerir-recetas')}
-        />
-        <ListItem
-          className="min-w-72 flex-1 basis-[45%]"
           icon={MessagesSquare}
           title="Escribirle al Banco"
           subtitle={
@@ -444,13 +434,6 @@ export default function HomeScreen() {
               : 'Contá un suceso, pedí algo, consultá o reclamá'
           }
           onPress={() => router.push('/banco')}
-        />
-        <ListItem
-          className="min-w-72 flex-1 basis-[45%]"
-          icon={Sparkles}
-          title="Asistente"
-          subtitle="Pedidos, familias, avisos y recetas, hablando"
-          onPress={() => router.push('/asistente')}
         />
         <ListItem
           className="min-w-72 flex-1 basis-[45%]"

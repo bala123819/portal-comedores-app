@@ -15,6 +15,7 @@ import {
   type PendingApproval,
 } from '@/services/assistant';
 import type { LocalAttachment } from './attachments';
+import { saveConversation } from './history';
 
 export const assistantKeys = {
   all: ['assistant'] as const,
@@ -324,6 +325,23 @@ export function useAssistantChat() {
     },
     [conversationId, deciding, qc],
   );
+
+  // ─── Historial en el dispositivo: la conversación se copia a medida que avanza (history.ts) ───
+  useEffect(() => {
+    if (!conversationId || assistant.mode !== 'http' || !turns.length) return;
+    void saveConversation(conversationId, turns).catch(() => {});
+  }, [conversationId, turns]);
+
+  // Cada sesión (1 h) tiene su propia identidad: al renovarse, la conversación anterior da 404 (P-36).
+  // Entonces se sigue en una conversación nueva; la anterior queda en el historial del dispositivo.
+  const recovering = useRef<string | null>(null);
+  const lostConversation =
+    !!conversationId && isAssistantError(messagesQ.error) && messagesQ.error.status === 404;
+  useEffect(() => {
+    if (!lostConversation || recovering.current === conversationId) return;
+    recovering.current = conversationId ?? null;
+    void newConversation();
+  }, [lostConversation, conversationId, newConversation]);
 
   const startError = sessionQ.error ?? conversationQ.error;
 

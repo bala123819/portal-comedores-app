@@ -181,3 +181,23 @@ Numeración `P-xx`, referenciada desde la [bitácora](bitacora.md).
 - **Síntoma:** en la consola, "React does not recognize the `accessibilityElementsHidden` / `importantForAccessibility` prop on a DOM element" al dibujar el logo y el avatar.
 - **Causa:** esas dos props son de iOS y Android; en web llegaban al `<svg>` o al `<div>` como atributos desconocidos.
 - **Solución:** se usa `aria-hidden`, que React Native admite en las tres plataformas, para ocultar lo decorativo (logo, avatar, círculo de la persona del Banco y el logo del login).
+
+### P-35 · "Empezar una conversación nueva" daba error en el asistente
+- **Síntoma:** al tocar el botón de chat nuevo aparecía "El asistente no está disponible ahora".
+- **Causa:** la API de GoDubi admite una sola conversación nueva por sesión: la segunda `POST /conversations` responde 500 (reproducido el 2026-11-12 con `curl`/Node, sin mandar mensajes). G-22.
+- **Solución:** si crear la conversación falla con un 5xx, el cliente abre una sesión nueva y la crea ahí (`createConversation` en `src/services/assistant/client.ts`).
+
+### P-36 · Los chats anteriores se perdían
+- **Síntoma:** después de un rato, o al empezar un chat nuevo, no había forma de volver a ver lo hablado; a veces el chat actual daba error.
+- **Causa:** cada sesión del chat (1 h) tiene otra identidad: una sesión nueva ve `GET /conversations → []` y recibe 404 al pedir los mensajes de una conversación anterior. G-22.
+- **Solución:** la conversación se copia en el dispositivo a medida que avanza (`features/asistente/history.ts`) y se puede releer desde "Chats anteriores". Si la conversación actual da 404 (sesión renovada), se sigue en una nueva automáticamente. El historial se borra al cerrar sesión.
+
+### P-37 · En el celular, mandar una foto al asistente decía "El asistente no está disponible ahora"
+- **Síntoma:** en Expo Go, al adjuntar una foto de la alacena y enviar, aparecía "El asistente no está disponible ahora, revisá tu conexión". En la compu funcionaba.
+- **Causa:** desde el SDK 58 (D-25) el `fetch` global del celular es el de Expo (`expo/fetch`), que no acepta el archivo en el formato clásico de React Native (`{ uri, name, type }`) dentro de un `FormData`: tira "Unsupported FormDataPart implementation" antes de mandar nada, y la app lo tomaba como falta de conexión. Se confirmó corriendo el convertidor real de Expo (`convertFormDataAsync`) con las dos formas: la vieja falla y un objeto con `bytes()` sale bien. La API y el proxy aceptaban fotos de hasta 6 MB.
+- **Solución:** el archivo se arma por plataforma (`src/services/assistant/filePart.ts` / `filePart.web.ts`, como `download.ts`): en el celular, un `File` de `expo-file-system` (expone `bytes()`, nombre y tipo); en web, un `Blob`. **Falta verificarlo en un celular.**
+
+### P-38 · El clip de adjuntar quedaba trabado si se cerraba la galería sin elegir
+- **Síntoma:** después de abrir la galería y cerrarla sin elegir una foto, el clip quedaba gris y no respondía hasta recargar.
+- **Causa:** el botón se deshabilitaba mientras el selector estaba abierto, y algunos navegadores no avisan cuando se cancela (`expo-image-picker` espera el evento `cancel`), así que nunca se volvía a habilitar.
+- **Solución:** el clip ya no se bloquea mientras el selector está abierto.

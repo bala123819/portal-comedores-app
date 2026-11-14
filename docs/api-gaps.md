@@ -194,3 +194,18 @@ Implementado según el post 11/14 (`docs/bda/11-recibido-nutricion.md`). Con est
 | `status` de requisitos | Sólo se vio `missing` (en inglés, a diferencia del resto de la API). Falta el listado de estados posibles. |
 | Carta compromiso | No hay ruta para el rol organización: `/organizations/{id}/terms-pdf` da 403. Sólo se sabe si la aceptaron por `terms_accepted_at`. |
 | Ficha social vacía | En una ficha sin relevar, los booleanos llegan en `false` (no `null`): no se distingue "no" de "sin dato". La app sólo muestra los `true`. |
+
+### G-21 · La organización no puede subir documentos (2026-11-12)
+En Documentación, los papeles que faltan no se pueden presentar desde la app.
+- `POST /org/documents` → **405** "Método no permitido para esta ruta" (`allowed_methods: GET, HEAD`).
+- `POST /organizations/{id}/documents` (el `subirDocumento` del OpenAPI: multipart `document`, `document_type`, `document_name`, `expires_at`) → **404** con el usuario de la organización: es del rol del Banco.
+- Se probó con un pedido **sin archivo**, que no puede crear nada.
+- **Mientras tanto:** cada papel faltante tiene "Presentar este papel", que abre un mensaje al Banco (solicitud) ya armado.
+- **Pedir al Banco:** habilitar `POST /org/documents` (multipart, mismos campos que `subirDocumento`) para el rol organización. La app ya tiene el selector de archivos (`expo-document-picker`) por el asistente.
+
+### G-22 · Asistente (GoDubi): una sola conversación por sesión y sin historial entre sesiones (2026-11-12)
+No es de la API de Mermab sino del webchat de GoDubi, pero afecta a la app.
+- La **segunda** `POST /conversations` de una misma sesión da **500 "Internal server error"** (la primera da 201). Debería crearla o responder un 409 con código.
+- Cada sesión (1 h) tiene otra `identityKey`: una sesión nueva ve `GET /conversations → []` y recibe 404 en los mensajes de una conversación anterior. No hay forma de recuperar el historial desde el servidor.
+- **Mientras tanto:** la app abre una sesión nueva para cada chat nuevo (P-35), sigue en una conversación nueva cuando la anterior da 404 y guarda el historial en el dispositivo (P-36).
+- **Pedir a GoDubi:** varias conversaciones por sesión, y una identidad estable (por ejemplo, con el login de Mermab, que ya está previsto) para que el historial viva en el servidor.

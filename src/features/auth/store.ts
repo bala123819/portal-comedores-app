@@ -3,6 +3,7 @@ import { apiConfig } from '@/services/api/client';
 import { authApi, orgApi } from '@/services/api/endpoints';
 import { isApiError } from '@/services/api/errors';
 import { assistant } from '@/services/assistant';
+import { clearHistory } from '@/features/asistente/history';
 import { queryClient, clearPersistedCache } from '@/services/query-client';
 import { storage, STORAGE_KEYS } from '@/services/storage';
 import type { Organization } from '@/features/org/types';
@@ -108,6 +109,7 @@ export const useSession = create<SessionState>((set, get) => ({
     }
     // La sesión del chat con el asistente es aparte (docs/asistente): se cierra y se borra también.
     await assistant.logout();
+    await clearHistory(); // los chats guardados en el dispositivo también son datos de la organización
     apiConfig.setToken(null);
     await storage.removeSecure(STORAGE_KEYS.token);
     await storage.remove(STORAGE_KEYS.tokenIssuedAt);

@@ -3,6 +3,7 @@ import {
   Bell,
   Building2,
   CalendarDays,
+  ChefHat,
   ChevronRight,
   FileText,
   HeartHandshake,
@@ -12,7 +13,6 @@ import {
   Package,
   Salad,
   ShoppingCart,
-  Sparkles,
   Stethoscope,
   UserRound,
   Users,
@@ -69,7 +69,7 @@ export default function MasScreen() {
           <ListItem icon={Package} title="Lo recibido" subtitle="Todo lo que llegó del Banco, por período" onPress={() => router.push('/recibido')} />
         ) : null}
         <ListItem icon={Salad} title="Nutrición" subtitle={features.recibido ? 'Cobertura por grupo de alimentos y cuota' : 'Cuota mensual y alimentación'} onPress={() => router.push('/nutricion')} />
-        <ListItem icon={Sparkles} title="Asistente" subtitle="Recetas, nutrición y dudas" onPress={() => router.push('/asistente')} />
+        <ListItem icon={ChefHat} title="Recetas" subtitle="Recetario y qué cocinar hoy" onPress={() => router.push('/recetas')} />
       </View>
 
       <SectionHeader title="Cuenta" />

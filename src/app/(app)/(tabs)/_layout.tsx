@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import {
-  ChefHat,
   House,
   Menu,
   ShoppingBasket,
@@ -42,6 +41,9 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
+        // Siempre debajo del ícono: en pantallas anchas React Navigation lo pone al costado y la
+        // píldora verde del ícono tapaba las primeras letras ("In" de Inicio)
+        tabBarLabelPosition: 'below-icon',
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600', marginTop: 2 },
         tabBarStyle: {
           backgroundColor: colors.card,
@@ -55,10 +57,7 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.background },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{ title: 'Inicio', tabBarIcon: tabIcon(House) }}
-      />
+      <Tabs.Screen name="index" options={{ title: 'Inicio', tabBarIcon: tabIcon(House) }} />
       {/* Mermas/retiros: sólo si el backend los habilita (hoy no, ver docs/bda 1/6 §6). `href: null` oculta la pestaña. */}
       <Tabs.Screen
         name="disponibles"
@@ -72,7 +71,9 @@ export default function TabsLayout() {
         name="retiros"
         options={{
           href: features.mermas ? undefined : null,
-          title: 'Mis retiros', tabBarIcon: tabIcon(Truck) }}
+          title: 'Mis retiros',
+          tabBarIcon: tabIcon(Truck),
+        }}
       />
       {/* Pedidos de mercadería. Con mermas activas pasa al menú "Más" (y al Inicio) para no superar 5 pestañas */}
       <Tabs.Screen
@@ -92,14 +93,9 @@ export default function TabsLayout() {
           tabBarIcon: tabIcon(Users),
         }}
       />
-      <Tabs.Screen
-        name="recetas"
-        options={{ title: 'Recetas', tabBarIcon: tabIcon(ChefHat) }}
-      />
-      <Tabs.Screen
-        name="mas"
-        options={{ title: 'Más', tabBarIcon: tabIcon(Menu) }}
-      />
+      {/* Recetas sale de la barra: se unificó con el asistente (botón flotante en todas las pantallas). La pantalla sigue en "Más". */}
+      <Tabs.Screen name="recetas" options={{ href: null, title: 'Recetas' }} />
+      <Tabs.Screen name="mas" options={{ title: 'Más', tabBarIcon: tabIcon(Menu) }} />
     </Tabs>
   );
 }

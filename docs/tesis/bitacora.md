@@ -1144,3 +1144,33 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Sumar la sección del backend (capítulo 4.1).
 
 **Archivos principales.** `docs/tesis/Tesis-Portal-Comedores-v2.docx`, `docs/tesis/Tesis-Portal-Comedores.docx`, `docs/tesis/capitulos/figuras/fig-4-9-asistente.png`
+
+---
+
+## d1b40b2 · docs(tesis): completar el documento v2 (backend, SDK 58, anexos B y C)
+- **Fecha:** 2026-11-16 18:26 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Documentación de la tesis
+
+**Objetivo.** Completar `Tesis-Portal-Comedores-v2.docx` con lo que faltaba según la revisión del 2026-11-16: la sección del backend y las inconsistencias detectadas.
+
+**Qué se hizo.**
+- **4.1:** subsección "El servidor: la plataforma Mermab" (la misma que en `capitulos/04-diseno-arquitectura.md`), con su entrada en el índice.
+- **2.2, tabla 2.10 y Referencias:** Expo SDK 58, React Native 0.88 y React 19.3 (antes SDK 57 / RN 0.86). El inicio del proyecto con SDK 57 (5.2) y la D-02 quedan como registro histórico.
+- **Figura 5.1:** el rótulo aclara que el cronograma cubre la primera etapa (25/09 a 23/10) y que lo posterior está en el Anexo D.
+- **Anexo B:** filas D-22, D-25 y D-27 (D-27 estaba nombrada en la introducción pero faltaba), e introducción sin la nota de "versión posterior".
+- **Anexo C:** filas P-22, P-23, P-24, P-29, P-30 y P-34. Queda completo de P-01 a P-38.
+- Método: se editó `word/document.xml` clonando párrafos y filas existentes para respetar el formato; se reempaquetó con el mismo orden de entradas.
+
+**Decisiones.** Ninguna nueva.
+
+**Problemas y soluciones.** Ninguno.
+
+**Verificación.** XML válido. Word abre el archivo sin avisos: 88 páginas (antes 85), 24.523 palabras, 41 tablas, 14 imágenes; la sección nueva empieza en la página 37 y aparece en el índice; los seis textos cambiados están presentes; el Anexo B lista D-22, D-25 y D-27 y el Anexo C va de P-01 a P-38.
+
+**Pendientes.**
+- Al abrir en Word, actualizar el índice (clic derecho → Actualizar campos) para que tome los números de página nuevos.
+- Rótulos de las 41 tablas e índice de figuras y tablas.
+- Confirmar con el Banco la tecnología del backend.
+- `Tesis-Portal-Comedores.docx` (versión anterior) no se tocó.
+
+**Archivos principales.** `docs/tesis/Tesis-Portal-Comedores-v2.docx`

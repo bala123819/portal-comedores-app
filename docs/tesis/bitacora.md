@@ -1097,3 +1097,25 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Pedir al Banco más productos en el catálogo de prueba (mensaje redactado, sin publicar).
 
 **Archivos principales.** `src/components/asistente/AgentFab.tsx`, `src/components/asistente/ChatHistory.tsx`, `src/features/asistente/history.ts`, `src/features/asistente/hooks.ts`, `src/services/assistant/client.ts`, `src/services/assistant/filePart.ts`, `src/services/assistant/filePart.web.ts`, `src/components/asistente/Composer.tsx`, `src/app/(app)/_layout.tsx`, `src/app/(app)/asistente.tsx`, `src/app/(app)/documentacion.tsx`, `src/app/(app)/(tabs)/_layout.tsx`, `src/app/(app)/(tabs)/index.tsx`, `src/app/(app)/(tabs)/mas.tsx`, `src/components/ui/Layout.tsx`, `src/components/ui/Query.tsx`, `src/features/auth/store.ts`, `docs/api-gaps.md`, `docs/decisiones.md`, `docs/tesis/problemas-y-soluciones.md`
+
+---
+
+## 1ae9fbc · docs(tesis): describir el backend (plataforma Mermab) en el capítulo 4
+- **Fecha:** 2026-11-16 18:17 · **Autoría:** Tomás Balardini (+ asistencia de IA: Claude Code)
+- **Etapa:** Documentación de la tesis
+
+**Objetivo.** Que la tesis hable del backend: qué es, cómo funciona y qué hizo el equipo con él, con la autoría real (lo desarrolla el área técnica del Banco; el equipo lo usa con autorización de la gerencia).
+
+**Qué se hizo.** Subsección "El servidor: la plataforma Mermab" dentro de 4.1 (sin renumerar el capítulo): alcance (388 rutas en el OpenAPI; la API de organizaciones es un subconjunto), tecnología (REST/JSON; la especificación está generada con Scribe, de Laravel), multiinquilino, seguridad (token de 24 h, roles y permisos, límite de tasa, idempotencia, CORS), formato de respuestas, reglas de negocio y el trabajo del equipo sobre el backend (relevamiento y pedido de servicios, validación del contrato, 22 brechas registradas, diseño defensivo) más el proxy del asistente como componente de servidor propio.
+
+**Decisiones.** Ninguna nueva.
+
+**Problemas y soluciones.** Ninguno.
+
+**Verificación.** Datos tomados de `docs/bda/` (guía 1/6, cliente 4/6–5/6, sesión), de `src/services/api/schema.d.ts` (388 rutas; 188 ejemplos "architecto", propios de Scribe), de `docs/api-gaps.md` (G-01 a G-22) y de la bitácora (posts del 1/10 y 5/10, serie del 7/10, prueba de humo 25/25).
+
+**Pendientes.**
+- Confirmar con el Banco la tecnología (Laravel, base de datos, hosting): queda marcado con un comentario PENDIENTE.
+- Pasar la subsección al documento Word de la tesis (v2).
+
+**Archivos principales.** `docs/tesis/capitulos/04-diseno-arquitectura.md`

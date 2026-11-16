@@ -14,6 +14,72 @@ servicios del rol de organización (`/org/*`) no reciben el identificador de la 
 
 <!-- PENDIENTE: agregar a la figura el servicio de agentes de IA y el canal de WhatsApp. -->
 
+### El servidor: la plataforma Mermab
+
+El backend del sistema es **Mermab Cloud**, la plataforma de gestión que usa el Banco de Alimentos para
+toda su operación. La desarrolla y mantiene el área técnica del Banco; el equipo la utilizó con la
+autorización de la gerencia, participó en la definición de la parte destinada a las organizaciones y
+la validó contra el servidor real, pero no modificó su código.
+
+**Alcance.** La plataforma es mucho más amplia que lo que usa la aplicación: su especificación OpenAPI
+describe 388 rutas que cubren donantes y donaciones, inventario, compras y facturas, sucursales,
+mermas y sus retiros, distribuciones, programas y jornadas, reportes y notificaciones. Para los
+comedores y merenderos expone un subconjunto propio, la **API de organizaciones** (`/api/org/*`), que es
+la que consume Portal Comedores (Anexo A).
+
+**Tecnología.** Es una API REST sobre HTTPS, en `https://cloud.mermab.com/api`, con respuestas JSON. La
+especificación provista por el Banco está generada con Scribe, la herramienta de documentación de
+Laravel (PHP), lo que indica que el backend está construido sobre ese *framework*.
+<!-- PENDIENTE: confirmar con el Banco la tecnología (Laravel, base de datos, hosting) antes de la versión final. -->
+
+**Multiinquilino.** Una sola instalación atiende a varios bancos de alimentos (*tenants*). Cada usuario
+pertenece a un tenant y, si es referente de un comedor, a una organización; el servidor deduce ambos a
+partir del token, por eso los servicios `/org/*` no reciben identificadores de organización y una
+organización nunca ve datos de otra. Las pruebas del proyecto se hicieron en el tenant *Banco de
+Alimentos Patagonia (TEST)*, dentro de la misma base que los bancos reales.
+
+**Seguridad y sesión.**
+
+- Autenticación por *token* Bearer que se obtiene con `POST /auth/login`, dura 24 horas y se renueva con
+  `POST /auth/refresh` (el token anterior deja de servir en el acto).
+- Control de acceso por **roles y permisos**: el referente de un comedor tiene el rol
+  `organization_coordinator`, y cualquier servicio de otro rol responde 403 `INSUFFICIENT_PERMISSION`.
+- **Límite de tasa**: 60 pedidos por minuto por usuario y 10 por minuto para el inicio de sesión.
+- **Idempotencia**: las escrituras aceptan la cabecera `Idempotency-Key`, de modo que un reintento con
+  la misma clave no duplica la operación.
+- CORS restringido a los orígenes autorizados.
+
+**Contrato.** Las respuestas siguen un formato uniforme: `{ success, data }` cuando la operación sale
+bien y `{ success, message, errors }` cuando falla, con un código de error (`error_code`) en los casos
+de negocio. Los errores de validación devuelven 422 con un mensaje por campo, que la aplicación muestra
+junto al campo correspondiente.
+
+**Reglas de negocio en el servidor.** El backend es la fuente de verdad de las reglas del Banco: cupo
+mensual por organización, hasta 30 productos por pedido y hasta 3 pedidos esperando respuesta, campos
+del perfil que sólo puede editar el Banco, contactos autorizados a retirar, estados del pedido y
+avisos a la organización cuando el Banco aprueba, rechaza o deja listo un pedido. La aplicación repite
+esas reglas en el cliente para avisar antes de enviar, pero la decisión final es siempre del servidor.
+
+**Trabajo del equipo sobre el backend.** Aunque no lo programó, el equipo tuvo un rol activo en su
+evolución para el uso de las organizaciones:
+
+1. **Relevamiento y pedido de servicios.** El equipo relevó qué necesitaban los comedores y se lo
+   planteó al Banco (1/10 y 5/10). En respuesta, el Banco publicó la serie "API organizaciones" (14
+   documentos, 7/10) y habilitó permisos y servicios nuevos, como el alta y la edición de familias.
+2. **Validación del contrato.** Cada servicio se verificó contra el servidor real: una prueba de humo
+   automatizada (25/25 en su última corrida) y verificaciones puntuales de supuestos (capítulo 6).
+3. **Registro de brechas.** Se documentaron 22 faltantes y comportamientos inesperados (G-01 a G-22,
+   sección 3.8), por ejemplo: errores 500 en lugar de 422 o 429, un documento listado sin archivo y la
+   falta de un servicio para que la organización suba documentos. Varios fueron corregidos por el
+   Banco durante el proyecto.
+4. **Diseño defensivo del cliente.** Como el backend evolucionó en paralelo a la aplicación, el cliente
+   se diseñó para tolerarlo: interruptores por módulo (sección 4.6), un simulador fiel a las respuestas
+   reales y reintentos seguros con idempotencia (sección 4.4).
+
+Además, el equipo escribió un componente de servidor propio, acotado: el **proxy del asistente**
+(`scripts/assistant-proxy.js`), que reenvía las llamadas del chat a la plataforma de agentes, porque
+ésta no admite CORS desde el navegador (D-26).
+
 ## 4.2 Arquitectura por capas del cliente
 
 El código fuente se organiza en capas con responsabilidades separadas y dependencias en un único

@@ -1119,3 +1119,28 @@ El Banco publicó en la orden 1149 de GoDubi la serie "API organizaciones (1/14)
 - Pasar la subsección al documento Word de la tesis (v2).
 
 **Archivos principales.** `docs/tesis/capitulos/04-diseno-arquitectura.md`
+
+---
+
+## 7105692 · cambiosdocumentacion
+- **Fecha:** 2026-11-16 17:55 · **Autoría:** Martina Gonella
+- **Etapa:** Documentación de la tesis
+
+**Objetivo.** Actualizar el documento de la tesis con lo hecho hasta el 13/11.
+
+**Qué se hizo** (entrada completada después, a partir de los cambios del commit). Se actualizaron `docs/tesis/Tesis-Portal-Comedores-v2.docx` y `docs/tesis/Tesis-Portal-Comedores.docx`, y se sumó la figura `docs/tesis/capitulos/figuras/fig-4-9-asistente.png` (integración con el asistente). La v2 queda en 85 páginas A4, con 14 figuras, 41 tablas y los anexos B y C hasta D-28 y P-38 (sin D-22 ni D-25, que se dejan para una versión posterior).
+
+**Decisiones.** Ninguna nueva.
+
+**Problemas y soluciones.** Ninguno.
+
+**Verificación.** Conteo de páginas, palabras, tablas e imágenes con Word sobre copias de los dos archivos; texto revisado contra el estado del proyecto.
+
+**Pendientes** (de la revisión del 2026-11-16):
+- El marco teórico (2.2 y 2.10) y las Referencias siguen en Expo SDK 57 / React Native 0.86; la app está en SDK 58 / RN 0.88 (D-25).
+- La Figura 5.1 (cronograma) dice "25/09 a 23/10".
+- El Anexo C no incluye P-22 a P-24, P-29, P-30 ni P-34.
+- Las tablas no tienen rótulo y no hay índice de figuras ni de tablas.
+- Sumar la sección del backend (capítulo 4.1).
+
+**Archivos principales.** `docs/tesis/Tesis-Portal-Comedores-v2.docx`, `docs/tesis/Tesis-Portal-Comedores.docx`, `docs/tesis/capitulos/figuras/fig-4-9-asistente.png`

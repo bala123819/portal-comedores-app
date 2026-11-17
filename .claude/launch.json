@@ -13,6 +13,12 @@
       "runtimeArgs": ["expo", "start", "--web", "--port", "3001"],
       "env": { "EXPO_PUBLIC_USE_MOCKS": "true", "EXPO_PUBLIC_MODULES_SCOPE": "real" },
       "port": 3001
+    },
+    {
+      "name": "nativo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--port", "8081"],
+      "port": 8081
     }
   ]
 }

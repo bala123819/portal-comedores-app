@@ -105,7 +105,7 @@ export function Screen({
   const insets = useSafeAreaInsets();
   const contentClasses = cn(
     // pb-28: deja lugar al botón flotante del asistente (AgentFab) al final de cada pantalla
-    'w-full max-w-content self-center gap-4 p-4 pb-28 md:px-8 lg:px-12',
+    'w-full max-w-content self-center gap-4 p-[1.3rem] pb-28 md:px-8 lg:px-12',
     contentClassName,
   );
   return (
@@ -127,7 +127,8 @@ export function Screen({
                   refreshing={refreshing}
                   onRefresh={onRefresh}
                   colors={[colors.primary]}
-                  tintColor={colors.primary}
+                  // Con hero el spinner de iOS queda sobre el fondo verde
+                  tintColor={hero ? colors.primaryForeground : colors.primary}
                 />
               ) : undefined
             }
@@ -135,6 +136,13 @@ export function Screen({
           >
             {hero ? (
               <>
+                {/* Pinta de verde la zona que se ve al estirar el scroll (pull-to-refresh en iOS),
+                    para que no quede un bloque blanco arriba del hero */}
+                <View
+                  pointerEvents="none"
+                  className="absolute inset-x-0 bg-primary"
+                  style={{ top: -1000, height: 1000 }}
+                />
                 {hero}
                 <View className={contentClasses}>{children}</View>
               </>
@@ -152,7 +160,7 @@ export function Screen({
             className="border-t border-border/60 bg-card"
             style={{ ...shadows.bar, paddingBottom: header ? Math.max(insets.bottom, 12) : 12 }}
           >
-            <View className="w-full max-w-content gap-2 self-center px-4 pt-3 md:px-8 lg:px-12">
+            <View className="w-full max-w-content gap-2 self-center px-[1.3rem] pt-3 md:px-8 lg:px-12">
               {footer}
             </View>
           </View>

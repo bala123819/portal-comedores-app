@@ -50,7 +50,14 @@ export function Input({
         ) : null}
         <TextInput
           ref={ref}
-          className={cn('flex-1 py-2 text-base text-foreground', className)}
+          // Una línea: alto fijo sin line-height ni padding vertical. En iOS/web el lineHeight
+          // de `text-base` empuja el texto hacia abajo y queda descentrado en la caja.
+          className={cn(
+            'flex-1 text-foreground',
+            multiline ? 'py-2 text-base' : 'h-12 p-0 text-[16px]',
+            className,
+          )}
+          style={{ includeFontPadding: false }}
           placeholderTextColor={colors.mutedForeground}
           secureTextEntry={secureTextEntry && hidden}
           multiline={multiline}

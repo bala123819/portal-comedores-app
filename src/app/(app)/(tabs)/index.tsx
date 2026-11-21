@@ -250,7 +250,7 @@ function HomeHero({
 }) {
   return (
     <View className="bg-primary">
-      <View className="w-full gap-4 px-4 pb-5 pt-3 md:px-8 lg:px-12">
+      <View className="w-full gap-4 px-[1.3rem] pb-5 pt-3 md:px-8 lg:px-12">
         <View className="flex-row items-center gap-3">
           {/* Mismo alto que las dos líneas de texto: text-sm (20) + text-2xl (32) */}
           <BrandMark size={52} inverted />

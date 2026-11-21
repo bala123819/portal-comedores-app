@@ -2,7 +2,7 @@ import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { ArrowRight, PackageSearch, Search } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, useWindowDimensions, View } from 'react-native';
 import { AssistantShortcut } from '@/components/asistente/AssistantShortcut';
 import { CatalogItem } from '@/components/pedidos/CatalogItem';
 import {
@@ -43,6 +43,10 @@ export default function NuevoPedidoScreen() {
   const lines = useCart((s) => s.lines);
   const setQuantity = useCart((s) => s.setQuantity);
   const contentPadding = useContentPadding();
+  const { width } = useWindowDimensions();
+  // Grilla de tarjetas verticales: 2 columnas en el celular, más en pantallas anchas.
+  const columns = width >= 1024 ? 4 : width >= 768 ? 3 : 2;
+  const gutter = 6;
 
   const products = flattenPages(query.data);
   // Categorías a partir de lo cargado: la API no tiene un listado de categorías para este rol.
@@ -153,20 +157,28 @@ export default function NuevoPedidoScreen() {
       }
     >
       <FlashList
+        key={columns}
         data={visible}
+        numColumns={columns}
         extraData={lines}
         keyExtractor={(p) => p.product_id}
         renderItem={({ item }) => (
-          <CatalogItem
-            product={item}
-            quantity={lines[item.product_id]?.quantity ?? 0}
-            onChange={onChange}
-          />
+          <View style={{ paddingHorizontal: gutter }}>
+            <CatalogItem
+              product={item}
+              quantity={lines[item.product_id]?.quantity ?? 0}
+              onChange={onChange}
+            />
+          </View>
         )}
-        ListHeaderComponent={header}
-        ListEmptyComponent={listEmpty}
+        ListHeaderComponent={<View style={{ paddingHorizontal: gutter }}>{header}</View>}
+        ListEmptyComponent={<View style={{ paddingHorizontal: gutter }}>{listEmpty}</View>}
         ItemSeparatorComponent={() => <View className="h-3" />}
-        contentContainerStyle={{ padding: 16, paddingHorizontal: contentPadding, paddingBottom: 32 }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingHorizontal: contentPadding - gutter,
+          paddingBottom: 32,
+        }}
         keyboardShouldPersistTaps="handled"
         onEndReachedThreshold={0.4}
         onEndReached={() => {

@@ -21,5 +21,5 @@ export const env = {
   assistantPublicationId: process.env.EXPO_PUBLIC_ASSISTANT_PUBLICATION_ID || '9806bc2a-7c76-4fe2-8d7a-79ae79544419',
   assistantOrigin: process.env.EXPO_PUBLIC_ASSISTANT_ORIGIN || 'https://app-organizaciones.mermab.com',
   /** Organización fija que atiende hoy el asistente: si la sesión de la app es de otra, se avisa. */
-  assistantOrgName: process.env.EXPO_PUBLIC_ASSISTANT_ORG_NAME || 'Comedor Prueba Tesis API',
+  assistantOrgName: process.env.EXPO_PUBLIC_ASSISTANT_ORG_NAME || 'Comedor El Manantial',
 };

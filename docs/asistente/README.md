@@ -33,7 +33,7 @@ Un **solo chat dentro de la app** (`/asistente`). Detrás responde el asistente 
 Después de confirmar una tarjeta, la app refresca las consultas de Familias, Pedidos o Avisos, así lo cargado
 por el chat aparece en las pantallas normales sin recargar.
 
-> ⚠️ **Hoy el asistente atiende siempre a una organización fija: "Comedor Prueba Tesis API".** Para que las
+> ⚠️ **Hoy el asistente atiende siempre a una organización fija: "Comedor El Manantial" (tenant Banco de Alimentos de Tucumán (Tesis), desde el 19/11).** Para que las
 > dos formas muestren lo mismo, la app tiene que estar logueada en esa organización. Si no, el chat muestra
 > un aviso. Más adelante se suma la identificación con el login de Mermab (un paso entre bootstrap y
 > exchange) y las pantallas no cambian.
@@ -150,7 +150,7 @@ EXPO_PUBLIC_ASSISTANT_MODE=            # http | mock | vacío
 EXPO_PUBLIC_ASSISTANT_BASE_URL=https://webchat.godubi.com/v1/webchat
 EXPO_PUBLIC_ASSISTANT_PUBLICATION_ID=9806bc2a-7c76-4fe2-8d7a-79ae79544419
 EXPO_PUBLIC_ASSISTANT_ORIGIN=https://app-organizaciones.mermab.com
-EXPO_PUBLIC_ASSISTANT_ORG_NAME=Comedor Prueba Tesis API
+EXPO_PUBLIC_ASSISTANT_ORG_NAME=Comedor El Manantial
 ```
 
 - **Vacío o `http` (por defecto):** API real en el celular **y en web** (D-26). La API no responde al pedido previo
@@ -183,7 +183,7 @@ EXPO_PUBLIC_ASSISTANT_ORG_NAME=Comedor Prueba Tesis API
 
 **En el celular, con la API real** (Expo Go):
 1. `npx expo start` y abrir con Expo Go (los módulos de cámara, galería y documentos vienen incluidos).
-2. Entrar con la coordinadora de prueba del comedor "Comedor Prueba Tesis API" (credenciales fuera de esta doc).
+2. Entrar con la coordinadora de prueba del comedor "Comedor El Manantial" (credenciales fuera de esta doc).
 3. Inicio → Asistente.
 
 **Dictado por voz:** no funciona en Expo Go. En el celular hace falta un *development build*

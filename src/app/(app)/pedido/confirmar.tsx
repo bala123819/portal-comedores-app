@@ -3,9 +3,10 @@ import { Redirect, router } from 'expo-router';
 import { AlertTriangle, Plus, Send } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { z } from 'zod';
 import { QuantityControl } from '@/components/pedidos/CatalogItem';
+import { PickupCalendar } from '@/components/pedidos/PickupCalendar';
 import { QuotaCard } from '@/components/pedidos/QuotaCard';
 import {
   Button,
@@ -97,6 +98,7 @@ export default function ConfirmarPedidoScreen() {
     },
   });
   const isUrgent = useWatch({ control, name: 'is_urgent' });
+  const pickupDate = useWatch({ control, name: 'requested_distribution_date' });
 
   const selected = cartLines(lines);
   const kg = cartKg(selected);
@@ -201,20 +203,7 @@ export default function ConfirmarPedidoScreen() {
           control={control}
           name="requested_distribution_date"
           render={({ field }) => (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerClassName="gap-2"
-            >
-              {days.map((d) => (
-                <Chip
-                  key={d}
-                  label={formatDay(d).replace(/^./, (c) => c.toUpperCase())}
-                  selected={field.value === d}
-                  onPress={() => field.onChange(d)}
-                />
-              ))}
-            </ScrollView>
+            <PickupCalendar days={days} value={field.value} onChange={field.onChange} />
           )}
         />
         {errors.requested_distribution_date ? (
@@ -222,7 +211,10 @@ export default function ConfirmarPedidoScreen() {
             {errors.requested_distribution_date.message}
           </Text>
         ) : (
-          <Text variant="caption">El Banco confirma el día al programar la entrega.</Text>
+          <Text variant="caption">
+            {pickupDate ? `Elegiste ${formatDay(pickupDate)}. ` : ''}El Banco confirma el día al
+            programar la entrega.
+          </Text>
         )}
       </View>
 
